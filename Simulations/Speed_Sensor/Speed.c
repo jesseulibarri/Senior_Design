@@ -16,15 +16,18 @@
 
 #define PI 3.14159
 
-uint8_t speed = 25;
+uint8_t speed = 6;
 uint8_t tire_diam = 22;
 uint8_t sprocket_teeth = 42;
 uint16_t sixteen_bit_timer_val;
+//char lcd_string_h[16];
+//char lcd_string_l[16];
+//div_t double_components;
+
 char lcd_string[32];
 char char_numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 void format_lcd_array(double number) {
-
     uint16_t integer_part = (uint16_t)number;
     uint16_t fraction_part = 100000 * (number - integer_part);
 
@@ -36,15 +39,26 @@ void format_lcd_array(double number) {
     lcd_string[5] = char_numbers[(fraction_part / 100) % 10];
     lcd_string[6] = char_numbers[(fraction_part / 10) % 10];
     lcd_string[7] = char_numbers[(fraction_part / 1) % 10];
-    
+                                              
 }
 
+/*
+void format_lcd_array(double number) {
+
+    double large_num = number * 1000;
+    uint16_t convert_to_sixteen = large_num;
+    double_components = div(convert_to_sixteen, 1000);
+    itoa(double_components.quot, lcd_string_h, 10);
+    itoa(double_components.rem, lcd_string_l, 10);
+
+}
+*/
 void timer1_init() {
     // Fast PWM mode, TOP in OCR1A, OC pin disconnected, prescale 64
     TCCR1A |= (1 << WGM10) | (1 << WGM11);
     TCCR1B |= (1 << WGM12) | (1 << WGM13) | (1 << CS10) | (1 << CS11);
     // OCR1A will define the period of the pulses
-    //OCR1A = sixteen_bit_timer_val;
+    //OCR1A = 23348;
     OCR1A = sixteen_bit_timer_val;
     // Set interrupt everytime the timer overflows
     TIMSK |= (1 << TOIE1);
@@ -60,9 +74,9 @@ void SPI_init() {
 
 ISR(TIMER1_OVF_vect) {
 
-    PORTB |= (1 << PB0);
+    PORTB |= (1 << PB7);
     _delay_us(10);
-    PORTB &= ~(1 << PB0);
+    PORTB &= ~(1 << PB7);
 
 }
 
@@ -76,21 +90,33 @@ double distance_per_pulse = tire_circ / sprocket_teeth;
 double period = distance_per_pulse / (speed * 17.6);
 sixteen_bit_timer_val = ((double)period * 16000000) / 64;
 
-//itoa(tire_circ, lcd_string, 10);
-format_lcd_array(distance_per_pulse);
 //PORTB.0 set to output
-DDRB = 0xFF;
+DDRB =0xFF;
+DDRC |= (1 << PC0);
 timer1_init();
 SPI_init();
 lcd_init();
 clear_display();
 sei();
 
-
     while(1){
+        format_lcd_array(speed);
+
+        /*
+        //send value to lcd screen
+        string2lcd(lcd_string_h);
+        char2lcd('.');
+        string2lcd(lcd_string_l);
+
+        //wait a moment
+        _delay_ms(500);
+        clear_display();
+        cursor_home();
+*/
         refresh_lcd(lcd_string);
         _delay_us(50);
-    }
+        
+    }//while
 
 return 0;
 }//main

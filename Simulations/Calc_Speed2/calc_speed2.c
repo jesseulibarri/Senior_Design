@@ -18,6 +18,7 @@
 
 void real_clk_init();
 void SPI_init();
+void timer1_init();
 
 volatile uint16_t i = 0;          //index
 uint8_t tire_diam = 22;
@@ -81,10 +82,10 @@ distance_per_pulse = tire_circ / sprocket_teeth;
 DDRC |= (1 << PC0) | (1 << PC1);;     //for troubleshooting
 
 DDRB = 0xFF;
-EICRA |= (1 << ISC00) | (1 << ISC01);   //interrupt on rising edge
-EIMSK |= (1 << INT0);   //enable external interrupt zero
+//EICRA |= (1 << ISC00) | (1 << ISC01);   //interrupt on rising edge
+//EIMSK |= (1 << INT0);   //enable external interrupt zero
 
-real_clk_init();        //initialize clock
+//real_clk_init();        //initialize clock
 SPI_init();
 lcd_init();
 clear_display();
@@ -120,3 +121,5 @@ void SPI_init() {
 	SPCR = (1 << SPE) | (1 << MSTR) | (0 << CPOL) | (0 << CPHA);
 	SPSR = (1 << SPI2X);
 }//SPI_init
+
+

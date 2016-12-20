@@ -51,9 +51,9 @@ void format_lcd_array(double number) {
 void calc_speed() {
 
     PORTC |= (1 << PC0);
-    static double timestamp_hist = 0;
-    double difference;
-    double timestamp_dif;
+    static uint16_t timestamp_hist = 0;
+    uint16_t difference;
+    uint16_t timestamp_dif;
 
     if(timestamp < timestamp_hist) {
         difference = 65535 - timestamp_hist;
@@ -62,7 +62,7 @@ void calc_speed() {
     else 
         timestamp_dif = timestamp - timestamp_hist;
 
-    double msec = timestamp_dif * count_period;
+    double msec = (double)timestamp_dif * count_period;
     double seconds = msec / 1000;
     speed = (distance_per_pulse / seconds) * (1 / 17.6);
     timestamp_hist = timestamp;
@@ -74,7 +74,7 @@ void calc_speed() {
 ISR(TIMER1_CAPT_vect) {
 
     PORTC |= (1 << PC1);
-    timestamp = (double)ICR1;
+    timestamp = ICR1;
     calc_speed();
     if(i > 100) {
         format_lcd_array(speed);

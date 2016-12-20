@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include "../Extern_Files/hd44780.h"
 #define PI 3.14159
+#define count_period 0.000016
 
 void real_clk_init();
 void SPI_init();
@@ -26,7 +27,7 @@ uint8_t sprocket_teeth = 42;
 double tire_circ;
 double distance_per_pulse;
 double seconds = 0;
-uint16_t msec;
+uint16_t timestamp;
 double speed;
 
 char lcd_string[32] = {"                                "};
@@ -48,31 +49,34 @@ void format_lcd_array(double number) {
 void calc_speed() {
 
     PORTC |= (1 << PC0);
-    static uint8_t msec_hist = 0;
-    uint8_t time_dif = msec - msec_hist;
-    seconds = (double)time_dif / 1000;
+    static double timestamp_hist = 0;
+    uint16_t difference;
+    double timestamp_dif;
+
+    if(timestamp < timestamp_hist) {
+        difference = 65535 - timestamp_hist;
+        timestamp_dif = (double)difference + timestamp;
+    } 
+    else 
+        timestamp_dif = timestamp - timestamp_hist;
+
+    double msec = timestamp_dif * count_period;
+    double seconds = msec * 1000;
     speed = (distance_per_pulse / seconds) * (1 / 17.6);
-    msec_hist = msec;
+    timestamp_hist = timestamp;
     PORTC &= ~(1 << PC0);
 
 }//calc_speed
 
 
-ISR(TIMER0_COMP_vect) {
+ISR(TIMER1_CAPT_vect) {
     PORTC |= (1 << PC1);
-    msec++;
-    i++;
-    if(i > 500) {
-        i = 0;
-        format_lcd_array(speed);
-    }
+
+    timestamp = (double)ICR1;
+    calc_speed();
+
     PORTC &= ~(1 << PC1);
 }
-
-ISR(INT0_vect) {
-    calc_speed();
-}
-
 
 int main()
 {
@@ -82,10 +86,9 @@ distance_per_pulse = tire_circ / sprocket_teeth;
 DDRC |= (1 << PC0) | (1 << PC1);;     //for troubleshooting
 
 DDRB = 0xFF;
-//EICRA |= (1 << ISC00) | (1 << ISC01);   //interrupt on rising edge
-//EIMSK |= (1 << INT0);   //enable external interrupt zero
 
 //real_clk_init();        //initialize clock
+timer1_init();
 SPI_init();
 lcd_init();
 clear_display();
@@ -122,4 +125,14 @@ void SPI_init() {
 	SPSR = (1 << SPI2X);
 }//SPI_init
 
+
+void timer1_init() {
+
+    //Makes use of the input capture function on PORTD.4.
+    TCCR1A = 0x00;                          //Normal mode, no compare
+    TCCR1B |= (1 << ICES1) | (1 << CS12);   //Input capture on rising edge,
+                                            //256 clk prescale
+    TIMSK |= (1 << TICIE1);                 //Enable input capture interrupt
+
+}//timer1_init
 

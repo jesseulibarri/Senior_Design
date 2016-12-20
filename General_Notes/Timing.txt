@@ -1,0 +1,54 @@
+
+***************** SPEED CALCULATIONS *********************
+Required values: tire_diameter, number of sprocket teeth
+    tire circumference, distance per speed sensor pulse,
+    period/frequency of pulse.
+
+Equations:
+    tire_circumference = tire_diameter * PI
+    distance_per_pulse = tire_circumference / sprocket_teeth
+    period = distance_per_pulse / (speed[mph] * 17.6[in/sec])
+                                NOTE: 1mph = 17.6in/sec
+    1 mile/hr * (5280 ft / 1 mile) * (12 in / 1 ft) * (1 hr / 3600 sec) = 17.6 in/sec
+    frequency = 1 / period
+
+Given:
+    tire_diameter = 22 in (inches)
+    sprocket_teeth = 42
+Constant values:
+    tire_circuference = 69.115 in
+    distance_per_pulse = 1.6456 in
+
+Edge Cases:
+    Slowest speed (1 mph):
+        period = 1.6456 in / (1 mile/hr * 17.6 in/sec) = 0.0935sec = 93.5mS
+            NOTE: This is the time between pulses
+        frequency = 1 / 0.0935sec = 10.695Hz
+
+    Fastest speed (40mph):
+        period = 1.6456 in / (40 mile/hr * 17.6 in/sec) = 0.00234sec = 2.34mS
+            NOTE: This is the time between pulses
+        frequency = 1 / 0.00234sec = 427.81Hz
+
+
+***************** INPUT CAPTURE TIMER *********************
+Timer 1 will be used for speed measurement. PORTD.4 reads a rising edge
+and will save the timer count value when that edge comes in (timestamp).
+This will allow us to calculate the frequency of the speed pulses coming in.
+
+I think that a prescale of 256 on a 16-bit timer will be best.
+
+Equations:
+    timer_freq = f_cpu / (MAX * prescale) = 16MHz / (2^16 * 256) = 0.9537Hz
+    period = 1 / timer_freq = 1.049sec
+    time_between_single_count = period / 2^16 = 16uS
+
+Edge Cases:
+    Slowest speed (1 mph):
+        pulse_period = 93.5mS
+        count = 93.5mS / 16uS = 5843.75
+
+    Fastest speed (40mph):
+        pulse_period = 2.34mS
+        count = 2.34mS / 16uS = 146.25
+

@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include "../Extern_Files/hd44780.h"
 #define PI 3.14159
-#define count_period 0.000016
+#define count_period 0.016
 
 void real_clk_init();
 void SPI_init();
@@ -35,13 +35,15 @@ char char_numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 void format_lcd_array(double number) {
     uint16_t integer_part = (uint16_t)number;
-    uint16_t fraction_part = 100 * (number - integer_part);
+    uint16_t fraction_part = 10000 * (number - integer_part);
 
     lcd_string[0] = char_numbers[(integer_part / 10) % 10];
     lcd_string[1] = char_numbers[(integer_part % 10)];
     lcd_string[2] = '.';
-    lcd_string[3] = char_numbers[(fraction_part / 10) % 10];
-    lcd_string[4] = char_numbers[(fraction_part / 1) % 10];
+    lcd_string[3] = char_numbers[(fraction_part / 1000) % 10];
+    lcd_string[4] = char_numbers[(fraction_part / 100) % 10];
+    lcd_string[5] = char_numbers[(fraction_part / 10) % 10];
+    lcd_string[6] = char_numbers[(fraction_part / 1) % 10];
                                               
 }
 
@@ -50,18 +52,18 @@ void calc_speed() {
 
     PORTC |= (1 << PC0);
     static double timestamp_hist = 0;
-    uint16_t difference;
+    double difference;
     double timestamp_dif;
 
     if(timestamp < timestamp_hist) {
         difference = 65535 - timestamp_hist;
-        timestamp_dif = (double)difference + timestamp;
+        timestamp_dif = difference + timestamp;
     } 
     else 
         timestamp_dif = timestamp - timestamp_hist;
 
     double msec = timestamp_dif * count_period;
-    double seconds = msec * 1000;
+    double seconds = msec / 1000;
     speed = (distance_per_pulse / seconds) * (1 / 17.6);
     timestamp_hist = timestamp;
     PORTC &= ~(1 << PC0);
@@ -70,12 +72,17 @@ void calc_speed() {
 
 
 ISR(TIMER1_CAPT_vect) {
-    PORTC |= (1 << PC1);
 
+    PORTC |= (1 << PC1);
     timestamp = (double)ICR1;
     calc_speed();
-
+    if(i > 100) {
+        format_lcd_array(speed);
+        i = 0;
+    }
+    i++;
     PORTC &= ~(1 << PC1);
+
 }
 
 int main()

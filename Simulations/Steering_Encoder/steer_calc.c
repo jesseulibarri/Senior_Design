@@ -30,11 +30,11 @@ double  angle;
 const double SF = 0.4396;
 const double deg_offset = 90.118;
 
-union Data {
-    uint8_t byte[4];
-    double dval;
+//union Data {
+  //  uint8_t byte[4];
+  //  double dval;
 
-}; 
+//}; 
 
 //Main program
 int main(){
@@ -96,18 +96,15 @@ void spi_16bit_transmit(uint16_t result){
  *  be sent one byte at a time over SPI.
  ******************************************************************************/
 void spi_double_transmit(double number){
-    union Data val_to_send;
+    uint16_t integer_part = (uint16_t)number;
+    uint16_t fraction_part = 1000 * (number - integer_part);
     
-    val_to_send.dval = number;
 
-    SPDR = val_to_send.byte[0];
+    SPDR = integer_part;
     while(bit_is_clear(SPSR, SPIF)){}
-    SPDR = val_to_send.byte[1];
+    SPDR = fraction_part;
     while(bit_is_clear(SPSR, SPIF)){}
-    SPDR = val_to_send.byte[2];
-    while(bit_is_clear(SPSR, SPIF)){}
-    SPDR = val_to_send.byte[3];
-    while(bit_is_clear(SPSR, SPIF)){}
+
 }
 /***********************************************************************************
  * Name: adc_init

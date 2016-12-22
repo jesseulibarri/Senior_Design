@@ -17,7 +17,8 @@
 
 //Function headers
 void spi_init();
-void spi_transmit(uint16_t);
+void spi_16bit_transmit(uint16_t);
+void spi_double_transmit(double);
 void adc_init();
 uint16_t adc_conversion();
 double calc_angle(uint16_t, const double, const double);
@@ -25,8 +26,6 @@ double calc_angle(uint16_t, const double, const double);
 //Global variables
 uint8_t i;
 uint16_t    adc_result;
-char    lcd_str_h[16];
-char    lcd_str_l[16];
 double  angle;
 const double SF = 0.04396;
 const double deg_offset = 90.118;
@@ -39,16 +38,31 @@ spi_init();
 //Initalize ADC ports
 adc_init();
 
-    while(1){
-        adc_result = adc_conversion();
+while(1){
+    adc_result = adc_conversion();
+    spi_16bit_transmit(adc_result);
+    _delay_ms(100);
 
-       // uint8_t adclow = ADCL;
-        spi_transmit(adc_result);
-       // spi_transmit(adclow);
-        _delay_ms(100);
+    angle = calc_angle(adc_result, SF, deg_offset);
+    spi_double_transmit(angle);
+    _delay_ms(100);    
 
-        //angle = calc_angle(adc_result, SF, deg_offset);
-    }
+    }//While
+}//Main
+
+
+/************************************
+ *
+ *
+ *
+ * **********************************/
+void spi_init(){
+    
+    //Set MOSI, SCK as output
+    DDRB |= (1<<PB3);
+    //Configure SPI (Slave mode, clk low on idle, rising edge sample)
+    SPCR = (1<<SPE)|(0<<MSTR)|(0<<CPOL)|(0<<CPHA); 
+    SPSR = (1<<SPR1)|(1<<SPR0);
 }
 
 /***************************************
@@ -57,7 +71,7 @@ adc_init();
  *
  *
  **************************************/
-void spi_transmit(uint16_t result){
+void spi_16bit_transmit(uint16_t result){
     char adc_low = result & 0xFF;
     char adc_high = result >> 8;
 
@@ -68,6 +82,39 @@ void spi_transmit(uint16_t result){
 
 }
 
+/******************************************
+ *
+ *
+ *
+ *
+ *****************************************/
+void spi_double_transmit(double number){
+    unsigned char *chptr;
+    chptr = (unsigned char *) &number;
+    
+    SPDR = (*chptr++);
+    while(bit_is_clear(SPSR, SPIF)){}
+    SPDR = (*chptr++);
+    while(bit_is_clear(SPSR, SPIF)){}
+    SPDR = (*chptr++);
+    while(bit_is_clear(SPSR, SPIF)){}
+    SPDR = (*chptr);
+}
+/*****************************************
+ *
+ *
+ *
+ ****************************************/
+void adc_init(){
+
+    //Initalize ADC and the ports
+    DDRF &= ~(1<<PF0);  //Port F bit 0 is ADC input
+    PORTF &= ~(1<<PF0); //Port F bit 0 pull up has to be off
+
+    ADMUX = (0<<REFS1)|(1<<REFS0)|(1<<MUX0);    //Single ended input, Port F bit 0, right adjusted, 10 bit
+    //ADC enabled, One shot mode, ADC complete interrupt enabled, clk prescalar 128 (125khz)
+    ADCSRA = (1<<ADEN)|(1<<ADIE)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
+}
 
 /***************************************
  *
@@ -93,33 +140,3 @@ double calc_angle(uint16_t adc_result, const double SF, const double deg_offset)
     return result;
 }
 
-
-/************************************
- *
- *
- *
- * **********************************/
-void spi_init(){
-    
-    //Set MOSI, SCK as output
-    DDRB |= (1<<PB3);
-    //Configure SPI (Slave mode, clk low on idle, rising edge sample)
-    SPCR = (1<<SPE)|(0<<MSTR)|(0<<CPOL)|(0<<CPHA); 
-    SPSR = (1<<SPR1)|(1<<SPR0);
-}
-
-/*****************************************
- *
- *
- *
- ****************************************/
-void adc_init(){
-
-    //Initalize ADC and the ports
-    DDRF &= ~(1<<PF0);  //Port F bit 0 is ADC input
-    PORTF &= ~(1<<PF0); //Port F bit 0 pull up has to be off
-
-    ADMUX = (0<<REFS1)|(1<<REFS0)|(1<<MUX0);    //Single ended input, Port F bit 0, right adjusted, 10 bit
-    //ADC enabled, One shot mode, ADC complete interrupt enabled, clk prescalar 128 (125khz)
-    ADCSRA = (1<<ADEN)|(1<<ADIE)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
-}

@@ -32,19 +32,35 @@ while True:
 
     time.sleep(0.1)
 
-
+##################################################################################
     resp = spi.readbytes(4)
-    #print resp
-    logging.info(str(datetime.datetime.now()) + ': SPI Float 32 Array =%s.' %resp)
+    print resp
+    time.sleep(0.1)
 
-    for i in range(len(resp)):
+
+
+
+
+
+
+
+###################################################################################
+###################################################################################
+    #resp = spi.readbytes(4)
+    #print resp
+    #logging.info(str(datetime.datetime.now()) + ': SPI Float 32 Array =%s.' %resp)
+
+    #for i in range(len(resp)):
        # print resp[i]
-        resp[i] = resp[i]-128
+       # resp[i] = resp[i]-128
        # print "New adjusted value :%s." %resp[i]
 
-    value = struct.unpack('<f', struct.pack('4b', *resp))[0]
-    print value
+    #value = struct.unpack('<f', struct.pack('4b', *resp))[0]
+    #print value
 
     #value = struct.unpack('<f', resp)
     #print value
-    time.sleep(0.1)
+
+##################################################################################
+
+   # time.sleep(0.1)

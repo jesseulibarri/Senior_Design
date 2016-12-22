@@ -98,13 +98,9 @@ void spi_16bit_transmit(uint16_t result){
 void spi_double_transmit(double number){
     uint16_t integer_part = (uint16_t)number;
     uint16_t fraction_part = 1000 * (number - integer_part);
-    
 
-    SPDR = integer_part;
-    while(bit_is_clear(SPSR, SPIF)){}
-    SPDR = fraction_part;
-    while(bit_is_clear(SPSR, SPIF)){}
-
+    spi_16bit_transmit(integer_part);
+    spi_16bit_transmit(fraction_part);
 }
 /***********************************************************************************
  * Name: adc_init

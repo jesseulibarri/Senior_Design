@@ -35,9 +35,22 @@ while True:
 ##################################################################################
     resp = spi.readbytes(4)
     print resp
+
+    Int_hi = resp[0]
+    Int_lo = resp[1]  
+	Int_full = 256*Int_hi + Int_lo
+    print Int_full
+	
+    Dec_hi = resp[2]
+    Dec_lo = resp[3]
+	Dec_full = 256*Dec_hi + Dec_lo
+    print Dec_full
+	
+    logging.info(str(datetime.datetime.now()) + ': SPI Actual Value =%s.' %Int_full)	
+    logging.info(str(datetime.datetime.now()) + ': SPI Actual Value =%s.' %Dec_full)		
     time.sleep(0.1)
 
-
+####################################################################################
 
 
 

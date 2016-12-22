@@ -18,7 +18,7 @@
 //Function headers
 void spi_init();
 void spi_16bit_transmit(uint16_t);
-void spi_double_transmit(double);
+void spi_double_transmit(Data);
 void adc_init();
 uint16_t adc_conversion();
 double calc_angle(uint16_t, const double, const double);
@@ -27,10 +27,16 @@ double calc_angle(uint16_t, const double, const double);
 uint8_t i;
 uint16_t    adc_result;
 double  angle;
-const double SF = 0.04396;
+const double SF = 0.4396;
 const double deg_offset = 90.118;
 
-//Main Program
+union Data {
+    uint8_t byte[4];
+    double dval;
+
+}; 
+
+//Main program
 int main(){
 
 //Initalize SPI ports
@@ -39,23 +45,24 @@ spi_init();
 adc_init();
 
 while(1){
-    adc_result = adc_conversion();
-    spi_16bit_transmit(adc_result);
-    _delay_ms(100);
+    adc_result = adc_conversion();  //Execute ADC conversion
+    spi_16bit_transmit(adc_result); //Transmit ADC result over SPI
+    _delay_ms(100);                 //Delay 100ms
 
-    angle = calc_angle(adc_result, SF, deg_offset);
-    spi_double_transmit(angle);
-    _delay_ms(100);    
+    angle = calc_angle(adc_result, SF, deg_offset); //Calculate angle
+    spi_double_transmit(angle);                     //Transmit angle over SPI
+    _delay_ms(100);                                 //Delay 100ms
 
-    }//While
-}//Main
+    }//while
+}//main
 
 
-/************************************
- *
- *
- *
- * **********************************/
+/*****************************************************************************
+ * Name: spi_init
+ *  
+ * Description: This function intializes the data direction and SPI registers
+ *  for SPI transmission in slave mode, with rising edge sample.
+ * **************************************************************************/
 void spi_init(){
     
     //Set MOSI, SCK as output
@@ -65,12 +72,12 @@ void spi_init(){
     SPSR = (1<<SPR1)|(1<<SPR0);
 }
 
-/***************************************
+/**************************************************************************************
+ * Name: spi_16bit_transmit
  *
- *
- *
- *
- **************************************/
+ * Description: This function is passed a 16 bit integer and breaks it into a high and 
+ *  low byte to be sent over SPI.
+ *************************************************************************************/
 void spi_16bit_transmit(uint16_t result){
     char adc_low = result & 0xFF;
     char adc_high = result >> 8;
@@ -82,34 +89,37 @@ void spi_16bit_transmit(uint16_t result){
 
 }
 
-/******************************************
+/******************************************************************************
+ * Name: spi_double_transmit
  *
- *
- *
- *
- *****************************************/
+ * Description: This function is passed a double and breaks it into 4 bytes to
+ *  be sent one byte at a time over SPI.
+ ******************************************************************************/
 void spi_double_transmit(double number){
-    unsigned char *chptr;
-    chptr = (unsigned char *) &number;
+    union Data val_to_send;
     
-    SPDR = (*chptr++);
+    val_to_send.dval = number;
+
+    SPDR = val_to_send.byte[0];
     while(bit_is_clear(SPSR, SPIF)){}
-    SPDR = (*chptr++);
+    SPDR = val_to_send.byte[1];
     while(bit_is_clear(SPSR, SPIF)){}
-    SPDR = (*chptr++);
+    SPDR = val_to_send.byte[2];
     while(bit_is_clear(SPSR, SPIF)){}
-    SPDR = (*chptr);
+    SPDR = val_to_send.byte[3];
+    while(bit_is_clear(SPSR, SPIF)){}
 }
-/*****************************************
+/***********************************************************************************
+ * Name: adc_init
  *
- *
- *
- ****************************************/
+ * Description: This function intializes the ADC Port F bit 1 and ADC registers for
+ *  single ended conversions with a prescalar of 128 (125khz).
+ ***********************************************************************************/
 void adc_init(){
 
     //Initalize ADC and the ports
-    DDRF &= ~(1<<PF0);  //Port F bit 0 is ADC input
-    PORTF &= ~(1<<PF0); //Port F bit 0 pull up has to be off
+    DDRF &= ~(1<<PF1);  //Port F bit 1 is ADC input
+    PORTF &= ~(1<<PF1); //Port F bit 1 pull up has to be off
 
     ADMUX = (0<<REFS1)|(1<<REFS0)|(1<<MUX0);    //Single ended input, Port F bit 0, right adjusted, 10 bit
     //ADC enabled, One shot mode, ADC complete interrupt enabled, clk prescalar 128 (125khz)
@@ -117,7 +127,9 @@ void adc_init(){
 }
 
 /***************************************
+ * Name adc_conversion
  *
+ * Description
  *
  *
  **************************************/

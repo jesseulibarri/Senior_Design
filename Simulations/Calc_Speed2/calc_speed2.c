@@ -43,7 +43,7 @@ ISR(TIMER1_CAPT_vect) {
 
     PORTC |= (1 << PC1);
     calc_speed();
-    spi_double_transmit(speed);
+    //spi_double_transmit(speed);
     
     if(i > 100) {
         format_lcd_array(speed);
@@ -94,6 +94,9 @@ return 0;
  *  for SPI transmission in master mode, with rising edge sample.
  * **************************************************************************/
 void spi_init_master() {
+    // set PORT direction. 
+    // PB0--SS_N, PB1--SCK, PB2--MOSI, PB3--MISO 
+    DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2) | (0 << PB3);
 	// set up SPI (master mode, clk low on idle, leading edge sample)
 	SPCR = (1 << SPE) | (1 << MSTR) | (0 << CPOL) | (0 << CPHA);
 	SPSR = (1 << SPI2X);

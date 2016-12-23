@@ -5,16 +5,19 @@ import logging
 import datetime
 import struct
 
-logging.basicConfig(filename='Speed_Test_IdentifierFirst_Nodelay_Test2.log',level=logging.DEBUG)
+logging.basicConfig(filename='SpeedTest_IdentifierFirst_Fivebytes_250000Hz.log',level=logging.DEBUG)
 logging.info(str(datetime.datetime.now()) + ': Starting Speed Datalog.')
 
 spi = spidev.SpiDev()
 spi.open(0,0)
 
-spi.max_speed_hz = 125000
+spi.max_speed_hz = 250000
 spi.mode = 0b00
 
+DataByte = [0,0,0,0,0]
+
 while True:
+    while True:
 
 #   resp = spi.readbytes(2)
 #   print resp
@@ -34,71 +37,108 @@ while True:
 #   time.sleep(0.1)
 
 ##################################################################################
+#
+#
+#
+##################################################################################
 
-    identifier = spi.readbytes(1)
-    #print identifier
+        identifier = spi.readbytes(1)
+        #print identifier
 
-    if identifier[0] == 0xFF:
+        if identifier[0] == 0xEE:
 
-        resp = spi.readbytes(4)
-        print resp
+            print 'Recieved identifier: %s' %identifier
+            logging.info(str(datetime.datetime.now()) + ': Recieved identifier =%s.' %identifier)
 
-        Int_hi = resp[0]
-        Int_lo = resp[1]
-        Int_full = 256*Int_hi + Int_lo
-        #print Int_full
+            Temp = spi.readbytes(1)
+            DataByte[0] = Temp[0]
+            if DataByte[0] == 0xEE:
+                break
+            Temp = spi.readbytes(1)
+            DataByte[1] = Temp[0]
+            if DataByte[1] == 0xEE:
+                break
+            Temp = spi.readbytes(1)
+            DataByte[2] = Temp[0]
+            if DataByte[2] == 0xEE:
+                break
+            Temp = spi.readbytes(1)
+            DataByte[3] = Temp[0]
+            if DataByte[3] == 0xEE:
+                break
+            Temp = spi.readbytes(1)
+            DataByte[4] = Temp[0]
+            if DataByte[4] == 0xEE:
+                break
 
-        Dec_hi = resp[2]
-        Dec_lo = resp[3]
-        Dec_full = 256*Dec_hi + Dec_lo
-        #print Dec_full
+            print 'Recieved Data: %s' %DataByte
+            logging.info(str(datetime.datetime.now()) + ': Recieved Data =%s.' %DataByte)
 
-        logging.info(str(datetime.datetime.now()) + ': Integer Speed =%s.' %Int_full)
-        logging.info(str(datetime.datetime.now()) + ': Decimal Speed =%s.' %Dec_full)
+            DropCnt = DataByte[4]
+
+            Int_hi = DataByte[0]
+            Int_lo = DataByte[1]
+            Int_full = 256*Int_hi + Int_lo
+            #print Int_full
+
+            Dec_hi = DataByte[2]
+            Dec_lo = DataByte[3]
+            Dec_full = 256*Dec_hi + Dec_lo
+            #print Dec_full
+
+#        logging.info(str(datetime.datetime.now()) + ': Integer Speed =%s.' %Int_full)
+#        logging.info(str(datetime.datetime.now()) + ': Decimal Speed =%s.' %Dec_full)
         #time.sleep(0.1)
 
-        Int_full = float(Int_full)
-        Dec_full = float(Dec_full)
-        Dec_full = Dec_full / 1000
-        ActualSpd = float(Dec_full + Int_full)
+            Int_full = float(Int_full)
+            Dec_full = float(Dec_full)
+            Dec_full = Dec_full / 1000
+            ActualSpd = float(Dec_full + Int_full)
 
-        print ActualSpd
-        logging.info(str(datetime.datetime.now()) + ': Actual Speed =%s.' %ActualSpd)
+            print 'Actual Speed: %s mph' %ActualSpd
+            print 'Dropped Messages: %s' %DropCnt
+
+        logging.info(str(datetime.datetime.now()) + ': Actual Speed =%f.' %ActualSpd)
+        logging.info(str(datetime.datetime.now()) + ': Dropped Packages =%s.' %DropCnt)
+
+        DataByte = [0,0,0,0,0]
+        identifier[0] = 0
 
 ####################################################################################
+#
+#
+#
+####################################################################################
 
-
-    identifier = spi.readbytes(1)
+    #identifier = spi.readbytes(1)
     #print identifier
 
-    if identifier[0] == 0xEE:
+    #if identifier[0] == 0xEE:
 
-        other = spi.readbytes(4)
-        print other
+    #    other = spi.readbytes(4)
+    #    print other
 
-        Int_hi = other[0]
-        Int_lo = other[1]
-        Int_full = 256*Int_hi + Int_lo
-        #print Int_full
+    #    Int_hi = other[0]
+    #    Int_lo = other[1]
+    #    Int_full = 256*Int_hi + Int_lo
+    #    #print Int_full
 
-        Dec_hi = other[2]
-        Dec_lo = other[3]
-        Dec_full = 256*Dec_hi + Dec_lo
-        #print Dec_full
+    #    Dec_hi = other[2]
+    #    Dec_lo = other[3]
+    #    Dec_full = 256*Dec_hi + Dec_lo
+    #    #print Dec_full
 
-        logging.info(str(datetime.datetime.now()) + ': Integer Other =%s.' %Int_full)
-        logging.info(str(datetime.datetime.now()) + ': Decimal Other =%s.' %Dec_full)
-        #time.sleep(0.1)
+    #    logging.info(str(datetime.datetime.now()) + ': Integer Other =%s.' %Int_full)
+    #    logging.info(str(datetime.datetime.now()) + ': Decimal Other =%s.' %Dec_full)
+    #    #time.sleep(0.1)
 
-        Int_full = float(Int_full)
-        Dec_full = float(Dec_full)
-        Dec_full = Dec_full / 1000
-        Actualother = float(Dec_full + Int_full)
+    #    Int_full = float(Int_full)
+    #    Dec_full = float(Dec_full)
+    #    Dec_full = Dec_full / 1000
+    #    Actualother = float(Dec_full + Int_full)
 
-        print Actualother
-        logging.info(str(datetime.datetime.now()) + ': Actual Other =%s.' %Actualother)
-
-
+    #    print Actualother
+    #    logging.info(str(datetime.datetime.now()) + ': Actual Other =%s.' %Actualother)
 
 
 ###################################################################################
@@ -106,6 +146,7 @@ while True:
 #
 #
 ###################################################################################
+
     #resp = spi.readbytes(4)
     #print resp
     #logging.info(str(datetime.datetime.now()) + ': SPI Float 32 Array =%s.' %resp)

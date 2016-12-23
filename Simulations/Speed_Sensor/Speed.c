@@ -16,7 +16,7 @@
 
 #define PI 3.14159
 
-uint8_t speed = 5;
+uint8_t speed = 10;
 uint8_t tire_diam = 22;
 uint8_t sprocket_teeth = 42;
 uint16_t sixteen_bit_timer_val;

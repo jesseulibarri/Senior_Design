@@ -35,48 +35,40 @@
  *********************************************************************/
 void pirate_mode() {
     //Configure interrupt 0 so a rising edge will wake up the controller out of sleep mode
-    //Enable power down mode and enable the sleep bit in MCUCR register
-    //MCUCR = (1<<SM1);
-    EICRB = (1<<ISC00) | (1<<ISC01);   //Generate aysnchronous interrupt request on rising edge
-    EIMSK |= (1<<INT0);                 //Enable external interrupt 0
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    
+    EICRA = (1<<ISC00) | (1<<ISC01);   //Generate aysnchronous interrupt request on rising edge
+    EIMSK = (1<<INT0);                 //Enable external interrupt 0
+
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);    //Enable power down mode, set sleep enable bit 
+                                            //in the MCUCR register
 
     PORTB &= ~((1<<speed1_relay)|(1<<speed2_relay)|(1<<pc_relay));  //Turn off relay circuits
-    cli();
-    _delay_ms(1000);
+    
+    cli();  //clear global interrupt
+    
+    
+    sleep_enable();         //Set sleep enable bit in MCUCR register
+   // sleep_bod_disable();  //Disable brown out detector
+    sei();                  //Set global interrupt bit
+    sleep_cpu();            //CPU is sleeping
+    sleep_disable();        //CPU wakes up on rising edge ISR is executed
 
-    if (PIND == 0b11111111){    
-        sleep_enable();          //set sleep enable bit in MCUCR register
-        //sleep_bod_disable();    //Disable brown out detector
-        sei();  //set global interrupt bit
-        sleep_cpu();
-        sleep_disable();
-    }
-    
-    
-    
     PORTB |= (1<<speed1_relay)|(1<<speed2_relay)|(1<<pc_relay); //Turn on relay circuits
+
 }//pirate_mode
 
 ISR(INT0_vect){
     EIMSK &= ~(1<<INT0);
-    EIFR &= ~(1<<INTF0);
-    //PORTD = (1<<PD0);
+    
 }//ISR
 
-/*int8_t debounce_switch() {
-    static uint16_t state = 0; //holds present state
-    state = (state << 1) | (!bit_is_clear(PIND, 0)) | 0xE000;
-    if (state == 0xF000) reutrn 1;
-    return 0;
-}
-*/
+
 
 int main() {
-    //int8_t check;
-    DDRB = 0xFF;
-    DDRD = 0x00;
-    PORTD = 0xFF;
+
+    DDRB = 0xFF;    //Configure Port B for output
+    DDRD = 0x00;    //Configure Port D for input
+    PORTD = 0xFF;   //Pull pins on Port D high
 
     PORTB |= (1<<speed1_relay)|(1<<speed2_relay)|(1<<pc_relay); //Turn on relay circuits
     
@@ -84,7 +76,7 @@ int main() {
         if(!(PIND & (1<<PD0))){ //If pin goes low enter pirate mode
              pirate_mode();
         }
-        _delay_ms(500);
+        //_delay_ms(500);
     }
 return 0;
 }//main

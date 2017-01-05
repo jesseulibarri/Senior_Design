@@ -5,22 +5,13 @@
 //#include "commands.h"
 #include "cobs.h"
 
-struct DataFrame_t{
-    unsigned char            data[DATAFRAME_SIZE];
-    unsigned int                 length;
-    unsigned int                    crc;
-    FRAME_OP                  operation;
-    FRAME_STATUS                 status;
-};
-
-
 int main(){
     
 	static struct DataFrame_t message;
-	frame_init(message)
+	frame_init(message);
 	
 	message->data = {0x07, 0x09, 0x00, 0x01, 0x00, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x00, 0x18, 0x22};
-    message->length = sizeof(message->data)
+    message->length = sizeof(message->data);
 	
 	printf(message->data);
 	printf(message->length);

@@ -6,7 +6,6 @@
 
 #define   DATAFRAME_SIZE              128
 #define   SAMPLE_BUF_LENGTH          2000
-
 typedef enum{
     FRAME_OP_ENCODE,
     FRAME_OP_DECODE,

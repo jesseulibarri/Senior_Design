@@ -8,7 +8,7 @@ uint16_t crc_1021(uint16_t old_crc, unsigned char data);
 
 /* DATAFRAME_SIZE defined in datatypes.h */
 
-void frame_encode(struct DataFrame_t *frame){
+void frame_encode(struct DataFrame_t frame){
 
     static unsigned char tmp[DATAFRAME_SIZE];
 

@@ -1,6 +1,6 @@
 #ifndef FRAME_H
 #define FRAME_H
-#include "datatypes.h"
+//#include "datatypes.h"
 
 void frame_decode(struct DataFrame_t *frame);
 void frame_encode(struct DataFrame_t *frame);

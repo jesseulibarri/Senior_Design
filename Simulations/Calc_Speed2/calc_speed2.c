@@ -14,8 +14,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "../Extern_Files/hd44780.h"
-#define PI 3.14159
-#define count_period    0.016
+#define PI 3.14159F
+#define count_period    0.016F
 
 //Function Headers
 void real_clk_init();

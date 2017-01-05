@@ -9,11 +9,13 @@ int main(){
     
 	struct DataFrame_t message;
 	
-	message.data = [0x07];
-    message.length = sizeof(message.data);
+	data[] = [0x07, 0x02, 0x00, 0x14];
+	for(unsigned int i=0; i < sizeof(data); i++)
+        strcpy(message->data[i], data[i]);
+    message.length = sizeof(message->data);
 	
-	printf(message->data);
-	printf(message->length);
+	//printf(message->data);
+	//printf(message->length);
 	
 	//char msg[] = {0x01, 'O', 'K'};
 

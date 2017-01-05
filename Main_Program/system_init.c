@@ -1,10 +1,10 @@
 
+#include <avr/io.h>
 #include "system_init.h"
 //TODO: #include "speed_calc.h"
 //TODO: #include "datalogging.h"
 
 //Global Variables
-uint8_t datalogging = OFF;
 uint8_t tire_diam = 22;
 uint8_t sprocket_teeth = 42;
 double tire_circ;
@@ -12,6 +12,8 @@ double distance_per_pulse;
 double speed;
 uint8_t dropped_byte = 0;
 
+/*** Turn ON to enable datalogging ***/
+uint8_t datalogging = OFF;
 
 /*****************************************************************************
  * Name: spi_init
@@ -56,7 +58,15 @@ void system_init() {
     distance_per_pulse = tire_circ / sprocket_teeth;
 
     /****** Datalogging *******/
-    if(datalogging) { spi_init(); }
+    if(datalogging) { 
+
+        //Set MOSI, SCK as output
+        DDRB |= (1<<PB3);
+        //Configure SPI (Slave mode, clk low on idle, rising edge sample)
+        SPCR = (1<<SPE)|(0<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR1)|(0<<SPR0);
+        SPSR = (1<<SPI2X);
+
+    }//if datalogging
     
     /******** ADC *********/
     //Initalize ADC and the ports

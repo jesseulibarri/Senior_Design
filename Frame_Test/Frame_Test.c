@@ -9,7 +9,7 @@ int main(){
     
 	struct DataFrame_t message;
 	
-	message.data = 0x07;
+	message.data = [0x07];
     message.length = sizeof(message.data);
 	
 	printf(message->data);

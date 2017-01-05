@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "frame.h"
-//#include "datatypes.h"
+#include "datatypes.h"
 //#include "commands.h"
 #include "cobs.h"
-
-#define   DATAFRAME_SIZE              128
 
 struct DataFrame_t{
     unsigned char            data[DATAFRAME_SIZE];

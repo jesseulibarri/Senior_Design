@@ -1,8 +1,8 @@
 #ifndef DATATYPES_H
 #define DATATYPES_H
-#include "stm32l4xx.h"
-#include "FreeRTOS.h"
-#include "queue.h"
+//#include "stm32l4xx.h"
+//#include "FreeRTOS.h"
+//#include "queue.h"
 
 #define   DATAFRAME_SIZE              128
 #define   SAMPLE_BUF_LENGTH          2000

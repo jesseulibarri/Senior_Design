@@ -1,7 +1,8 @@
 
 #include <avr/io.h>
 #include "system_init.h"
-//TODO: #include "speed_calc.h"
+#include "pirate.h"
+//TODO: #include "speed.h"
 //TODO: #include "datalogging.h"
 
 //Global Variables
@@ -15,24 +16,13 @@ uint8_t dropped_byte = 0;
 /*** Turn ON to enable datalogging ***/
 uint8_t datalogging = OFF;
 
-/*****************************************************************************
- * Name: spi_init
- *  
- * Description: This function intializes the data direction and SPI registers
- *  for SPI transmission in slave mode, with rising edge sample.
- * **************************************************************************/
-void spi_init(){
-    
-    //Set MOSI, SCK as output
-    DDRB |= (1<<PB3);
-    //Configure SPI (Slave mode, clk low on idle, rising edge sample)
-    SPCR = (1<<SPE)|(0<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR1)|(0<<SPR0);
-    SPSR = (1<<SPI2X);
 
-}//spi_init
-
-
-
+/********************************************************
+ * Name: system_init
+ *
+ * Description: Function takes care of all initializations.
+ *  Timers, interrupts, UART, datalogging, ADC, IO
+ * ******************************************************/
 void system_init() {
 
     /****** System Timing *******/
@@ -52,6 +42,15 @@ void system_init() {
     TCCR3B |= (1 << ICES3) | (1 << CS32);   //Input capture on rising edge,
                                             //256 clk prescale
     ETIMSK |= (1 << TICIE3);                 //Enable input capture interrupt
+
+    /******** Enable Global Interrupts *********/
+    sei();
+
+    /******** IO *********/
+    DDRB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Output for relay circuits
+    DDRD |= (1<<PIRATE_SWITCH);     //Pirate mode enable on PORTD.0 (INT0)
+    PORTB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Turn on relay circuits
+    PORTD |= (1<<PIRATE_SWITCH);     //Set high
 
     /*** Calculate the system needed constants ***/
     tire_circ = tire_diam * PI;

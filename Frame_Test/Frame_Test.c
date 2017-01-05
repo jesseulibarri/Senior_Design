@@ -2,7 +2,7 @@
 #include <string.h>
 #include "frame.h"
 #include "datatypes.h"
-#include "commands.h"
+//#include "commands.h"
 #include "cobs.h"
 
 #define   DATAFRAME_SIZE              128

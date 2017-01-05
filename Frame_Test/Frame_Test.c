@@ -9,7 +9,7 @@ int main(){
     
 	struct DataFrame_t message;
 	
-	data[] = [0x07, 0x02, 0x00, 0x14];
+	char data[] = [0x07, 0x02, 0x00, 0x14];
 	for(unsigned int i=0; i < sizeof(data); i++)
         strcpy(message->data[i], data[i]);
     message.length = sizeof(message->data);

@@ -7,33 +7,70 @@
 
 int main(){
     
-	struct DataFrame_t message;
-	frame_init(message);
-	
-	message.data = {0x07, 0x09, 0x00, 0x01, 0x00, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x00, 0x18, 0x22};
-    message.length = sizeof(message.data);
-	
-	printf(message->data);
-	printf(message->length);
-	
-	//char msg[] = {0x01, 'O', 'K'};
+    struct DataFrame_t message;
+	char data[] = {'1','2','3','4','5'};
 
-    //unsigned int crc = 0;
-    //for(int i=0; i < sizeof(msg); i++)
-    //    crc = frame_update_crc(crc, msg[i]);
+	for(unsigned int i=0; i < sizeof(data); i++)
+        message.data[i] = data[i];
+    message.length = sizeof(data);
+    message.crc = 0x0000;
+    message.status = FRAME_STATUS_OK;
+    message.operation = FRAME_OP_ENCODE;
 
-    //char frame[5];
-    //memcpy(frame, msg, 3);
-    //frame[3] = (crc >> 8) & 0x000000FF;
-    //frame[4] = (crc & 0x000000FF);
+    printf("Message contents: ");
+    for(int i=0; i < message.length; i++){
+        printf("%02x ", message.data[i]);
+    }
+    
+    printf("\n");
+    printf("Message length: %i ", message.length);
+    printf("\n");
+    printf("Message CRC: %i ", message.crc);
+    printf("\n");
+    //printf("%s ", message.operation);
+    printf("\n");
+    //printf("%s ", message.status);
 
-    //char output[30];
-    //frame_encode(output, frame, 5);
 
-    /*for(int i=0; i < sizeof(msg); i++){*/
-        /*printf("%02x ", msg[i]);*/
-    /*}*/
-    /*printf("\n");*/
+    frame_encode(&message);
+   
+    printf("Encoded message contents: ");
+    for(int i=0; i < message.length; i++){
+        printf("%02x ", message.data[i]);
+    }
+ 
+    printf("\n");
+    printf("Encoded message length: %i ", message.length);
+    printf("\n");
+    printf("Encoded message CRC: %i ", message.crc);
+    printf("\n");
+    //printf("%s ", message.operation);
+    printf("\n");
+    //printf("%s ", message.status);
+
+
+    uint8_t Flag = frame_verify_crc(&message);
+    printf("CRC Error Check Status: %i ", Flag);
+    printf("\n\n");
+
+
+    frame_decode(&message);
+
+    printf("Decoded message contents: ");
+    for(int i=0; i < message.length; i++){
+        printf("%02x ", message.data[i]);
+    }
+ 
+    printf("\n");
+    printf("Decoded message length: %i ", message.length);
+    printf("\n");
+    printf("Decoded message CRC: %i ", message.crc);
+    printf("\n");
+    //printf("%s ", message.operation);
+    printf("\n");
+    //printf("%s ", message.status);
+ 
+
 
     /*char output[30];*/
     /*frame_encode(output, msg, sizeof(msg));*/

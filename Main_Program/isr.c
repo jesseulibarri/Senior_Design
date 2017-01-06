@@ -3,6 +3,11 @@
  *
  * *****************************************************/
 
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include "speed.h"
+#include "datalogging.h"
+
 /*********************************************************************
  * ISR: pirate_mode
  *
@@ -22,9 +27,9 @@ ISR(INT0_vect){
  *********************************************************************/
 ISR(TIMER1_CAPT_vect) {
 
-    calc_speed1();
-    spi_double_transmit(speed1);
-    spi_8bit_transmit(dropped_byte);
+    calc_speed();
+    spi_double_tx(speed1);
+    spi_8bit_tx(dropped_byte);
     //dropped_byte++;
     /*
     if(i > 70) {
@@ -44,9 +49,9 @@ ISR(TIMER1_CAPT_vect) {
  *********************************************************************/
 ISR(TIMER3_CAPT_vect) {
 
-    calc_speed2();
-    spi_double_transmit(speed2);
-    spi_8bit_transmit(dropped_byte);
+    calc_speed();
+    spi_double_tx(speed2);
+    spi_8bit_tx(dropped_byte);
     //dropped_byte++;
     /*
     if(i > 70) {

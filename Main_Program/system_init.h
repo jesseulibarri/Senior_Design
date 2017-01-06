@@ -15,4 +15,6 @@
 
 void system_init();
 
+//uint8_t datalogging;
+
 #endif

@@ -7,6 +7,9 @@
 #ifndef SPEED_H
 #define SPEED_H
 
+extern double speed1;
+extern double speed2;
+
 uint16_t calc_avg(uint16_t *array);
 void calc_speed();
 

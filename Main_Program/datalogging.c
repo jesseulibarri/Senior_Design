@@ -3,10 +3,13 @@
  *
  * *****************************************************/
 
+#include <avr/io.h>
 #include "datalogging.h"
 
 /******** ON to enable **********/
 #define DATALOGGING OFF 
+
+uint16_t dropped_byte = 0;
 
 /**************************************************************************************
  * Name: timeout

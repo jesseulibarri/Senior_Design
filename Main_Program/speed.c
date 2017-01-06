@@ -1,7 +1,11 @@
 
+#include <avr/io.h>
 #include "speed.h"
 #include "const.h"
+#include "datalogging.h"
 
+double speed1;
+double speed2;
 
 /**************************************************************************************
  * Name: calc_avg
@@ -45,7 +49,7 @@ void calc_speed() {
     timestamp_avg_dif = calc_avg(timestamp_dif);
     double msec = (double)timestamp_avg_dif * COUNT_PERIOD;
     double seconds = msec / 1000;
-    speed = (distance_per_pulse / seconds) * (1 / MPH_TO_SEC_PER_IN);
+    speed1 = (distance_per_pulse / seconds) * (1 / MPH_TO_SEC_PER_IN);
     timestamp_hist = timestamp;
 
     //TODO: Change the function so that it returns the calculated speed.

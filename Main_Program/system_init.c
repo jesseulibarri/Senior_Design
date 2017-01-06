@@ -1,10 +1,14 @@
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
+#include "math.h"
 #include "system_init.h"
 #include "pirate.h"
+#include "const.h"
 //TODO: #include "speed.h"
 //TODO: #include "datalogging.h"
 
+/*
 //Global Variables
 uint8_t tire_diam = 22;
 uint8_t sprocket_teeth = 42;
@@ -12,6 +16,7 @@ double tire_circ;
 double distance_per_pulse;
 double speed;
 uint8_t dropped_byte = 0;
+*/
 
 /*** Turn ON to enable datalogging ***/
 uint8_t datalogging = OFF;
@@ -52,9 +57,9 @@ void system_init() {
     PORTB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Turn on relay circuits
     PORTD |= (1<<PIRATE_SWITCH);     //Set high
 
-    /*** Calculate the system needed constants ***/
-    tire_circ = tire_diam * PI;
-    distance_per_pulse = tire_circ / sprocket_teeth;
+    ///*** Calculate the system needed constants ***/
+    tire_circ = TIRE_DIAM * M_PI;
+    distance_per_pulse = tire_circ / SPROCKET_TEETH;
 
     /****** Datalogging *******/
     if(datalogging) { 

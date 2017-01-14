@@ -48,6 +48,20 @@ void system_init() {
                                             //256 clk prescale
     ETIMSK |= (1 << TICIE3);                 //Enable input capture interrupt
 
+    /******** System Timer *********/
+    //Timer will run on the 32kHz oscillator to allow for a slower speed
+    //Normal mode, 32,768Hz with 8 pre-scale = 16Hz = 62.5mS
+    
+    // Follow procedures in the datasheet to select the external clock.
+    TIMSK &= ~((1 << OCIE0) | (1 << TOIE0)); //clear interrupts
+    ASSR |= (1 << AS0);                      //enable external clock
+    TCCR0 = (0 << WGM01) | (0 << WGM00) | \
+            (0 << CS01) | (1 << CS00);      //Normal mode, 8 prescale
+    while(!((ASSR & 0b0111) == 0)) {}       //spin till registers finish updating
+    TIFR |= (1 << OCF0) | (1 << TOV0);      //clear interrupt flags
+    TIMSK |= (1 << OCIE0);                  //enable compare match interrupt
+
+
     /******** Enable Global Interrupts *********/
     sei();
 

@@ -10,6 +10,10 @@
 extern double speed1;
 extern double speed2;
 
+//timestamps from the input capture pin
+extern uint16_t times1[10];
+extern uint16_t times2[10];
+
 uint16_t calc_avg(uint16_t *array);
 void calc_speed();
 

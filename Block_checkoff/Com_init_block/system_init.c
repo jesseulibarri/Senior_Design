@@ -5,7 +5,7 @@
 #include <util/delay.h>
 #include "math.h"
 
-#define F_CPU 16000000
+//#define F_CPU 16000000
 #define ON  1
 #define OFF 0
 #define TIRE_DIAM       22
@@ -80,12 +80,10 @@ void system_init() {
     TCCR0 = (0 << WGM01) | (0 << WGM00) | \
             (0 << CS01) | (1 << CS00);      //Normal mode, 8 prescale
     while(!((ASSR & 0b0111) == 0)) {}       //spin till registers finish updating
-    TIFR |= (1 << OCF0) | (1 << TOV0);      //clear interrupt flags
-    TIMSK |= (1 << OCIE0);                  //enable compare match interrupt
 
 
     /******** Enable Global Interrupts *********/
-    //sei();
+    sei();
 
     /******** IO *********/
     DDRB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Output for relay circuits

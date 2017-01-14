@@ -1,13 +1,30 @@
-PRG            =system_init
+PRG             =system_init
+#PRG				=uart_test
 
-OBJ            = $(PRG).o
+OBJS            =system_init.o 
+SRCS            =system_init.c
 
 MCU_TARGET     = atmega128
+#MCU_TARGET     = atmega48
+PROGRAMMER_TARGET     = m128
+#PROGRAMMER_TARGET     = m48
+
+#agressive optimization
 OPTIMIZE       = -O2    # options are 1, 2, 3, s
-CC             = avr-gcc
+#optimize for small code
+#OPTIMIZE       = -Os    # options are 1, 2, 3, s
+#OPTIMIZE       = -1s    # options are 1, 2, 3, s
+
 F_CPU          = 16000000UL
 
-override CFLAGS        = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) $(DEFS)
+DEFS           =
+LIBS           =
+
+CC             = avr-gcc
+
+# Override is only needed by avr-lib build system.
+
+override CFLAGS        = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) $(DEFS) -DF_CPU=$(F_CPU)
 override LDFLAGS       = -Wl,-Map,$(PRG).map
 
 OBJCOPY        = avr-objcopy
@@ -15,25 +32,51 @@ OBJDUMP        = avr-objdump
 
 all: $(PRG).elf lst text eeprom
 
-$(PRG).elf: $(OBJ)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS) -DF_CPU=$(F_CPU)
+$(PRG).elf: $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
+#prevent confusion with any file named "clean"
+#"-" prevents erroring out with file not found
+.PHONY	: clean
 clean: 
-	rm -rf *.o $(PRG).elf *.bin *.hex *.srec *.bak  
-	rm -rf $(PRG)_eeprom.bin $(PRG)_eeprom.hex $(PRG)_eeprom.srec
-	rm -rf *.lst *.map 
+	-rm -rf $(PRG).o $(PRG).elf *.d 
+	-rm -rf $(PRG).lst $(PRG).map 
+	-rm -rf $(PRG).srec $(PRG)*.bin $(PRG).hex 
+	-rm -rf $(PRG)_eeprom.srec $(PRG)_eeprom*.bin $(PRG)_eeprom.hex 
+	-rm -rf *.o* *.d*
 
-#setup for for USB programmer
-#may need to be changed depending on your programmer
+all_clean:
+	rm -rf *.o *.elf *.lst *.map *.srec *.bin *.hex
+
+#setup for usb programmer
+#hacked the permissions for stinkin' Redhat box
 program: $(PRG).hex
-	sudo avrdude -c usbasp -p m128 -e -U flash:w:$(PRG).hex  -v
+	chmod 644 $(PRG).hex
+	sudo avrdude -p $(PROGRAMMER_TARGET) -c usbasp -e -U flash:w:$(PRG).hex 
+#	avrdude -p $(PROGRAMMER_TARGET) -c osuisp2 -e -U flash:w:$(PRG).hex 
 
 lst:  $(PRG).lst
 
 %.lst: %.elf
 	$(OBJDUMP) -h -S $< > $@
 
-# Rules for building the .text rom images
+
+#put dependencies on header files in here
+#there must be a better way to do this!
+#lm73_functions.o thermo2.o :  lm73_functions.h
+#lcd_functions.o thermo2.o  :  lcd_functions.h
+#thermo2.o                  :  twi_master.h
+
+#Here is the pattern rule to generate a file of dependencies (i.e., a makefile) 
+#called `name.d' from a C source file +called `name.c':
+%.d: %.c
+	@set -e; rm -f $@; \
+	$(CC) -MM $(CFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+#include the dependencies from the other makefiles
+-include $(SRCS:.c=.d)
 
 text: hex bin srec
 
@@ -59,10 +102,13 @@ ebin:  $(PRG)_eeprom.bin
 esrec: $(PRG)_eeprom.srec
 
 %_eeprom.hex: %.elf
-	$(OBJCOPY) -j .eeprom --change-section-lma .eeprom=0 -O ihex $< $@
+	$(OBJCOPY) -j .eeprom --change-section-lma .eeprom=0 -O ihex $< $@ \
+	|| { echo empty $@ not generated; exit 0; }
 
 %_eeprom.srec: %.elf
-	$(OBJCOPY) -j .eeprom --change-section-lma .eeprom=0 -O srec $< $@
+	$(OBJCOPY) -j .eeprom --change-section-lma .eeprom=0 -O srec $< $@ \
+	|| { echo empty $@ not generated; exit 0; }
 
 %_eeprom.bin: %.elf
-	$(OBJCOPY) -j .eeprom --change-section-lma .eeprom=0 -O binary $< $@
+	$(OBJCOPY) -j .eeprom --change-section-lma .eeprom=0 -O binary $< $@ \
+	|| { echo empty $@ not generated; exit 0; }

@@ -31,11 +31,7 @@ uint8_t datalogging = ON;
  *  Timers, interrupts, UART, datalogging, ADC, IO
  * ******************************************************/
 void system_init() {
-
-    /****** System Timing *******/
-    DDRC |= (1 << PC0);                  //for timing requirement 
-    PORTC |= (1 << PC0);                 //begin timing
-
+ 
     /******** ICP1 *********/
     //Makes use of the input capture function on PORTD.4.
     TCCR1A = 0x00;                          //Normal mode, no compare
@@ -50,6 +46,15 @@ void system_init() {
                                             //256 clk prescale
     ETIMSK |= (1 << TICIE3);                 //Enable input capture interrupt
 
+    /******** Enable Global Interrupts *********/
+    sei();
+
+    /******** IO *********/
+    DDRB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Output for relay circuits
+    DDRB |= (1<<PIRATE_SWITCH);     //Pirate mode enable on PORTD.0 (INT0)
+    PORTB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Turn on relay circuits
+    PORTB |= (1<<PIRATE_SWITCH);     //Set high
+
     /******** System Timer *********/
     //Timer will run on the 32kHz oscillator to allow for a slower speed
     //Normal mode, 32,768Hz with 8 pre-scale = 16Hz = 62.5mS
@@ -61,12 +66,7 @@ void system_init() {
             (0 << CS01) | (1 << CS00);      //Normal mode, 8 prescale
     while(!((ASSR & 0b0111) == 0)) {}       //spin till registers finish updating
 
-    /******** IO *********/
-    DDRB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Output for relay circuits
-    DDRB |= (1<<PIRATE_SWITCH);     //Pirate mode enable on PORTD.0 (INT0)
-    PORTB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Turn on relay circuits
-    PORTB |= (1<<PIRATE_SWITCH);     //Set high
-
+   
     ///*** Calculate the system needed constants ***/
     tire_circ = TIRE_DIAM * M_PI;
     distance_per_pulse = tire_circ / SPROCKET_TEETH;
@@ -100,26 +100,27 @@ void system_init() {
     UBRR0L = 51;
 
     /****** UART2 *******/
-    uart1_init();
-/*    UCSR1B |= (1 << RXEN1) | (1 << TXEN1);      //Enable TX, RX
+    //uart1_init();
+    UCSR1B |= (1 << RXEN1) | (1 << TXEN1);      //Enable TX, RX
     UCSR1C |= (0<<UMSEL1)|(0<<USBS1)|(1<<UCSZ10)|(1<<UCSZ11);   //Async, no parity, 1 stop bit
                                                                 // 8-bit char size
     UBRR1H = (51 >> 8);      //set baudrate to 38.4k
     UBRR1L = 51;
-*/  
+  
     
     /****** For Block Checkoff *******/
-    //Send a value via UART
+/*    //Send a value via UART
     uint8_t i;
     char characters[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     for(i = 0; i < 10; i++) {
         uart1_putc(characters[i]);
         _delay_ms(1000);
     }
-
+*/
     //Send a value to the bar graph via SPI
-/*    DDRE = (1 << PE6) | (1 << PE5);  //set data direction for bar graph poke
-    *********** Send SPI Data **********
+//    DDRE = (1 << PE6) | (1 << PE5);  //set data direction for bar graph poke
+    //*********** Send SPI Data **********
+    /*_delay_ms(500);
     for(i = 1; i < 11; i++) {
         SPDR = i;
         while(bit_is_clear(SPSR, SPIF)) {} // wait until data is sent
@@ -129,13 +130,6 @@ void system_init() {
         _delay_ms(1000);
     }
 */
-
-    /******** Enable Global Interrupts *********/
-    sei();
-
-
-    PORTC &= ~(1 << PC0);   //end timing test
-
     /******************** End Testing **************************/
 
 
@@ -145,7 +139,14 @@ void system_init() {
 int main() {
 
 DDRB |= (1 << PB7);
+
+/****** System Timing *******/
+DDRC |= (1 << PC0);                  //for timing requirement 
+PORTC |= (1 << PC0);                 //begin timing
+
 system_init();
+
+PORTC &= ~(1 << PC0);   //end timing test
 
 while(1) {
 PORTB ^= (1 << PB7);

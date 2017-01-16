@@ -6,9 +6,7 @@
 #include <util/delay.h>
 #include "math.h"
 #include "uart_functions.h"
-//#include "hd44780.h"
 
-//#define F_CPU 16000000
 #define ON  1
 #define OFF 0
 #define TIRE_DIAM       22
@@ -19,44 +17,12 @@
 #define PIRATE_SWITCH   7
 
 //Global Variables
-//uint8_t tire_diam = 22;
-//uint8_t sprocket_teeth = 42;
 double tire_circ;
 double distance_per_pulse;
-//double speed;
 
 /*** Turn ON to enable datalogging ***/
 uint8_t datalogging = ON;
 
-
-/*** Extra stuff for testing ***/
-/*uint8_t           i;
-volatile uint8_t  rcv_rdy;
-char              rx_char; 
-char              lcd_str_array[16];  //holds string to send to lcd
-uint8_t           send_seq=0;         //transmit sequence number
-char              lcd_string[3];      //holds value of sequence number
-*/
-
-
-/********************************************************
- * Name: send_speed
- *
- * Description: This is not the completed "send speed"
- *  function. This is needed to verify the block 
- *  according to the testing proceedures in the block 
- *  description report.
- * ******************************************************/
-void send_speed() {
-
-    // For block checkoff testing proceedures
-    PORTC &= ~(1 << PC0);   //end timing test
-
-    // For block checkoff, send theoretical speed
-    //UDR0 = 10;      //send a speed of 10mph
-    //while(bit_is_clear(UCSR0A, TXC)) {} //wait for tx to complete
-
-}//send_speed
 
 /********************************************************
  * Name: system_init
@@ -95,10 +61,6 @@ void system_init() {
             (0 << CS01) | (1 << CS00);      //Normal mode, 8 prescale
     while(!((ASSR & 0b0111) == 0)) {}       //spin till registers finish updating
 
-
-    /******** Enable Global Interrupts *********/
-    //sei();
-
     /******** IO *********/
     DDRB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Output for relay circuits
     DDRB |= (1<<PIRATE_SWITCH);     //Pirate mode enable on PORTD.0 (INT0)
@@ -131,13 +93,12 @@ void system_init() {
     ADCSRA = (1<<ADEN)|(1<<ADIE)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
 
     /****** UART0 *******/
-    //uart_init();
-/*    UCSR0B |= (1 << RXEN0) | (1 << TXEN0);      //Enable TX, RX
+    UCSR0B |= (1 << RXEN0) | (1 << TXEN0);      //Enable TX, RX
     UCSR0C |= (0<<UMSEL0)|(0<<USBS0)|(1<<UCSZ00)|(1<<UCSZ01);   //Async, no parity, 1 stop bit
                                                                 // 8-bit char size
     UBRR0H = (51 >> 8);     //set baudrate to 38.4k
     UBRR0L = 51;
-*/
+
     /****** UART2 *******/
     uart1_init();
 /*    UCSR1B |= (1 << RXEN1) | (1 << TXEN1);      //Enable TX, RX
@@ -149,32 +110,31 @@ void system_init() {
     
     /****** For Block Checkoff *******/
     //Send a value via UART
-    //UDR0 = 5;
-    //while(bit_is_clear(UCSR0A, TXC)) {} // wait for tx to complete
-uint8_t i;
-/*char characters[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+    uint8_t i;
+    char characters[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     for(i = 0; i < 10; i++) {
         uart1_putc(characters[i]);
         _delay_ms(1000);
     }
-*/
-
 
     //Send a value to the bar graph via SPI
-    DDRE = (1 << PE6) | (1 << PE5);  //set data direction for bar graph poke
-    //*********** Send SPI Data **********
+/*    DDRE = (1 << PE6) | (1 << PE5);  //set data direction for bar graph poke
+    *********** Send SPI Data **********
     for(i = 1; i < 11; i++) {
         SPDR = i;
         while(bit_is_clear(SPSR, SPIF)) {} // wait until data is sent
-        //********** Bar Graph Portion *******************
+        ********** Bar Graph Portion *******************
         PORTE |= (1 << PE6);      // move graph data from shift to storage reg.
         PORTE &= ~(1 << PE6);     // change 3-state back to high Z
         _delay_ms(1000);
     }
+*/
+
+    /******** Enable Global Interrupts *********/
+    sei();
 
 
-    //PORTC &= ~(1 << PC0);   //end timing test
-    send_speed();
+    PORTC &= ~(1 << PC0);   //end timing test
 
     /******************** End Testing **************************/
 
@@ -182,30 +142,9 @@ uint8_t i;
 }//system_init
 
 
-/*******************************************************/
-/* void spi_init(void){*/
-       /* Run this code before attempting to write to the LCD.*/
-/*       DDRF  |= 0x08;  //port F bit 3 is enable for LCD
-       PORTF &= 0xF7;  //port F bit 3 is initially low
-          
-       DDRB  |= 0x07;  //Turn on SS, MOSI, SCLK
-       PORTB |= _BV(PB1);  //port B initalization for SPI, SS_n off
-       //see: /$install_path/avr/include/avr/iom128.h for bit definitions   
-        
-       //Master mode, Clock=clk/4, Cycle half phase, Low polarity, MSB first
-       SPCR=(1<<SPE) | (1<<MSTR); //enable SPI, clk low initially, rising edge sample
-       SPSR=(1<<SPI2X);           //SPI at 2x speed (8 MHz)  
-     }*/
-       /**/
-
 int main() {
 
 DDRB |= (1 << PB7);
-/*  spi_init();
-  lcd_init();
-  clear_display();
-  cursor_home();
-*/
 system_init();
 
 while(1) {

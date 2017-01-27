@@ -5,6 +5,7 @@
 #include "system_init.h"
 #include "pirate.h"
 #include "const.h"
+#include "user_io.h"
 //TODO: #include "speed.h"
 //TODO: #include "datalogging.h"
 
@@ -66,10 +67,14 @@ void system_init() {
     sei();
 
     /******** IO *********/
+    DDRA |= (1<<ACCELERATE) | (1<<CRUISE);  //Accelerate and cruise (input) buttons on PORTA.0-1
     DDRB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Output for relay circuits
-    DDRD |= (1<<PIRATE_SWITCH);     //Pirate mode enable on PORTD.0 (INT0)
+    DDRD |= (1<<PIRATE_SWITCH);             //Pirate mode enable on PORTD.0 (INT0)
+    PORTA |= (1<<ACCELERATE) | (1<<CRUISE); //Set pullup resistors
     PORTB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Turn on relay circuits
-    PORTD |= (1<<PIRATE_SWITCH);     //Set high
+    PORTD |= (1<<PIRATE_SWITCH);            //Set high
+
+    
 
     ///*** Calculate the system needed constants ***/
     tire_circ = TIRE_DIAM * M_PI;

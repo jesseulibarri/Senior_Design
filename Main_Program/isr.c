@@ -7,6 +7,9 @@
 #include <avr/interrupt.h>
 #include "speed.h"
 #include "datalogging.h"
+#include "system_init.h"
+#include "user_io.h"
+#include "pirate.h"
 
 
 /*********************************************************************
@@ -17,20 +20,65 @@
  *********************************************************************/
 ISR(TIMER0_OVF_vect) {
 
-    speed1 = calc_speed(&times1);
-    speed2 = calc_speed(&times2);
+    user_mode = PINA;
 
-    //Start ADC conversion to get steering angle
-    ADCSRA |= (1 << ADSC);                  //Poke ADSC and start conversion
-    while(bit_is_clear(ADCSRA, ADIF)) { }   //loop while interrupt flag not set
-    ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
+    switch(user_mode) 
+    {
+        //Accelerate button was let go
+        case 0x00:
+            pirate_mode();
+            system_init();
+            break;
+        //Accelerate button is pushed
+        case 0x01:
 
-    //TODO: Calculate new values for the motor controllers
-    //TODO: Build UART frame
-    //TODO: UART0 send
-    //TODO: UART1 send
+            speed1 = calc_speed(&times1);
+            speed2 = calc_speed(&times2);
 
-}
+            //TODO: This will go away if we use the SPI steering sensor
+            //Start ADC conversion to get steering angle
+            ADCSRA |= (1 << ADSC);                  //Poke ADSC and start conversion
+            while(bit_is_clear(ADCSRA, ADIF)) { }   //loop while interrupt flag not set
+            ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
+
+            //TODO: Calculate new values for the motor controllers
+            uint8_t some_number_1 = motor_torque();
+            uint8_t some_number_2 = motor_torque();
+            //TODO: Build UART frame
+            // frame(some_number_1);
+            // frame(some_number_2);
+            //TODO: UART0 send
+            // tx_UART0(frame1);
+            //TODO: UART1 send
+            // tx_UART1(frame2);
+            break;
+
+        //Accelerate button is pushed
+        case 0x02:
+
+            speed1 = calc_speed(&times1);
+            speed2 = calc_speed(&times2);
+
+            //TODO: This will go away if we use the SPI steering sensor
+            //Start ADC conversion to get steering angle
+            ADCSRA |= (1 << ADSC);                  //Poke ADSC and start conversion
+            while(bit_is_clear(ADCSRA, ADIF)) { }   //loop while interrupt flag not set
+            ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
+
+            //TODO: Calculate new values for the motor controllers
+            uint8_t some_number_3 = motor_torque();
+            uint8_t some_number_4 = motor_torque();
+            //TODO: Build UART frame
+            // frame(some_number_1);
+            // frame(some_number_2);
+            //TODO: UART0 send
+            // tx_UART0(frame1);
+            //TODO: UART1 send
+            // tx_UART1(frame2);
+            break;
+    }//switch
+
+}//timer0_ISR
 
 
 /*********************************************************************
@@ -46,9 +94,14 @@ ISR(INT0_vect){
 
 
 /*********************************************************************
- * ISR: speed_sensor_221
+ * ISR: speed_sensor_1
  *
- * Description: 
+ * Description: This interrupt will occur every time the speed sensor
+ *  sends a pulse the uC. The interrupt will capture the timestamp
+ *  that the pulse came in at, it will shift all the old timestamps
+ *  in the time array to make room for the new one. It will then put
+ *  the new stamp in position zero. As the car travels,
+ *  the stamps will constantly be shifted through the array. 
  *********************************************************************/
 ISR(TIMER1_CAPT_vect) {
 
@@ -56,27 +109,22 @@ ISR(TIMER1_CAPT_vect) {
     uint16_t timestamp = ICR1;
     static uint16_t timestamp_hist1 = 0;
 
-         //shift difference history over to make room for new
-         for(k = 9; k >= 0; k--) { times1[k+1] = times1[k]; }
+    //shift difference history over to make room for new
+    for(k = 9; k >= 0; k--) { times1[k+1] = times1[k]; }
      
-         //wrap around at the end of the timer
-         if(timestamp < timestamp_hist) { times1[0] = 65535 - timestamp_hist + timestamp; }
-         else { times1[0] = timestamp - timestamp_hist; }
+    //wrap around at the end of the timer
+    if(timestamp < timestamp_hist1) { times1[0] = 65535 - timestamp_hist1 + timestamp; }
+    else { times1[0] = timestamp - timestamp_hist1; }
               
-         timestamp_hist = timestamp;
+    timestamp_hist1 = timestamp;
     
-    /*
-    calc_speed();
-    spi_double_tx(speed1);
-    spi_8bit_tx(dropped_byte);
-*/
 }
 
 
 /*********************************************************************
  * ISR: speed_sensor_2
  *
- * Description: 
+ * Description: Same as speed_sensor_1 description. 
  *********************************************************************/
 ISR(TIMER3_CAPT_vect) {
 
@@ -84,20 +132,14 @@ ISR(TIMER3_CAPT_vect) {
     uint16_t timestamp = ICR3;
     static uint16_t timestamp_hist2 = 0;
 
-         //shift difference history over to make room for new
-         for(k = 9; k >= 0; k--) { times2[k+1] = times2[k]; }
-     
-         //wrap around at the end of the timer
-         if(timestamp < timestamp_hist) { times2[0] = 65535 - timestamp_hist + timestamp; }
-         else { times2[0] = timestamp - timestamp_hist; }
-              
-         timestamp_hist = timestamp;
+    //shift difference history over to make room for new
+    for(k = 9; k >= 0; k--) { times2[k+1] = times2[k]; }
+    
+    //wrap around at the end of the timer
+    if(timestamp < timestamp_hist2) { times2[0] = 65535 - timestamp_hist2 + timestamp; }
+    else { times2[0] = timestamp - timestamp_hist2; }
+           
+    timestamp_hist2 = timestamp;
 
-
-    /*
-    calc_speed();
-    spi_double_tx(speed2);
-    spi_8bit_tx(dropped_byte);
-*/
 }
 

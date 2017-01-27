@@ -20,6 +20,8 @@
 double tire_circ;
 double distance_per_pulse;
 
+uint16_t timestamps[16];
+
 /*** Turn ON to enable datalogging ***/
 uint8_t datalogging = ON;
 
@@ -68,8 +70,13 @@ void system_init() {
 
    
     ///*** Calculate the system needed constants ***/
+    uint8_t j;
     tire_circ = TIRE_DIAM * M_PI;
     distance_per_pulse = tire_circ / SPROCKET_TEETH;
+
+    for(j = 0; j < 9; j++) {
+        timestamps[j] = 0;
+    }
 
     /****** Datalogging *******/
     if(datalogging) { 
@@ -100,33 +107,35 @@ void system_init() {
     UBRR0L = 51;
 
     /****** UART2 *******/
-    //uart1_init();
-    UCSR1B |= (1 << RXEN1) | (1 << TXEN1);      //Enable TX, RX
+    uart1_init();
+/*    UCSR1B |= (1 << RXEN1) | (1 << TXEN1);      //Enable TX, RX
     UCSR1C |= (0<<UMSEL1)|(0<<USBS1)|(1<<UCSZ10)|(1<<UCSZ11);   //Async, no parity, 1 stop bit
                                                                 // 8-bit char size
     UBRR1H = (51 >> 8);      //set baudrate to 38.4k
     UBRR1L = 51;
-  
+*/  
     
     /****** For Block Checkoff *******/
-/*    //Send a value via UART
-    uint8_t i;
+    
+    //Send a value via UART
+ /*   uint8_t i;
     char characters[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     for(i = 0; i < 10; i++) {
         uart1_putc(characters[i]);
         _delay_ms(1000);
     }
 */
-    //Send a value to the bar graph via SPI
-//    DDRE = (1 << PE6) | (1 << PE5);  //set data direction for bar graph poke
     //*********** Send SPI Data **********
-    /*_delay_ms(500);
+    //Send a value to the bar graph via SPI
+/*    DDRF = (1 << PF6) | (1 << PF5);  //set data direction for bar graph poke
+
+    _delay_ms(500);
     for(i = 1; i < 11; i++) {
         SPDR = i;
         while(bit_is_clear(SPSR, SPIF)) {} // wait until data is sent
         ********** Bar Graph Portion *******************
-        PORTE |= (1 << PE6);      // move graph data from shift to storage reg.
-        PORTE &= ~(1 << PE6);     // change 3-state back to high Z
+        PORTF |= (1 << PF6);      // move graph data from shift to storage reg.
+        PORTF &= ~(1 << PF6);     // change 3-state back to high Z
         _delay_ms(1000);
     }
 */
@@ -141,12 +150,12 @@ int main() {
 DDRB |= (1 << PB7);
 
 /****** System Timing *******/
-DDRC |= (1 << PC0);                  //for timing requirement 
-PORTC |= (1 << PC0);                 //begin timing
+DDRA |= (1 << PA0);                  //for timing requirement 
+PORTA |= (1 << PA0);                 //begin timing
 
 system_init();
 
-PORTC &= ~(1 << PC0);   //end timing test
+PORTA &= ~(1 << PA0);   //end timing test
 
 while(1) {
 PORTB ^= (1 << PB7);

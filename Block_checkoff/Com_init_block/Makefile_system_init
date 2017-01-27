@@ -1,8 +1,8 @@
 PRG             =system_init
 #PRG				=uart_test
 
-OBJS            =system_init.o uart_functions.o hd44780.o
-SRCS            =system_init.c uart_functions.c hd44780.c
+OBJS            =system_init.o uart_functions.o #hd44780.o
+SRCS            =system_init.c uart_functions.c #hd44780.c
 
 MCU_TARGET     = atmega128
 #MCU_TARGET     = atmega48

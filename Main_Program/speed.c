@@ -3,9 +3,11 @@
 #include "speed.h"
 #include "const.h"
 #include "datalogging.h"
+#include "user_io.h"
 
-double speed1;
-double speed2;
+float speed1;
+float speed2;
+float target_speed;
 uint16_t times1[10] = {1};
 uint16_t times2[10] = {1};
 
@@ -28,36 +30,35 @@ uint16_t calc_avg(uint16_t *array) {
  *
  * Description: Calculates the speed based on the incoming speed sensor pulse.
  *************************************************************************************/
-void calc_speed() {
+float calc_speed(uint16_t *times) {
 
-    int8_t k;
-    uint16_t timestamp = ICR1;
-    static uint16_t timestamp_hist = 0;
-    static uint16_t timestamp_dif[10] = {1};
-    //static uint16_t timestamp_dif;
-    static uint16_t timestamp_avg_dif;
-
-    //shift difference history over to make room for new
-    for(k = 9; k >= 0; k--) { timestamp_dif[k+1] = timestamp_dif[k]; }
-
-    if(timestamp < timestamp_hist) {
-        //timestamp_dif = 65535 - timestamp_hist + timestamp;
-        timestamp_dif[0] = 65535 - timestamp_hist + timestamp;
-    } 
-    else 
-        //timestamp_dif = timestamp - timestamp_hist;
-        timestamp_dif[0] = timestamp - timestamp_hist;
-
-    timestamp_avg_dif = calc_avg(timestamp_dif);
-    double msec = (double)timestamp_avg_dif * COUNT_PERIOD;
-    double seconds = msec / 1000;
-    speed1 = (distance_per_pulse / seconds) * (1 / MPH_TO_SEC_PER_IN);
-    timestamp_hist = timestamp;
-
-    //TODO: Change the function so that it returns the calculated speed.
-    //  This will allow us to use the same function for both speed sensors.
-
+    uint16_t timestamp_avg_dif = calc_avg(times);
+    float msec = (float)timestamp_avg_dif * COUNT_PERIOD;
+    float seconds = msec / 1000;
+    float speed = (distance_per_pulse / seconds) * (1 / MPH_TO_SEC_PER_IN);
+return speed;
+   
 }//calc_speed
 
 
+uint8_t motor_torque() {
 
+    static uint8_t dummy_torque = 0;
+    static uint8_t dummy_torque2;
+
+    //TODO: For now, this is just a dummy function as a tester
+    switch(user_mode)
+    {
+        //We are accelerating
+        case 0x01:
+            target_speed = speed1;
+            if(dummy_torque > 25) { dummy_torque = 0; }
+            return dummy_torque++;
+
+        //We are cruising
+        case 0x02:
+            if(target_speed < speed1) { dummy_torque2 = 0; }
+            else { dummy_torque2 = 5; }
+            return dummy_torque2;
+    }//switch
+}//motor_torque

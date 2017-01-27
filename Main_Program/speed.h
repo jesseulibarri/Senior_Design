@@ -7,15 +7,16 @@
 #ifndef SPEED_H
 #define SPEED_H
 
-extern double speed1;
-extern double speed2;
+extern float speed1;
+extern float speed2;
 
 //timestamps from the input capture pin
 extern uint16_t times1[10];
 extern uint16_t times2[10];
 
 uint16_t calc_avg(uint16_t *array);
-void calc_speed();
+float calc_speed();
+uint8_t motor_torque();
 
 //TODO: Need to change calc speed so that it takes in an array
 //  of speed timestamps, and outputs the calculated speed.

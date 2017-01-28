@@ -1,13 +1,13 @@
 #include "frame.h"
 #include "commands.h"
 #include "datatypes.h"
-#include "uart.h"
-#include "motor.h"
-#include "arm_math.h"
-#include "sampling.h"
-#include "adc.h"
-#include "constants.h"
-#include "hall.h"
+//#include "uart.h"
+//#include "motor.h"
+//#include "arm_math.h"
+//#include "sampling.h"
+//#include "adc.h"
+//#include "constants.h"
+//#include "hall.h"
 
 static struct DataFrame_t resp;
 

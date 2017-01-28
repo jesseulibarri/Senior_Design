@@ -100,6 +100,7 @@ void system_init() {
     ADCSRA = (1<<ADEN)|(1<<ADIE)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
 
     /****** UART0 *******/
+    //uart_init();
     UCSR0B |= (1 << RXEN0) | (1 << TXEN0);      //Enable TX, RX
     UCSR0C |= (0<<UMSEL0)|(0<<USBS0)|(1<<UCSZ00)|(1<<UCSZ01);   //Async, no parity, 1 stop bit
                                                                 // 8-bit char size
@@ -118,27 +119,27 @@ void system_init() {
     /****** For Block Checkoff *******/
     
     //Send a value via UART
- /*   uint8_t i;
+    uint8_t i;
     char characters[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     for(i = 0; i < 10; i++) {
         uart1_putc(characters[i]);
         _delay_ms(1000);
     }
-*/
+
     //*********** Send SPI Data **********
     //Send a value to the bar graph via SPI
-/*    DDRF = (1 << PF6) | (1 << PF5);  //set data direction for bar graph poke
+    DDRF = (1 << PF6) | (1 << PF5);  //set data direction for bar graph poke
 
     _delay_ms(500);
     for(i = 1; i < 11; i++) {
         SPDR = i;
         while(bit_is_clear(SPSR, SPIF)) {} // wait until data is sent
-        ********** Bar Graph Portion *******************
+        //********** Bar Graph Portion *******************
         PORTF |= (1 << PF6);      // move graph data from shift to storage reg.
         PORTF &= ~(1 << PF6);     // change 3-state back to high Z
         _delay_ms(1000);
     }
-*/
+
     /******************** End Testing **************************/
 
 

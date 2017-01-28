@@ -19,7 +19,7 @@ int main(){
 
     printf("Message contents: ");
     for(int i=0; i < message.length; i++){
-        printf("%s ", message.data[i]);
+        printf("%i ", message.data[i]);
     }
     
     printf("\n");
@@ -36,7 +36,7 @@ int main(){
    
     printf("Encoded message contents: ");
     for(int i=0; i < message.length; i++){
-        printf("%02x ", message.data[i]);
+        printf("%i ", message.data[i]);
     }
  
     printf("\n");
@@ -58,7 +58,7 @@ int main(){
 
     printf("Decoded message contents: ");
     for(int i=0; i < message.length; i++){
-        printf("%02x ", message.data[i]);
+        printf("%i ", message.data[i]);
     }
  
     printf("\n");

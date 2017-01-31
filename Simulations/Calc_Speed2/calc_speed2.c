@@ -14,8 +14,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "../Extern_Files/hd44780.h"
-#define PI 3.14159
-#define count_period    0.016
+#define PI 3.14159F
+#define count_period    0.016F
 
 //Function Headers
 void real_clk_init();
@@ -44,7 +44,25 @@ char char_numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 ISR(TIMER1_CAPT_vect) {
 
     PORTC |= (1 << PC1);
-    calc_speed();
+    uint16_t timestamp = ICR1;
+    static uint16_t timestamp_hist = 0;
+    static uint16_t times1[10] = {1};
+
+    //shift difference history over to make room for new
+    for(k = 9; k >= 0; k--) { timestamp_dif[k+1] = timestamp_dif[k]; }
+
+    //wrap around at the end of the timer
+    if(timestamp < timestamp_hist) {
+        //timestamp_dif = 65535 - timestamp_hist + timestamp;
+        times1[0] = 65535 - timestamp_hist + timestamp;
+    } 
+    else 
+        //timestamp_dif = timestamp - timestamp_hist;
+        times1[0] = timestamp - timestamp_hist;
+
+    timestamp_hist = timestamp;
+
+    speed = calc_speed(times1);
     spi_double_transmit(speed);
     spi_8bit_transmit(dropped_byte);
     //dropped_byte++;
@@ -191,34 +209,34 @@ uint16_t calc_avg(uint16_t *array) {
  *
  * Description: Calculates the speed based on the incoming speed sensor pulse.
  *************************************************************************************/
-void calc_speed() {
+float calc_speed(uint16_t *timestamps) {
 
     PORTC |= (1 << PC0);
-    int8_t k;
-    uint16_t timestamp = ICR1;
-    static uint16_t timestamp_hist = 0;
-    static uint16_t timestamp_dif[10] = {1};
-    //static uint16_t timestamp_dif;
+    //int8_t k;
+    //uint16_t timestamp = ICR1;
+    //static uint16_t timestamp_hist = 0;
+    //static uint16_t timestamp_dif[10] = {1};
+    ////static uint16_t timestamp_dif;
     static uint16_t timestamp_avg_dif;
 
     //shift difference history over to make room for new
-    for(k = 9; k >= 0; k--) { timestamp_dif[k+1] = timestamp_dif[k]; }
+    //for(k = 9; k >= 0; k--) { timestamp_dif[k+1] = timestamp_dif[k]; }
 
-    if(timestamp < timestamp_hist) {
-        //timestamp_dif = 65535 - timestamp_hist + timestamp;
-        timestamp_dif[0] = 65535 - timestamp_hist + timestamp;
-    } 
-    else 
-        //timestamp_dif = timestamp - timestamp_hist;
-        timestamp_dif[0] = timestamp - timestamp_hist;
+    //if(timestamp < timestamp_hist) {
+    //    //timestamp_dif = 65535 - timestamp_hist + timestamp;
+    //    timestamp_dif[0] = 65535 - timestamp_hist + timestamp;
+    //} 
+    //else 
+    //    //timestamp_dif = timestamp - timestamp_hist;
+    //    timestamp_dif[0] = timestamp - timestamp_hist;
 
-    timestamp_avg_dif = calc_avg(timestamp_dif);
+    timestamp_avg_dif = calc_avg(timestamps);
     double msec = (double)timestamp_avg_dif * count_period;
     double seconds = msec / 1000;
     speed = (distance_per_pulse/ seconds) * (1 / 17.6);
-    timestamp_hist = timestamp;
+    //timestamp_hist = timestamp;
     PORTC &= ~(1 << PC0);
-
+return speed;
 }//calc_speed
 
 

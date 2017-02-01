@@ -19,7 +19,7 @@ int main(){
 
     printf("Message contents: ");
     for(int i=0; i < message.length; i++){
-        printf("%02x ", message.data[i]);
+        printf("%i ", message.data[i]);
     }
     
     printf("\n");
@@ -27,16 +27,16 @@ int main(){
     printf("\n");
     printf("Message CRC: %i ", message.crc);
     printf("\n");
-    //printf("%s ", message.operation);
+    printf("%s ", message.operation);
     printf("\n");
-    //printf("%s ", message.status);
+    printf("%s ", message.status);
 
 
     frame_encode(&message);
    
     printf("Encoded message contents: ");
     for(int i=0; i < message.length; i++){
-        printf("%02x ", message.data[i]);
+        printf("%i ", message.data[i]);
     }
  
     printf("\n");
@@ -44,9 +44,9 @@ int main(){
     printf("\n");
     printf("Encoded message CRC: %i ", message.crc);
     printf("\n");
-    //printf("%s ", message.operation);
+    printf("%s ", message.operation);
     printf("\n");
-    //printf("%s ", message.status);
+    printf("%s ", message.status);
 
 
     uint8_t Flag = frame_verify_crc(&message);
@@ -58,7 +58,7 @@ int main(){
 
     printf("Decoded message contents: ");
     for(int i=0; i < message.length; i++){
-        printf("%02x ", message.data[i]);
+        printf("%i ", message.data[i]);
     }
  
     printf("\n");
@@ -66,48 +66,9 @@ int main(){
     printf("\n");
     printf("Decoded message CRC: %i ", message.crc);
     printf("\n");
-    //printf("%s ", message.operation);
+    printf("%s ", message.operation);
     printf("\n");
-    //printf("%s ", message.status);
- 
-
-
-    /*char output[30];*/
-    /*frame_encode(output, msg, sizeof(msg));*/
-
-    //printf("Encoded: ");
-    //for(int i=0; i < 7; i++){
-    //    printf("\\x%02x", output[i]);
-    //}
-    //printf("\n");
-
-    /*char decoded[40];*/
-    /*frame_decode(decoded, output);*/
-
-    /*for(int i=0; i < sizeof(msg); i++){*/
-        /*printf("%02x ", decoded[i]);*/
-    /*}*/
-    /*printf("\n");*/
-
-    /*unsigned int crc = 0;*/
-    /*for(int i=0; i < sizeof(msg); i++)*/
-        /*crc = frame_update_crc(crc, msg[i]);*/
-
-    /*printf("%04x\n", crc);*/
-
-    /*unsigned char tmp[100];*/
-    /*memcpy(tmp, msg, sizeof(msg));*/
-    /*tmp[sizeof(msg)] = (crc >> 8) & 0xFF;*/
-    /*tmp[sizeof(msg)+1] = (crc >> 0) & 0xFF;*/
-
-    /*for(int i=0; i < sizeof(msg) + 2; i++){*/
-        /*printf("%02x ", tmp[i]);*/
-    /*}*/
-
-    /*printf("\n");*/
-
-    /*printf("%d\n", frame_verify_crc(tmp, sizeof(msg) + 2));*/
-
+    printf("%s ", message.status);
 
 
     return 0;

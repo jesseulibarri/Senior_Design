@@ -20,6 +20,9 @@
  *********************************************************************/
 ISR(TIMER0_OVF_vect) {
 
+    uint8_t torque1;
+    uint8_t torque2;
+
     user_mode = PINA;
 
     switch(user_mode) 
@@ -33,6 +36,7 @@ ISR(TIMER0_OVF_vect) {
         case 0x01:
 
             speed1 = calc_speed(&times1);
+            //speed two will not be needed if we only use one speed sensor
             speed2 = calc_speed(&times2);
 
             //TODO: This will go away if we use the SPI steering sensor
@@ -42,10 +46,16 @@ ISR(TIMER0_OVF_vect) {
             ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
 
             //TODO: Calculate new values for the motor controllers
-            uint8_t some_number_1 = motor_torque();
-            uint8_t some_number_2 = motor_torque();
+            torque1 = motor_torque();
+            torque2 = motor_torque();
             //TODO: Build UART frame
             // frame(some_number_1);
+
+            //***** Set data to LCD *******
+            UDR0 = torque1;
+            while(bit_is_clear(UCSR0A, TXC0)) {}
+            UDR1 = torque2;
+            while(bit_is_clear(UCSR1A, TXC1)) {}
             // frame(some_number_2);
             //TODO: UART0 send
             // tx_UART0(frame1);
@@ -57,6 +67,7 @@ ISR(TIMER0_OVF_vect) {
         case 0x02:
 
             speed1 = calc_speed(&times1);
+            //speed two will not be needed if we only use one speed sensor
             speed2 = calc_speed(&times2);
 
             //TODO: This will go away if we use the SPI steering sensor
@@ -66,9 +77,16 @@ ISR(TIMER0_OVF_vect) {
             ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
 
             //TODO: Calculate new values for the motor controllers
-            uint8_t some_number_3 = motor_torque();
-            uint8_t some_number_4 = motor_torque();
+            torque1 = motor_torque();
+            torque1 = motor_torque();
             //TODO: Build UART frame
+
+            //***********
+            UDR0 = torque1;
+            while(bit_is_clear(UCSR0A, TXC0)) {}
+            UDR1 = torque2;
+            while(bit_is_clear(UCSR1A, TXC1)) {}
+
             // frame(some_number_1);
             // frame(some_number_2);
             //TODO: UART0 send
@@ -84,12 +102,18 @@ ISR(TIMER0_OVF_vect) {
 /*********************************************************************
  * ISR: pirate_mode
  *
- * Description: 
+ * Description: The pirate mode switch is connected to external
+ *  interrupt 0. If triggered, the pirate mode function will be called.
  *********************************************************************/
 
 ISR(INT0_vect){
+
+    //NOT SURE WHAT THIS IS FOR
     EIMSK &= ~(1<<INT0);
-    
+
+    pirate_mode();
+    system_init();
+
 }//ISR
 
 

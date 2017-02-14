@@ -9,6 +9,13 @@
 //TODO: #include "speed.h"
 //TODO: #include "datalogging.h"
 
+#define USART_BAUDRATE 38400  
+#define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16UL)) - 1 )
+
+#define USART1_BAUDRATE 38400  
+#define BAUDVALUE_1  ((F_CPU/(USART1_BAUDRATE * 16UL)) - 1 )
+
+
 /*
 //Global Variables
 uint8_t tire_diam = 22;
@@ -21,6 +28,7 @@ uint8_t dropped_byte = 0;
 
 /*** Turn ON to enable datalogging ***/
 uint8_t datalogging = OFF;
+uint8_t spi_steering = ON;
 
 
 /********************************************************
@@ -32,8 +40,8 @@ uint8_t datalogging = OFF;
 void system_init() {
 
     /****** System Timing *******/
-    DDRC |= (1 << PC0);                  //for timing requirement 
-    PORTC |= (1 << PC0);                 //begin timing
+    DDRC |= (1 << PC0);                     //for timing requirement 
+    PORTC |= (1 << PC0);                    //begin timing
 
     /******** ICP1 *********/
     //Makes use of the input capture function on PORTD.4.
@@ -47,7 +55,7 @@ void system_init() {
     TCCR3A = 0x00;                          //Normal mode, no compare
     TCCR3B |= (1 << ICES3) | (1 << CS32);   //Input capture on rising edge,
                                             //256 clk prescale
-    ETIMSK |= (1 << TICIE3);                 //Enable input capture interrupt
+    ETIMSK |= (1 << TICIE3);                //Enable input capture interrupt
 
     /******** System Timer *********/
     //Timer will run on the 32kHz oscillator to allow for a slower speed
@@ -74,8 +82,6 @@ void system_init() {
     PORTB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Turn on relay circuits
     PORTD |= (1<<PIRATE_SWITCH);            //Set high
 
-    
-
     ///*** Calculate the system needed constants ***/
     tire_circ = TIRE_DIAM * M_PI;
     distance_per_pulse = tire_circ / SPROCKET_TEETH;
@@ -90,7 +96,24 @@ void system_init() {
         SPSR = (1<<SPI2X);
 
     }//if datalogging
+
+    /****** spi_steering sensor *******/
+    if(spi_steering) { 
+
+        //Set data direction for SPI and set pullup for MISO
+        DDRB = (1<<PB0)|(1<<PB1)|(1<<PB2)|(0<<PB3);
+        PORTB |= (1<<PB3);
+        DDRD = (1<<PD0);   //ss for encoder
+
+        //SPCR |= 1 << SPIE;    //Enable interrupts
+        //SPCR |= 0 << SPIE;    //Disable interrupts
     
+        //Enable SPI, shift LSB first, master mode, clk low on idle, 
+        //  data sampled on rising edge, clk / 16 = 1MHz datarate
+        SPCR = (1<<SPE)|(0<<DORD)|(1<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR0);
+
+    }//if spi_steering
+
     /******** ADC *********/
     //Initalize ADC and the ports
     DDRF &= ~(1<<PF1);  //Port F bit 1 is ADC input
@@ -102,14 +125,14 @@ void system_init() {
     ADCSRA = (1<<ADEN)|(1<<ADIE)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
 
     /****** UART0 *******/
-    //TODO: UART interrupts
-    UCSR0B |= (1 << RXEN0) | (1 << TXEN0);      //Enable TX, RX
+    //UCSR0B |= (1<<RXCIE0)|(1<<TXCIE0)|(1<<RXEN0)|(1<<TXEN0);  //Enable TX, RX, interrupts
+    UCSR0B |= (1 << RXEN0) | (1 << TXEN0);                      //Enable TX, RX
     UCSR0C |= (0<<UMSEL0)|(0<<USBS0)|(1<<UCSZ00)|(1<<UCSZ01);   //Async, no parity, 1 stop bit
                                                                 // 8-bit char size
 
     /****** UART2 *******/
-    //TODO: UART interrupts
-    UCSR1B |= (1 << RXEN1) | (1 << TXEN1);      //Enable TX, RX
+    //UCSR1B |= (1<<RXCIE1)|(1<<TXCIE1)|(1<<RXEN1)|(1<<TXEN1);  //Enable TX, RX, interrupts
+    UCSR1B |= (1 << RXEN1) | (1 << TXEN1);                      //Enable TX, RX
     UCSR1C |= (0<<UMSEL1)|(0<<USBS1)|(1<<UCSZ10)|(1<<UCSZ11);   //Async, no parity, 1 stop bit
                                                                 // 8-bit char size
     

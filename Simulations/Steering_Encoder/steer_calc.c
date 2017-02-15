@@ -13,7 +13,7 @@
 #include <util/delay.h>
 #include <string.h>
 #include <stdlib.h>
-//#include "../Extern_Files/hd44780.h"
+
 
 //Function headers
 void spi_init();
@@ -24,35 +24,24 @@ uint16_t adc_conversion();
 double calc_angle(uint16_t, const double, const double);
 
 //Global variables
-uint8_t i;
 uint16_t    adc_result;
 double  angle;
 const double SF = 0.4396;
 const double deg_offset = 90.118;
 
-//union Data {
-  //  uint8_t byte[4];
-  //  double dval;
-
-//}; 
-
 //Main program
 int main(){
 
-//Initalize SPI ports
-spi_init();
-//Initalize ADC ports
-adc_init();
+    //Initalize SPI ports
+    spi_init();
+    //Initalize ADC ports
+    adc_init();
 
-while(1){
-    adc_result = adc_conversion();  //Execute ADC conversion
-    spi_16bit_transmit(adc_result); //Transmit ADC result over SPI
-    _delay_ms(100);                 //Delay 100ms
-
-    angle = calc_angle(adc_result, SF, deg_offset); //Calculate angle
-    spi_double_transmit(angle);                     //Transmit angle over SPI
-    _delay_ms(100);                                 //Delay 100ms
-
+    while(1){
+        adc_result = adc_conversion();  //Execute ADC conversion
+        spi_16bit_transmit(adc_result); //Transmit ADC result over SPI
+        angle = calc_angle(adc_result, SF, deg_offset); //Calculate angle
+        spi_double_transmit(angle);                     //Transmit angle over SPI    
     }//while
 }//main
 
@@ -65,11 +54,11 @@ while(1){
  * **************************************************************************/
 void spi_init(){
     
-    //Set MOSI, SCK as output
+    //Set MISO for output
     DDRB |= (1<<PB3);
     //Configure SPI (Slave mode, clk low on idle, rising edge sample)
     SPCR = (1<<SPE)|(0<<MSTR)|(0<<CPOL)|(0<<CPHA); 
-    SPSR = (1<<SPR1)|(1<<SPR0);
+    SPSR = (1<<SPI2x);
 }
 
 /**************************************************************************************
@@ -119,13 +108,12 @@ void adc_init(){
     ADCSRA = (1<<ADEN)|(1<<ADIE)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
 }
 
-/***************************************
+/*************************************************************************************
  * Name adc_conversion
  *
- * Description
- *
- *
- **************************************/
+ * Description: This function completes 1 ADC conversion and returns a 16 bit integer
+ *  from 0-1024.
+ ************************************************************************************/
 uint16_t adc_conversion(){
     ADCSRA |= (1<<ADSC); //Set ADSC and start conversion
     while(bit_is_clear(ADCSRA,ADIF)){}   //loop while interrupt flag not set
@@ -133,12 +121,16 @@ uint16_t adc_conversion(){
     return ADC;   //Read the ADC output as 16 bits and return
 }
 
-/*************************************
+/***************************************************************************************
+ * Name: calc_angle
  *
- *
- *
- *
- ************************************/
+ * Description: This function is used to calculate the angle corresponding to the 
+ * 0-1024 16 bit integer that was returned from the adc_conversion. The scaling
+ * factor is calculated by 360deg/(1024-starting data point at 1V). The scaling 
+ * factor used right now assumes 1V = data point 205. This is the starting point for 0
+ * degrees. this is because the steering sensor sends an analog signal from 4-20mA. 
+ * Using a resistor we will scale 4-20mA to 1-5V.
+ ***************************************************************************************/
 double calc_angle(uint16_t adc_result, const double SF, const double deg_offset){
     double result;
     result = (adc_result*SF)-(deg_offset);

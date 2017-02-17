@@ -27,6 +27,11 @@
 float torque_right = 0.0;
 float torque_left = 0.0;
 
+struct int_frac{
+    uint16_t integer;
+    uint16_t fraction;
+};
+
 /****************************************************************
  * Name: timer1_init
  *
@@ -34,17 +39,17 @@ float torque_left = 0.0;
  ****************************************************************/
 void timer1_init(){
     //Initialize 16 bit Timer/Counter 1 for Fast PWM
-    TCCR1A = (1<<WGM11)|(1<<WGM10);
-    TCCR1B = (1<<WGM13)|(1<<WGM12);
+    TCCR1A |= (1<<WGM11)|(1<<WGM10);
+    TCCR1B |= (1<<WGM13)|(1<<WGM12);
     
     //Set Prescalar to 64
-    TCCR1B = (1<<CS11)|(1<<CS10);
+    TCCR1B |= (1<<CS11)|(1<<CS10);
 
     //Set Output Comare Match A Value
     OCR1A = 24999; 
 
     //Configure Timer/Counter 1 Output Compare Match A Interrupt
-    TIMSK = (1<<TOIE1);
+    TIMSK |= (1<<TOIE1);
 
 }//timer1_init
 
@@ -83,13 +88,13 @@ void spi_init(void){
  *
  * Description: 
  ****************************************************************/
-uint16_t spi_float_to_int(float number){
-    uint16_t result;
-    uint16_t integer_part = (uint16_t)number;
-    uint16_t fraction_part = 1000 * (number - integer_part);
+void spi_float_to_int(struct int_frac *value, float number){
+    //uint16_t result;
+    value->integer = (uint16_t)number;
+    value->fraction = 1000 * (number - value->integer);
     
-    result = (integer_part<<8)|(fraction_part);
-    return result;
+    //result = (integer_part<<8);//|(fraction_part);
+    //return value;
 }
 
 /****************************************************************
@@ -167,9 +172,10 @@ void motor_torque(float* torque_right, float* torque_left){
     general_torque = general_torque + 0.5;
     static uint8_t max_torque = 25;
    
-    uint8_t user_mode = PIND || 0x7F;
+    uint8_t user_mode = PIND | 0x7F;
 
-    angle = get_angle();
+    //angle = get_angle();
+    angle = 10;
 
     switch(user_mode){
 
@@ -197,6 +203,14 @@ void motor_torque(float* torque_right, float* torque_left){
             break;
         //Cruise Mode
         case 0x03:
+            break;
+        default:
+            if(general_torque != 0) {
+                general_torque = 0;
+                *torque_left = 0;
+                *torque_right = 0;
+            }
+            else {}
             break;
 
     }//switch
@@ -228,7 +242,7 @@ ISR(INT0_vect){
 ISR(TIMER1_OVF_vect){
     PORTB ^= (1<<PB7);
     motor_torque(&torque_right, &torque_left);
-    //spi_init();
+    spi_init();
 
 }//timer1_isr
 
@@ -236,8 +250,8 @@ ISR(TIMER1_OVF_vect){
 
 int main(){
 
-    uint16_t TR;
-    uint16_t TL;
+    struct int_frac TR;
+    struct int_frac TL;
     char lcd_data1[16] = {"         "};
     char lcd_data2[16] = {"             "};
     char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
@@ -254,28 +268,34 @@ int main(){
     sei();
 
     while(1){
-        TR = spi_float_to_int(torque_right);
-        TL = spi_float_to_int(torque_left);
+        spi_float_to_int(&TR, torque_right);
+        spi_float_to_int(&TL, torque_left);
     
         clear_display();
         cursor_home();
 
         //PORTB ^= (1<<PB7);
 
-        lcd_data1[0] = numbers[TR/1000 % 10];
-        lcd_data1[1] = numbers[TR/100 % 10];
-        lcd_data1[2] = numbers[TR/10 % 10];
-        lcd_data1[3] = numbers[TR % 10];
+        lcd_data1[0] = numbers[TR.integer/100 % 10];
+        lcd_data1[1] = numbers[TR.integer/10 % 10];
+        lcd_data1[2] = numbers[TR.integer % 10];
+        lcd_data1[3] = '.';
+        lcd_data1[4] = numbers[TR.fraction/100 % 10];
+        lcd_data1[5] = numbers[TR.fraction/10 % 10];
+        lcd_data1[6] = numbers[TR.fraction % 10];
 
-        lcd_data2[0] = numbers[TL/1000 % 10];
-        lcd_data2[1] = numbers[TL/100 % 10];
-        lcd_data2[2] = numbers[TL/10 % 10];
-        lcd_data2[3] = numbers[TL % 10];
+        lcd_data2[0] = numbers[TL.integer/100 % 10];
+        lcd_data2[1] = numbers[TL.integer/10 % 10];
+        lcd_data2[2] = numbers[TL.integer % 10];
+        lcd_data2[3] = '.';
+        lcd_data2[4] = numbers[TL.fraction/100 % 10];
+        lcd_data2[5] = numbers[TL.fraction/10 % 10];
+        lcd_data2[6] = numbers[TL.fraction % 10];
         
         string2lcd(lcd_data1);
         string2lcd(lcd_data2);
 
-//        _delay_ms(100);
+        _delay_ms(20);
 /*
         if(PIND & (1<<PD0)){
             pirate_mode();

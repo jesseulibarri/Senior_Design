@@ -22,15 +22,22 @@
 #define speed2_relay 5      //Port C Pin 1
 #define pc_relay 6          //Port C pin 2
 #define pirate_switch 0     //Port D Pin 0
-
-//Global Torque Variables
+#define BAUD 9600           //USART Baud Rate
+#define FOSC 16000000
+#define MYUBBR FOSC/16/BAUD-1
+//Global Variables
 float torque_right = 0.0;
 float torque_left = 0.0;
+uint16_t steering_angle;
 
 struct int_frac{
     uint16_t integer;
     uint16_t fraction;
 };
+
+    struct int_frac TR;
+    struct int_frac TL;
+    uint8_t data_array[10];
 
 /****************************************************************
  * Name: timer1_init
@@ -164,18 +171,19 @@ uint16_t get_angle(){
  *
  * Description: 
  ****************************************************************/
-void motor_torque(float* torque_right, float* torque_left){
+void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle){
     
     uint16_t angle;
     float torque_ratio;
     static float general_torque;
-    general_torque = general_torque + 0.5;
+    general_torque = general_torque + 0.1;
     static uint8_t max_torque = 25;
    
     uint8_t user_mode = PIND | 0x7F;
 
-    //angle = get_angle();
-    angle = 10;
+    angle = get_angle();
+    *steer_angle = angle;
+    
 
     switch(user_mode){
 
@@ -216,6 +224,32 @@ void motor_torque(float* torque_right, float* torque_left){
     }//switch
 }//motor_torque
 
+void usart_init(unsigned char ubrr){
+    
+    //Set Baud Rate at 9600
+    UBRR1H = (unsigned char)(ubrr>>8);
+    UBRR1L = (unsigned char)ubrr;
+
+    //Enable Transmitter and Reciever
+    UCSR1B = (1<<RXEN)|(1<<TXEN);
+    
+    //Set Frame Format, 8 bit data, 2 stop bit, Asynchronous
+    UCSR1C |= (1<<UCSZ11)|(1<<UCSZ10)|(1<<USBS1);
+}//usart_init
+
+void usart_transmit(uint8_t data_array[]){
+    int i = 0;
+    for(;i<10; i++){
+        //Wait for empty transmit buffer
+        while(!(UCSR1A & (1<<UDRE1)));
+
+    //Put data into buffer, send data
+        UDR1 = data_array[i];
+        }//for
+}//usart_transmit
+
+
+
 
 void pirate_mode(){
 
@@ -241,8 +275,23 @@ ISR(INT0_vect){
 
 ISR(TIMER1_OVF_vect){
     PORTB ^= (1<<PB7);
-    motor_torque(&torque_right, &torque_left);
+    PORTF |= (1<<PF0);
+    motor_torque(&torque_right, &torque_left, &steering_angle);
+    spi_float_to_int(&TR, torque_right);
+    spi_float_to_int(&TL, torque_left);
+    data_array[0] = TR.integer >> 8;
+    data_array[1] = TR.integer & 0x00FF;
+    data_array[2] = TR.fraction >> 8;
+    data_array[3] = TR.fraction & 0x00FF;
+    data_array[4] = TL.integer >> 8;
+    data_array[5] = TL.integer & 0x00FF;
+    data_array[6] = TL.fraction >> 8;
+    data_array[7] = TL.fraction & 0x00FF;
+    data_array[8] = steering_angle >> 8;
+    data_array[9] = steering_angle & 0x00FF;
+    usart_transmit(data_array);
     spi_init();
+    PORTF &= ~(1<<PF0);
 
 }//timer1_isr
 
@@ -252,30 +301,32 @@ int main(){
 
     struct int_frac TR;
     struct int_frac TL;
-    char lcd_data1[16] = {"         "};
-    char lcd_data2[16] = {"             "};
-    char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+   // char lcd_data1[16] = {"         "};
+   // char lcd_data2[16] = {"             "};
+   // char lcd_data3[16] = {"        "};
+   // char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
     DDRB |= (1<<PB7)|(1<<PB6);
-
+    DDRF = 0xFF;
     DDRD |= (1<<PD0);   //SPI SS pin
-    DDRD &= ~(1<<PD7); //Configure Port D Pin 7 for input
+    DDRD &= ~(1<<PD7);  //Configure Port D Pin 7 for input
     PORTD |= (1<<PD7);  //enable pullup
-    timer1_init();
-    spi_init();
-    lcd_init();
-    _delay_ms(200);
+    timer1_init();      //initialize 16 bit timer
     sei();
 
     while(1){
-        spi_float_to_int(&TR, torque_right);
-        spi_float_to_int(&TL, torque_left);
-    
+        
+        
+    }//while
+return 0;
+}//main
+
+/**
+ 
         clear_display();
         cursor_home();
-
-        //PORTB ^= (1<<PB7);
-
+    }//while
+ 
         lcd_data1[0] = numbers[TR.integer/100 % 10];
         lcd_data1[1] = numbers[TR.integer/10 % 10];
         lcd_data1[2] = numbers[TR.integer % 10];
@@ -292,16 +343,14 @@ int main(){
         lcd_data2[5] = numbers[TL.fraction/10 % 10];
         lcd_data2[6] = numbers[TL.fraction % 10];
         
+        lcd_data3[0] = numbers[steering_angle/1000 % 10];
+        lcd_data3[1] = numbers[steering_angle/100 % 10];
+        lcd_data3[2] = numbers[steering_angle/10 % 10];
+        lcd_data3[3] = numbers[steering_angle/1 % 10];
+        
+
         string2lcd(lcd_data1);
         string2lcd(lcd_data2);
+        string2lcd(lcd_data3);
 
-        _delay_ms(20);
-/*
-        if(PIND & (1<<PD0)){
-            pirate_mode();
-            _delay_ms(10);
-        }*/
-    }//while
-return 0;
-}//main
-
+**/

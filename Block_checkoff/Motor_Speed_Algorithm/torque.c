@@ -26,11 +26,6 @@
 #define FOSC 16000000		//Clk frequency
 #define MYUBBR FOSC/16/BAUD-1	//USART UBBR calulation to get 9600 baud
 
-//Global Variables
-float torque_right = 0.0;
-float torque_left = 0.0;
-uint16_t steering_angle = 0;
-
 //Structure that holds a 16 bit integer and 16 bit fraction
 //once the floats are converted to ints
 struct int_frac{
@@ -284,6 +279,24 @@ void usart_transmit(uint8_t data_array[]){
         }//for
 }//usart_transmit
 
+/****************************************************************************************
+ * Name: program_init
+ *
+ * Description: This function is used to initialize the timer and usart and is called
+ *	when the controller wakes up out of sleep mode.  
+ ***************************************************************************************/
+void program_init(){
+
+    DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
+    DDRF = 0xFF;
+    DDRD |= (1<<PD0);   //SPI SS pin
+    DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
+    PORTD |= (1<<PD7);  //enable pullup
+    timer1_init();      //initialize 16 bit timer
+    usart_init(MYUBBR);	//initialize usart
+    sei();
+}//program_init
+
 /************************************************************************************************
  * Name: pirate_mode
  *
@@ -314,24 +327,6 @@ void pirate_mode(){
     program_init();
     PORTB |= (1<<speed1_relay)|(1<<speed2_relay)|(1<<pc_relay); //Turn on relay circuits
 }//pirate_mode
-
-/****************************************************************************************
- * Name: program_init
- *
- * Description: This function is used to initialize the timer and usart and is called
- *	when the controller wakes up out of sleep mode.  
- ***************************************************************************************/
-void program_init(){
-
-    DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
-    DDRF = 0xFF;
-    DDRD |= (1<<PD0);   //SPI SS pin
-    DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
-    PORTD |= (1<<PD7);  //enable pullup
-    timer1_init();      //initialize 16 bit timer
-    usart_init();	//initialize usart
-    sei();
-}//program_init
 
 //ISR for the pirate mode function
 ISR(INT0_vect){
@@ -375,7 +370,7 @@ int main(){
     DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
     PORTD |= (1<<PD7);  //enable pullup
     timer1_init();      //initialize 16 bit timer
-    usart_init();	//initialize usart
+    usart_init(MYUBBR);	//initialize usart
     sei();
 
     while(1){

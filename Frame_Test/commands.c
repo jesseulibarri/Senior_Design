@@ -1,6 +1,7 @@
 #include "frame.h"
 #include "commands.h"
 #include "datatypes.h"
+#include "string.h"
 //#include "uart.h"
 //#include "motor.h"
 //#include "arm_math.h"
@@ -9,7 +10,7 @@
 //#include "constants.h"
 //#include "hall.h"
 
-static struct DataFrame_t resp;
+
 
 void float2Bytes(unsigned char* bytes_temp, float float_variable){
 	union {

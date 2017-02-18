@@ -8,10 +8,11 @@
 int main(){
     
     struct DataFrame_t message;
-	char data[] = {'0x0F','0'};
+	char data[] = {'1','1','1','1','1','1'};
+    char here[] = {};
     float current = 2.546;
     
-    float2Bytes(data[1], current);
+    //float2Bytes(here, current);
 
 	for(unsigned int i=0; i < sizeof(data); i++)
         message.data[i] = data[i];

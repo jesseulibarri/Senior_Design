@@ -22,9 +22,9 @@
 #define speed2_relay 5      	//Port B Pin 5
 #define pc_relay 6          	//Port B pin 6
 #define pirate_switch 1     	//Port D Pin 1
-#define BAUD 9600           	//USART Baud Rate
+#define BAUD 38400           	//UART Baud Rate
 #define FOSC 16000000		//Clk frequency
-#define MYUBBR FOSC/16/BAUD-1	//USART UBBR calulation to get 9600 baud
+#define MYUBBR FOSC/16/BAUD-1	//UART UBBR calulation to get 9600 baud
 
 //Structure that holds a 16 bit integer and 16 bit fraction
 //once the floats are converted to ints
@@ -40,7 +40,7 @@ uint16_t steering_angle;
 
 struct int_frac TR;
 struct int_frac TL;
-uint8_t data_array[10];	//data array used to send a 10 byte frame over USART
+uint8_t data_array[10];	//data array used to send a 10 byte frame over UART
 
 /***************************************************************************
  * Name: timer1_init
@@ -77,6 +77,7 @@ void spi_encoder_init(){
     //Set data direction for SPI and set pullup for MISO
     DDRB |= (1<<PB0)|(1<<PB1)|(1<<PB2)|(0<<PB3);
     PORTB |= (1<<PB3); //MISO line
+    DDRD |= (1<<PD0);
   
     //Enable SPI, shift LSB first, mast mode, clk low on idle,
     //data sampled on rising edge, clk/16 = 1MHz datarate
@@ -126,7 +127,8 @@ uint16_t get_angle(){
     uint8_t low_byte;
     uint16_t angle;
 
-    spi_encoder_init();	//Initialize the SPI protocol for the steering encoder
+    //spi_encoder_init();	//Initialize the SPI protocol for the steering encoder
+    //_delay_us(20);
     PORTD &= ~(1<<PD0); //Set Select Line Low
     SPDR = rd_pos;      //Send get position command
     while(bit_is_clear(SPSR, SPIF)){} //Wait for SPI transmission
@@ -154,6 +156,8 @@ uint16_t get_angle(){
     while(bit_is_clear(SPSR, SPIF)){}   //Wait for Position to Be received
     PORTD |= (1<<PD0);      //Set Select Line High
     low_byte = SPDR;
+
+    //spi_init(); //re-enable lcd screen spi config
 
     //Cancatonate the high and low byte of the steering 
     //angle to a 16 bit integer and return the angle
@@ -187,6 +191,7 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
 
     general_torque += 0.5;	//This variable is used for the ramping feature
     angle = get_angle();	//get steering angle reading from encoder
+    //angle = 10;
     *steer_angle = angle;	//modify the global steering angle variable
     
     switch(user_mode){
@@ -229,16 +234,16 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
 }//motor_torque
 
 /***********************************************************************************
- * Name: usart_init
+ * Name: uart_init
  *
- * Description: This function is used to initialize USART1 on the atmega128 so
+ * Description: This function is used to initialize UART1 on the atmega128 so
  *	we can send torque values and steering angle to the simulation on matlab.
  *
- * 	TODO:Eventually we will need to initialize USART2 when we communicate to
+ * 	TODO:Eventually we will need to initialize UART2 when we communicate to
  *		the two differn't motor controller boards but for the simulation
- *		and block checkoff one usart line is sufficient.  
+ *		and block checkoff one uart line is sufficient.  
  ***********************************************************************************/
-void usart_init(unsigned char ubrr){
+void uart_init(unsigned char ubrr){
     
     //Set Baud Rate at 9600
     UBRR1H = (unsigned char)(ubrr>>8);
@@ -249,40 +254,42 @@ void usart_init(unsigned char ubrr){
     
     //Set Frame Format, 8 bit data, 2 stop bit, Asynchronous
     UCSR1C |= (1<<UCSZ11)|(1<<UCSZ10)|(1<<USBS1);
-}//usart_init
+}//uart_init
 
 /**********************************************************************************************
- * Name: usart_transmit
+ * Name: uart_transmit
  *
  * Description: This function has a 8 bit data array as an input argument. This array
  * 	will be formatted as a 10 byte frame that contains two torque values and a
- *	steering angle that will be sent over usart 10 times a second. Each torque
+ *	steering angle that will be sent over uart 10 times a second. Each torque
  *	value will be 4 bytes, 2 bytes for the integer part and 2 bytes for the fraction
  *	part. The steering angle will be 2 bytes which leaves a total of 10 bytes to be
- *	transmitted. Usart can only transmit 8 bits at a time thats why we use an array
+ *	transmitted. Uart can only transmit 8 bits at a time thats why we use an array
  * 	to frame the data into 8 bit segments. 
  *
  *	TODO: We need to add flag bits after every byte is sent so we can keep data together.
  *		We also might need to add a hand shake feature or error checking so the data
  *		being sent is reliable and not garbage.
  ************************************************************************************************/
-void usart_transmit(uint8_t data_array[]){
+void uart_transmit(uint8_t data_array[]){
     int i = 0;
-    for(;i<10; i++){
-        //Wait for empty transmit buffer
-        while(!(UCSR1A & (1<<UDRE1)));
+    //Wait for empty transmit buffer
+    while(!(UCSR1A & (1<<UDRE1))) { }
 
-    //Put data into buffer, send data
+    for(;i<10; i++){
+        //Put data into buffer, send data
         UDR1 = data_array[i];
-        while(!(UCSR1A & (1<<UDRE1)));
-	//Send flag bit/byte
+        while(!(UCSR1A & (1<<UDRE1))) { }
+	    //Send flag bit/byte
+        UDR1 = '\n';
+        while(!(UCSR1A & (1<<UDRE1))) { }
         }//for
-}//usart_transmit
+}//uart_transmit
 
 /****************************************************************************************
  * Name: program_init
  *
- * Description: This function is used to initialize the timer and usart and is called
+ * Description: This function is used to initialize the timer and uart and is called
  *	when the controller wakes up out of sleep mode.  
  ***************************************************************************************/
 void program_init(){
@@ -293,7 +300,7 @@ void program_init(){
     DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
     PORTD |= (1<<PD7);  //enable pullup
     timer1_init();      //initialize 16 bit timer
-    usart_init(MYUBBR);	//initialize usart
+    uart_init(MYUBBR);	//initialize uart
     sei();
 }//program_init
 
@@ -313,8 +320,8 @@ void program_init(){
 void pirate_mode(){
 
     //Configure interrupt 0 so a rising edge will wake up the controller from sleep mode
-    EICRA |= (1<<ISC01); //Generate aysnchronous interrupt request on rising edge
-    EIMSK |= (1<<INT0);  //Enable external interrupt 0
+    EICRA |= (1<<ISC11)|(1<<ISC10); //Generate aysnchronous interrupt request on rising edge
+    EIMSK |= (1<<INT1);  //Enable external interrupt 0
 
     set_sleep_mode(SLEEP_MODE_PWR_DOWN); //Enable power down mode, set sleep enable bit
                                          //in the MCUCR register
@@ -329,7 +336,7 @@ void pirate_mode(){
 }//pirate_mode
 
 //ISR for the pirate mode function
-ISR(INT0_vect){
+ISR(INT1_vect){
     EIMSK &= ~(1<<INT1);
 }//ISR
 
@@ -342,7 +349,7 @@ ISR(TIMER1_OVF_vect){
     spi_float_to_int(&TL, torque_left);		//convert left motortorque value from float to int
     
     //Below we format the two torque values and steering angle into a
-    //10 byte frame to be sent over USART
+    //10 byte frame to be sent over uart
     data_array[0] = TR.integer >> 8;		//high byte
     data_array[1] = TR.integer & 0x00FF;	//low byte
     data_array[2] = TR.fraction >> 8;
@@ -353,42 +360,42 @@ ISR(TIMER1_OVF_vect){
     data_array[7] = TL.fraction & 0x00FF;
     data_array[8] = steering_angle >> 8;
     data_array[9] = steering_angle & 0x00FF;
-    usart_transmit(data_array);		//Call usart transmit to transmit 10 bytes
+    uart_transmit(data_array);		//Call uart transmit to transmit 10 bytes
     //spi_init();	//Used to initalize SPI for LCD screen if being used
     PORTF &= ~(1<<PF0);
 }//timer1_isr
 
 int main(){
-   // char lcd_data1[16] = {"         "};
-   // char lcd_data2[16] = {"             "};
-   // char lcd_data3[16] = {"        "};
-   // char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+   //char lcd_data1[16] = {"         "};
+   //char lcd_data2[16] = {"             "};
+   //char lcd_data3[16] = {"        "};
+   //char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
     DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
     DDRF = 0xFF;
-    DDRD |= (1<<PD0);   //SPI SS pin
+    //DDRD |= (1<<PD0);   //SPI SS pin
     DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
     PORTD |= (1<<PD7);  //enable pullup
+    //spi_init();
+    //lcd_init();
+    //clear_display();
+    //cursor_home();
+    spi_encoder_init();
     timer1_init();      //initialize 16 bit timer
-    usart_init(MYUBBR);	//initialize usart
+    uart_init(MYUBBR);	//initialize uart
     sei();
 
+    //spi_float_to_int(&TR, torque_right);	//convert right motor torque value from float to int
+    //spi_float_to_int(&TL, torque_left);		//convert left motortorque value from float to int
     while(1){
     
 	if(!(PIND & (1<<PD1))){
 		pirate_mode();	//If toggle goes low, go to sleep
 		_delay_ms(10);
-	}	    
-        
-    }//while
-return 0;
-}//main
-
-/**
- 
+	} 
+    /*
         clear_display();
         cursor_home();
-    }//while
  
         lcd_data1[0] = numbers[TR.integer/100 % 10];
         lcd_data1[1] = numbers[TR.integer/10 % 10];
@@ -405,15 +412,20 @@ return 0;
         lcd_data2[4] = numbers[TL.fraction/100 % 10];
         lcd_data2[5] = numbers[TL.fraction/10 % 10];
         lcd_data2[6] = numbers[TL.fraction % 10];
-        
+      */  
+        /*
         lcd_data3[0] = numbers[steering_angle/1000 % 10];
         lcd_data3[1] = numbers[steering_angle/100 % 10];
         lcd_data3[2] = numbers[steering_angle/10 % 10];
         lcd_data3[3] = numbers[steering_angle/1 % 10];
-        
-
+        */
+/*
         string2lcd(lcd_data1);
         string2lcd(lcd_data2);
-        string2lcd(lcd_data3);
-
-**/
+        //string2lcd(lcd_data3);	    
+        
+        _delay_ms(20);
+*/        
+    }//while
+return 0;
+}//main

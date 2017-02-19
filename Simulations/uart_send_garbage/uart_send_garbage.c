@@ -16,7 +16,7 @@ while(1) {
 
     //Send a value via UART
     uint8_t i;
-    for(i = 0; i < 10; i++) {
+    for(i = 0; i < 255; i++) {
         PORTB = 0x01;
         while (!(UCSR1A&(1<<UDRE1)));    // Wait for previous transmissions
             UDR1 = i;    // Send data byte

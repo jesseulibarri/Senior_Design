@@ -17,10 +17,11 @@ uart_init();
 
 while(1) {
 
-    for(i = 0; i < 100; i++) {
+    for(i = 0; i < 255; i++) {
         UDR0 = i;
-        _delay_ms(1000);
+        _delay_ms(100);
     }
+    i = 0;
 
 }
 }//main

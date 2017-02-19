@@ -127,7 +127,7 @@ uint16_t get_angle(){
     uint8_t low_byte;
     uint16_t angle;
 
-    //spi_encoder_init();	//Initialize the SPI protocol for the steering encoder
+    spi_encoder_init();	//Initialize the SPI protocol for the steering encoder
     //_delay_us(20);
     PORTD &= ~(1<<PD0); //Set Select Line Low
     SPDR = rd_pos;      //Send get position command
@@ -276,14 +276,24 @@ void uart_transmit(uint8_t data_array[]){
     //Wait for empty transmit buffer
     while(!(UCSR1A & (1<<UDRE1))) { }
 
-    for(;i<10; i++){
+    for(i=0;i<2; i++){
         //Put data into buffer, send data
         UDR1 = data_array[i];
         while(!(UCSR1A & (1<<UDRE1))) { }
+    }//for
 	    //Send flag bit/byte
         UDR1 = '\n';
         while(!(UCSR1A & (1<<UDRE1))) { }
-        }//for
+
+    for(i=2;i<4; i++){
+        //Put data into buffer, send data
+        UDR1 = data_array[i];
+        while(!(UCSR1A & (1<<UDRE1))) { }
+    }//for
+	    //Send flag bit/byte
+        UDR1 = '\n';
+        while(!(UCSR1A & (1<<UDRE1))) { }
+
 }//uart_transmit
 
 /****************************************************************************************
@@ -354,33 +364,33 @@ ISR(TIMER1_OVF_vect){
     data_array[1] = TR.integer & 0x00FF;	//low byte
     data_array[2] = TR.fraction >> 8;
     data_array[3] = TR.fraction & 0x00FF;
-    data_array[4] = TL.integer >> 8;
+/*    data_array[4] = TL.integer >> 8;
     data_array[5] = TL.integer & 0x00FF;
     data_array[6] = TL.fraction >> 8;
     data_array[7] = TL.fraction & 0x00FF;
     data_array[8] = steering_angle >> 8;
-    data_array[9] = steering_angle & 0x00FF;
+    data_array[9] = steering_angle & 0x00FF; */
     uart_transmit(data_array);		//Call uart transmit to transmit 10 bytes
-    //spi_init();	//Used to initalize SPI for LCD screen if being used
+    spi_init();	//Used to initalize SPI for LCD screen if being used
     PORTF &= ~(1<<PF0);
 }//timer1_isr
 
 int main(){
-   //char lcd_data1[16] = {"         "};
-   //char lcd_data2[16] = {"             "};
-   //char lcd_data3[16] = {"        "};
-   //char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+   char lcd_data1[16] = {"         "};
+   char lcd_data2[16] = {"             "};
+   char lcd_data3[16] = {"        "};
+   char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
     DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
     DDRF = 0xFF;
     //DDRD |= (1<<PD0);   //SPI SS pin
     DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
     PORTD |= (1<<PD7);  //enable pullup
-    //spi_init();
-    //lcd_init();
-    //clear_display();
-    //cursor_home();
-    spi_encoder_init();
+/*    spi_init();
+    lcd_init();
+    clear_display();
+    cursor_home();
+*/    spi_encoder_init();
     timer1_init();      //initialize 16 bit timer
     uart_init(MYUBBR);	//initialize uart
     sei();
@@ -388,12 +398,12 @@ int main(){
     //spi_float_to_int(&TR, torque_right);	//convert right motor torque value from float to int
     //spi_float_to_int(&TL, torque_left);		//convert left motortorque value from float to int
     while(1){
-    
+/*    
 	if(!(PIND & (1<<PD1))){
 		pirate_mode();	//If toggle goes low, go to sleep
 		_delay_ms(10);
-	} 
-    /*
+	} */
+/*    
         clear_display();
         cursor_home();
  
@@ -412,7 +422,7 @@ int main(){
         lcd_data2[4] = numbers[TL.fraction/100 % 10];
         lcd_data2[5] = numbers[TL.fraction/10 % 10];
         lcd_data2[6] = numbers[TL.fraction % 10];
-      */  
+*/        
         /*
         lcd_data3[0] = numbers[steering_angle/1000 % 10];
         lcd_data3[1] = numbers[steering_angle/100 % 10];

@@ -108,7 +108,7 @@ void spi_init(void){
  *****************************************************************************/
 void spi_float_to_int(struct int_frac *value, float number){
     value->integer = (uint16_t)number;
-    value->fraction = 1000 * (number - value->integer);
+    value->fraction = 10000 * (number - value->integer);
 }//spi_float_to_int
 
 /****************************************************************

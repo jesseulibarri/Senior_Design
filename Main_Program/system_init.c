@@ -9,10 +9,10 @@
 //TODO: #include "speed.h"
 //TODO: #include "datalogging.h"
 
-#define USART_BAUDRATE 38400  
+#define USART_BAUDRATE 115200  
 #define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16UL)) - 1 )
 
-#define USART1_BAUDRATE 38400  
+#define USART1_BAUDRATE 115200  
 #define BAUDVALUE_1  ((F_CPU/(USART1_BAUDRATE * 16UL)) - 1 )
 
 
@@ -44,12 +44,13 @@ void system_init() {
     PORTC |= (1 << PC0);                    //begin timing
 
     /******** ICP1 *********/
-    //Makes use of the input capture function on PORTD.4.
+    //TODO: We are going down to one speed sensor so this init is not needed.
+/*    //Makes use of the input capture function on PORTD.4.
     TCCR1A = 0x00;                          //Normal mode, no compare
     TCCR1B |= (1 << ICES1) | (1 << CS12);   //Input capture on rising edge,
                                             //256 clk prescale
     TIMSK |= (1 << TICIE1);                 //Enable input capture interrupt
-
+*/
     /******** ICP3 *********/
     //Makes use of the input capture function on PORTE.7.
     TCCR3A = 0x00;                          //Normal mode, no compare
@@ -58,9 +59,22 @@ void system_init() {
     ETIMSK |= (1 << TICIE3);                //Enable input capture interrupt
 
     /******** System Timer *********/
+    //Initialize 16 bit Timer/Counter 1 for Fast PWM, TOP=24,999
+    //  16MHz, pre-scale=64, TOP=24,999, freq=10Hz, period=100mS
+    TCCR1A |= (1<<WGM11)|(1<<WGM10);
+    TCCR1B |= (1<<WGM13)|(1<<WGM12);
+    //Set Prescalar to 64
+    TCCR1B |= (1<<CS11)|(1<<CS10);
+    //Set Output Comare Match A Value (TOP value)
+    OCR1A = 24999; 
+    //Interrupt on timer overflow (at TOP value)
+    TIMSK |= (1<<TOIE1);
+
     //Timer will run on the 32kHz oscillator to allow for a slower speed
     //Normal mode, 32,768Hz with 8 pre-scale = 16Hz = 62.5mS
-    
+    //TODO: We will not be using the 32kHz timer. It takes to long to start up,
+    //  and we will get better accuracy with timer1.
+/*    
     // Follow procedures in the datasheet to select the external clock.
     TIMSK &= ~((1 << OCIE0) | (1 << TOIE0)); //clear interrupts
     ASSR |= (1 << AS0);                      //enable external clock
@@ -69,7 +83,7 @@ void system_init() {
     while(!((ASSR & 0b0111) == 0)) {}       //spin till registers finish updating
     TIFR |= (1 << OCF0) | (1 << TOV0);      //clear interrupt flags
     TIMSK |= (1 << OCIE0);                  //enable compare match interrupt
-
+*/
 
     /******** Enable Global Interrupts *********/
     sei();
@@ -88,9 +102,9 @@ void system_init() {
 
     /****** Datalogging *******/
     if(datalogging) { 
-
-        //Set MOSI, SCK as output
-        DDRB |= (1<<PB3);
+        //Raspberry Pi will be master.
+        //Set SS, MOSI, SCK as input, MISO as output
+        DDRB |= (0 << PB0) | (0 << PB1) | (0 << PB2) | (1 << PB3);
         //Configure SPI (Slave mode, clk low on idle, rising edge sample)
         SPCR = (1<<SPE)|(0<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR1)|(0<<SPR0);
         SPSR = (1<<SPI2X);
@@ -138,23 +152,6 @@ void system_init() {
     
     //TODO: Add any timers/interrupts found to be necessary!!!!
     
-    /****** For Block Checkoff *******/
-    //Send a value via UART
-    UDR0 = 5;
-    while(bit_is_clear(UCSR0A, TXC)) {} // wait until data is sent
-
-    //Send a value to the bar graph via SPI
-    DDRE = (1 << PE1);  //set data direction for bar graph poke
-    //*********** Send SPI Data **********
-    SPDR = 5;
-    while(bit_is_clear(SPSR, SPIF)) {} // wait until data is sent
-    
-    //********** Bar Graph Portion *******************
-    PORTE |= (1 << PE6);      // move graph data from shift to storage reg.
-    PORTE &= ~(1 << PE6);     // change 3-state back to high Z
-
-    /******************** End Testing **************************/
-
-    PORTC &= ~(1 << PC0);   //end timing test
+       PORTC &= ~(1 << PC0);   //end timing test
 
 }//system_init

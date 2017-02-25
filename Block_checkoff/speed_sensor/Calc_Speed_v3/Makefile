@@ -1,8 +1,8 @@
 PRG             =calc_speed_v3
 #PRG				=uart_test
 
-OBJS            =calc_speed_v3.o ../Extern_Files/hd44780.o
-SRCS            =calc_speed_v3.c ../Extern_Files/hd44780.c
+OBJS            =calc_speed_v3.o hd44780.o
+SRCS            =calc_speed_v3.c hd44780.c
 
 MCU_TARGET     = atmega128
 #MCU_TARGET     = atmega48

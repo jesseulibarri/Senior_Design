@@ -1,10 +1,10 @@
 PRG             =Speed
 #PRG				=uart_test
 
-OBJS            =Speed.o ../Extern_Files/hd44780.o
+OBJS            =Speed.o hd44780.o
 
 
-SRCS            =Speed.c ../Extern_Files/hd44780.c
+SRCS            =Speed.c hd44780.c
 
 MCU_TARGET     = atmega128
 #MCU_TARGET     = atmega48

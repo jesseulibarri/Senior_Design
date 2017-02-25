@@ -13,7 +13,7 @@
 #include <avr/interrupt.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../Extern_Files/hd44780.h"
+#include "hd44780.h"
 
 #define USART_BAUDRATE 115200 
 #define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16UL)) - 1 )
@@ -24,7 +24,7 @@
 
 #define PI              3.14159F
 #define count_period    0.016F
-#define PACKET_SIZE     4
+#define PACKET_SIZE     8
 
 //Function Headers
 void spi_init_lcd();
@@ -44,9 +44,23 @@ uint8_t sprocket_teeth = 42;
 float tire_circ;
 float distance_per_pulse;
 float speed;
-unsigned char speed_bytes[4];
+float avg_speed;
+unsigned char avg_speed_bytes[4];
+unsigned char rx_buf[4];
+unsigned char tx_buf[8];
 
 char lcd_string[16];
+
+ISR(USART1_RX_vect) {
+    static uint8_t i = 0;
+    char data = UDR1;
+    if(data == '\n') {
+        i = 0;
+    } else {
+        rx_buf[i] = data;
+        i++;
+    }
+}//ISR
 
 
 ISR(TIMER1_CAPT_vect) {
@@ -71,10 +85,12 @@ ISR(TIMER1_CAPT_vect) {
 
     timestamp_hist = timestamp;
 
-    speed = calc_speed(times1);
-    float_to_bytes(&speed, speed_bytes);
-    send_packet(speed_bytes);
-    dtostrf(speed, 6, 3, lcd_string);
+    avg_speed = calc_speed(times1);
+    float_to_bytes(&avg_speed, avg_speed_bytes);
+    for(k = 0; k <= 3; k++) { tx_buf[k] = rx_buf[k]; }
+    for(k = 0; k <= 3; k++) { tx_buf[k+4] = avg_speed_bytes[k]; }
+    send_packet(tx_buf);
+    dtostrf(avg_speed, 6, 3, lcd_string);
     
     PORTC &= ~(1 << PC0);
 
@@ -91,6 +107,7 @@ DDRC |= (1 << PC0) | (1 << PC1);;     //for troubleshooting
 //initializations
 timer1_init();
 uart_init();
+uart1_init();
 
 /****** Turn on to send to lcd *******/
 DDRF |= 0x08;
@@ -111,22 +128,8 @@ while(1) {
 
 return 0;
 }//main
-/*****************************************************************************
-/*****************************************************************************
- * Name: Exponential Moving Average
- *  
- * Description: This function 
- * **************************************************************************/
-    //Exponential Moving Average
-    #define N 16
-    float ema(float avg, unsigned int sample)
-    {
-    	float alpha = 2.0/(N+1);
-    	avg = alpha * sample + (1.0-alpha) * avg;
-    	return avg;
-    }
     
-/*****************************************************************************
+/*****************************************************************************/
 /*****************************************************************************
  * Name: timer1_init
  *  
@@ -173,8 +176,8 @@ UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
 
 void uart1_init(){
 //rx and tx enable, receive interrupt enabled, 8 bit characters
-//UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
-  UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
+UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
+//  UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
 
 //async operation, no parity,  one stop bit, 8-bit characters
   UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10);
@@ -214,6 +217,20 @@ uint16_t calc_avg(uint16_t *array) {
     return avg;
 }//calc_avg
 
+/*****************************************************************************/
+/*****************************************************************************
+ * Name: Exponential Moving Average
+ *  
+ * Description: This function 
+ * **************************************************************************/
+//Exponential Moving Average
+#define N 16
+float ema(float avg, float sample)
+{
+    float alpha = 2.0/(N+1);
+    avg = alpha * sample + (1.0-alpha) * avg;
+    return avg;
+}
 
 /**************************************************************************************
  * Name: calc_speed
@@ -230,10 +247,11 @@ float calc_speed(uint16_t *timestamps) {
     float msec = (float)timestamp_avg_dif * count_period;
     float seconds = msec / 1000;
     speed = (distance_per_pulse/ seconds) * (1 / 17.6);
+    avg_speed = ema(avg_speed, speed); 
 
     PORTC &= ~(1 << PC0);
 
-return speed;
+return avg_speed;
 }//calc_speed
 
 

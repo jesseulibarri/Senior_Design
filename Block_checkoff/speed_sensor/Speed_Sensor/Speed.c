@@ -12,47 +12,25 @@
 #include <avr/interrupt.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../Extern_Files/hd44780.h"
+#include <math.h>
+#include "hd44780.h"
+
+#define USART_BAUDRATE 76800
+#define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16UL)) - 1 )
 
 #define PI 3.14159
+#define PACKET_SIZE 4
 
-uint8_t speed = 20;
+float speed = 1.0;
+unsigned char speed_bytes[4];
 uint8_t tire_diam = 22;
 uint8_t sprocket_teeth = 42;
 uint16_t sixteen_bit_timer_val;
-//char lcd_string_h[16];
-//char lcd_string_l[16];
-//div_t double_components;
 
 char lcd_string[32];
-char char_numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
-void format_lcd_array(double number) {
-    uint16_t integer_part = (uint16_t)number;
-    uint16_t fraction_part = 100000 * (number - integer_part);
 
-    lcd_string[0] = char_numbers[(integer_part / 10) % 10];
-    lcd_string[1] = char_numbers[(integer_part % 10)];
-    lcd_string[2] = '.';
-    lcd_string[3] = char_numbers[(fraction_part / 10000) % 10];
-    lcd_string[4] = char_numbers[(fraction_part / 1000) % 10];
-    lcd_string[5] = char_numbers[(fraction_part / 100) % 10];
-    lcd_string[6] = char_numbers[(fraction_part / 10) % 10];
-    lcd_string[7] = char_numbers[(fraction_part / 1) % 10];
-                                              
-}
 
-/*
-void format_lcd_array(double number) {
-
-    double large_num = number * 1000;
-    uint16_t convert_to_sixteen = large_num;
-    double_components = div(convert_to_sixteen, 1000);
-    itoa(double_components.quot, lcd_string_h, 10);
-    itoa(double_components.rem, lcd_string_l, 10);
-
-}
-*/
 void timer1_init() {
     // Fast PWM mode, TOP in OCR1A, OC pin disconnected, prescale 64
     TCCR1A |= (1 << WGM10) | (1 << WGM11);
@@ -72,13 +50,63 @@ void SPI_init() {
 }//SPI_init
 
 
+void uart_init(){
+//rx and tx enable, receive interrupt enabled, 8 bit characters
+//UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
+UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
+
+//async operation, no parity,  one stop bit, 8-bit characters
+  UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00);
+  UBRR0H = (BAUDVALUE >>8 ); //load upper byte of the baud rate into UBRR 
+  UBRR0L =  BAUDVALUE;       //load lower byte of the baud rate into UBRR 
+
+}
+
+
+void float_to_bytes(float* src, unsigned char* dest) {
+    union {
+        float a;
+        unsigned char bytes[4];
+    } u;
+    u.a = *src;
+    memcpy(dest, u.bytes, 4);
+}//float_to_bytes
+
+
+ void send_packet(unsigned char packet[]) {
+    //make sure that nothing else is sending
+    while(!(UCSR0A & (1<<UDRE0))) { }
+    int8_t i;
+    for(i = 0; i < PACKET_SIZE; i++) {
+        UDR0 = packet[i];
+        while(!(UCSR0A & (1<<UDRE0))) { }
+        _delay_us(100);
+    }
+    //send terminator
+    UDR0 = '\n';
+    while(!(UCSR0A & (1<<UDRE0))) { }
+}//send_packet
+
+
+ISR(INT0_vect) {
+    if(speed == 40) {
+    } else { speed += 0.25; }
+}//ISR
+
+ISR(INT1_vect) {
+    if(speed == 0) {
+    } else { speed -= 0.25; }
+}//ISR
+
 ISR(TIMER1_OVF_vect) {
 
     PORTB |= (1 << PB7);
+    PORTB |= (1 << PB6);
     _delay_us(10);
     PORTB &= ~(1 << PB7);
+    PORTB &= ~(1 << PB6);
 
-}
+}//ISR
 
 /******************** MAIN *************************/
 int main()
@@ -89,32 +117,40 @@ double distance_per_pulse = tire_circ / sprocket_teeth;
 // 1 mph = 17.6 in/sec
 double period = distance_per_pulse / (speed * 17.6);
 sixteen_bit_timer_val = ((double)period * 16000000) / 64;
+float theta = 0.01;
 
+//PORTD.0 will increase speed, PORTD.1 will deacrease speed
+//Interrupts will trigger on falling edge.
+/*DDRD |= (0 << PD0) | (0 << PD1);
+PORTD |= (1 << PD0) | (1 << PD1);
+EICRA |= (1 << ISC01) | (1 << ISC11);
+EIMSK |= (1 << INT0) | (1 << INT1);
+*/
 //PORTB.0 set to output
 DDRB =0xFF;
 DDRC |= (1 << PC0);
 timer1_init();
+uart_init();
 SPI_init();
 lcd_init();
 clear_display();
 sei();
 
     while(1){
-        format_lcd_array(speed);
 
-        /*
-        //send value to lcd screen
-        string2lcd(lcd_string_h);
-        char2lcd('.');
-        string2lcd(lcd_string_l);
+        speed = 40*sin(theta);
+        period = distance_per_pulse / (speed * 17.6);
+        OCR1A = (period * 16000000) / 64;
+        theta += 0.01;
+        if(theta > PI) { theta = 0.01; }
 
-        //wait a moment
-        _delay_ms(500);
+        float_to_bytes(&speed, speed_bytes);
+        send_packet(speed_bytes);
+        dtostrf(speed, 6, 3, lcd_string);
         clear_display();
         cursor_home();
-*/
-        refresh_lcd(lcd_string);
-        _delay_us(50);
+        string2lcd(lcd_string);
+        _delay_ms(100);
         
     }//while
 

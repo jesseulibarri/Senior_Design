@@ -22,7 +22,7 @@
 #define speed2_relay 5      	//Port B Pin 5
 #define pc_relay 6          	//Port B pin 6
 #define pirate_switch 1     	//Port D Pin 1
-#define BAUD 38400           	//UART Baud Rate
+#define BAUD 76800           	//UART Baud Rate
 #define FOSC 16000000		//Clk frequency
 #define MYUBBR FOSC/16/BAUD-1	//UART UBBR calulation to get 9600 baud
 

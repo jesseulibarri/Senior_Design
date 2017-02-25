@@ -93,7 +93,7 @@ uart_init();
         clear_display();
         cursor_home();
         string2lcd(lcd_string);
-        _delay_ms(700);
+        _delay_ms(200);
         
 
     }//while

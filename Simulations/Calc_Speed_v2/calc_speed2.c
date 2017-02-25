@@ -7,7 +7,7 @@
  *
  *******************************************************/
 
-#define F_CPU 16000000
+//#define F_CPU 16000000
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -23,7 +23,7 @@ void spi_init();
 void spi_init_master();
 void timer1_init();
 void format_lcd_array(double);
-void calc_speed();
+float calc_speed();
 uint8_t spi_8bit_transmit(uint8_t);
 uint8_t spi_16bit_transmit(uint16_t);
 uint8_t spi_double_transmit(double);
@@ -47,9 +47,10 @@ ISR(TIMER1_CAPT_vect) {
     uint16_t timestamp = ICR1;
     static uint16_t timestamp_hist = 0;
     static uint16_t times1[10] = {1};
+    uint8_t k;
 
     //shift difference history over to make room for new
-    for(k = 9; k >= 0; k--) { timestamp_dif[k+1] = timestamp_dif[k]; }
+    for(k = 9; k >= 0; k--) { times1[k+1] = times1[k]; }
 
     //wrap around at the end of the timer
     if(timestamp < timestamp_hist) {

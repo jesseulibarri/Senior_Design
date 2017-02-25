@@ -35,6 +35,7 @@ uint8_t datalogging = ON;
 void system_init() {
  
     /******** ICP1 *********/
+
     //Makes use of the input capture function on PORTD.4.
     TCCR1A = 0x00;                          //Normal mode, no compare
     TCCR1B |= (1 << ICES1) | (1 << CS12);   //Input capture on rising edge,
@@ -67,7 +68,6 @@ void system_init() {
     TCCR0 = (0 << WGM01) | (0 << WGM00) | \
             (0 << CS01) | (1 << CS00);      //Normal mode, 8 prescale
     while(!((ASSR & 0b0111) == 0)) {}       //spin till registers finish updating
-
    
     ///*** Calculate the system needed constants ***/
     uint8_t j;
@@ -81,7 +81,7 @@ void system_init() {
     /****** Datalogging *******/
     if(datalogging) { 
 
-        //Set MOSI, SCK as output
+        //Set SS, MOSI, SCK as output
         DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2);
         //Configure SPI (Slave mode, clk low on idle, rising edge sample)
         SPCR = (1<<SPE)|(1<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR1)|(0<<SPR0);

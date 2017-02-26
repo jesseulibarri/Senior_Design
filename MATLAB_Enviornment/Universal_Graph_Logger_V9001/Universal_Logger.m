@@ -24,9 +24,9 @@ delay = 0.001;                      %Make sure sample faster than resolution
             
 %Choose which input float to graph (float_to_graph,then
 %indicate the maximum and minimum value that it can be.
-float_to_graph = 1;                 %Define which float to graph     
+float_to_graph = 3;                 %Define which float to graph     
 min = 0;                            %Define y-min
-max = 25;                           %Define y-max
+max = 5000;                           %Define y-max
 
 %Log file name and column titles 
 Log_Title = 'LogTitle.txt';

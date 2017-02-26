@@ -18,15 +18,15 @@ clc;
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
 serialPort = 'COM4';                %Define COM port #
-baudrate = 76800;                   %Define baudrate of data
-num_of_in_float = 2;                %Define # of Float/packet
+baudrate = 115200;                   %Define baudrate of data
+num_of_in_float = 1;                %Define # of Float/packet
 delay = 0.025;                      %Make sure sample faster than resolution
             
 %Choose which input float to graph (float_to_graph,then
 %indicate the maximum and minimum value that it can be.
 float_to_graph = 2;                 %Define which float to graph     
 min = 0;                            %Define y-min
-max = 40;                         %Define y-max
+max = 25;                           %Define y-max
 
 %Log file name and column titles 
 Log_Title = 'LogTitle.txt';

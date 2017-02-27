@@ -20,25 +20,25 @@ clc;
 serialPort = 'COM4';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 3;                %Define # of Float/packet
-delay = 0.001;                      %Make sure sample faster than resolution
+delay = 0.005;                      %Make sure sample faster than resolution
             
 %Log file name and column titles 
 Log_Title = 'DataLog.txt';
 fileID = fopen(Log_Title,'w');
-fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Torque Output 1','Torque Output 2','Steering Wheel Angle (Binary)');
+fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Torque Output 1','Torque Output 2','Steering Angle (Binary)');
 
 %Other User Defined Properties
-plotTitle = 'Steering Wheel Angle (Binary) vs Time';   %Plot title
+plotTitle = 'Torque Output 1 vs Time';   %Plot title
 xLabel = 'Elapsed Time(s)';         %X-axis label
-yLabel = 'Steering Wheel Angle (Binary)';        %Y-axis label
+yLabel = 'Torque Output 1';        %Y-axis label
 plotGrid = 'on';                    %'off' to turn off grid
 scrollWidth = 20;                   %Display period in plot, plot entire data log if <= 0
 
 %Choose which input float to graph (float_to_graph,then
 %indicate the maximum and minimum value that it can be.
-float_to_graph = 3;                 %Define which float to graph     
+float_to_graph = 1;                 %Define which float to graph     
 min = 0;                            %Define y-min
-max = 5000;                           %Define y-max
+max = 25;                           %Define y-max
 
 %Define Function Variables
 time = 0;

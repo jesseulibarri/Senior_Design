@@ -20,7 +20,7 @@
 
 #define PACKAGE_SIZE    4
 
-float torque;
+float torque = 0;
 float converted_torque;
 unsigned char torque_bytes[4];
 
@@ -85,7 +85,7 @@ cursor_home();
 uart_init();
 
     while(1) {
-        torque = torque + 0.24395;
+        torque = torque + 0.5;
         float_to_bytes(&torque, torque_bytes);
         send_package(torque_bytes);
         bytes_to_float(torque_bytes, &converted_torque);
@@ -93,7 +93,7 @@ uart_init();
         clear_display();
         cursor_home();
         string2lcd(lcd_string);
-        _delay_ms(200);
+        _delay_ms(500);
         
 
     }//while

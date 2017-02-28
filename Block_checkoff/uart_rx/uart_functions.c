@@ -10,10 +10,10 @@
 
 //F_CPU should be set in Makefile, don't set it here.
 
-#define USART_BAUDRATE 38400  
+#define USART_BAUDRATE 115200
 #define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16UL)) - 1 )
 
-#define USART1_BAUDRATE 38400  
+#define USART1_BAUDRATE 115200 
 #define BAUDVALUE_1  ((F_CPU/(USART1_BAUDRATE * 16UL)) - 1 )
 
 #include <string.h>
@@ -97,8 +97,8 @@ void uart_puts_p(const char *str) {
 
 void uart_init(){
 //rx and tx enable, receive interrupt enabled, 8 bit characters
-UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
-//  UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
+//UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
+UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
 
 //async operation, no parity,  one stop bit, 8-bit characters
   UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00);

@@ -1,8 +1,8 @@
-PRG             =uart_tx
+PRG             =rx
 #PRG				=uart_test
 
-OBJS            =uart_tx.o uart_functions.o
-SRCS            =uart_tx.c uart_functions.c
+OBJS            =rx.o uart_functions.o hd44780.o
+SRCS            =rx.c uart_functions.c hd44780.c
 
 MCU_TARGET     = atmega128
 #MCU_TARGET     = atmega48

@@ -26,16 +26,6 @@
 #define FOSC 16000000		//Clk frequency
 #define MYUBBR FOSC/16/BAUD-1	//UART UBBR calulation to get 9600 baud
 
-<<<<<<< HEAD
-=======
-//Structure that holds a 16 bit integer and 16 bit fraction
-//once the floats are converted to ints
-//struct int_frac{
-//    uint16_t integer;
-//    uint16_t fraction;
-//};
->>>>>>> c31e415e1edc4663d4820f7e7caef68e40dd1dfb
-
 //Global Variables
 float torque_right = 0.0;
 unsigned char torque_r_bytes[4];
@@ -45,13 +35,6 @@ uint16_t steering_angle;
 unsigned char steering_angle_bytes[4];
 float steering_angle_float = 0.0;
 
-<<<<<<< HEAD
-=======
-//struct int_frac TR;
-//struct int_frac TL;
-//uint8_t data_array[10];	//data array used to send a 10 byte frame over UART
-
->>>>>>> c31e415e1edc4663d4820f7e7caef68e40dd1dfb
 /***************************************************************************
  * Name: timer1_init
  *
@@ -68,28 +51,37 @@ void timer1_init(){
     
     //Set Prescalar to 64 - 10Hz
     TCCR1B |= (1<<CS11)|(1<<CS10);
-<<<<<<< HEAD
-=======
-
->>>>>>> c31e415e1edc4663d4820f7e7caef68e40dd1dfb
     //Set Prescalar to 256 - 1Hz
     //TCCR1B |= (1<<CS12);;
 
     //Set Output Comare Match A Value - 10Hz
     OCR1A = 24999; 
-<<<<<<< HEAD
     //Set Output Comare Match A Value - 1Hz
     //OCR1A = 62500; 
-=======
-
-    //Set Output Comare Match A Value - 1Hz
-    //OCR1A = 62500; 
-
->>>>>>> c31e415e1edc4663d4820f7e7caef68e40dd1dfb
 
     //Configure Timer/Counter 1 Output Compare Match A Interrupt
     TIMSK |= (1<<TOIE1);
 }//timer1_init
+
+
+/****************************************************************************************
+ * Name: program_init
+ *
+ * Description: This function is used to initialize the timer and uart and is called
+ *	when the controller wakes up out of sleep mode.  
+ ***************************************************************************************/
+void program_init(){
+
+    DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
+    DDRF = 0xFF;
+    DDRD |= (1<<PD0);   //SPI SS pin
+    DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
+    PORTD |= (1<<PD7);  //enable pullup
+    timer1_init();      //initialize 16 bit timer
+    uart1_init(MYUBBR);	//initialize uart
+    sei();
+}//program_init
+
 
 /****************************************************************
  * Name: spi_encoder_init
@@ -366,78 +358,7 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
     }//switch
 }//motor_torque
 
-<<<<<<< HEAD
-=======
-/***********************************************************************************
- * Name: uart_init
- *
- * Description: This function is used to initialize UART1 on the atmega128 so
- *	we can send torque values and steering angle to the simulation on matlab.
- *
- * 	TODO:Eventually we will need to initialize UART2 when we communicate to
- *		the two differn't motor controller boards but for the simulation
- *		and block checkoff one uart line is sufficient.  
- ***********************************************************************************/
-void uart_init(unsigned char ubrr){
-    
-    //Set Baud Rate at 9600
-    UBRR1H = (unsigned char)(ubrr>>8);
-    UBRR1L = (unsigned char)ubrr;
 
-    //Enable Transmitter and Reciever
-    UCSR1B = (1<<RXEN)|(1<<TXEN);
-    
-    //Set Frame Format, 8 bit data, 2 stop bit, Asynchronous
-    UCSR1C |= (1<<UCSZ11)|(1<<UCSZ10)|(1<<USBS1);
-}//uart_init
-
-/**********************************************************************************************
- * Name: uart_transmit
- *
- * Description: This function has a 8 bit data array as an input argument. This array
- * 	will be formatted as a 10 byte frame that contains two torque values and a
- *	steering angle that will be sent over uart 10 times a second. Each torque
- *	value will be 4 bytes, 2 bytes for the integer part and 2 bytes for the fraction
- *	part. The steering angle will be 2 bytes which leaves a total of 10 bytes to be
- *	transmitted. Uart can only transmit 8 bits at a time thats why we use an array
- * 	to frame the data into 8 bit segments. 
- *
- *	TODO: We need to add flag bits after every byte is sent so we can keep data together.
- *		We also might need to add a hand shake feature or error checking so the data
- *		being sent is reliable and not garbage.
- ************************************************************************************************/
-void uart_transmit(uint8_t data_array[], int n){
-    int i = 0;
-    //Wait for empty transmit buffer
-    while(!(UCSR1A & (1<<UDRE1))) { }
-
-    for(i = 0; i < n;i++) {
-        UDR1 = data_array[i];
-    while(!(UCSR1A & (1<<UDRE1))) { }
-    _delay_us(100);
-    }
-
-}//uart_transmit
-
-/****************************************************************************************
- * Name: program_init
- *
- * Description: This function is used to initialize the timer and uart and is called
- *	when the controller wakes up out of sleep mode.  
- ***************************************************************************************/
-void program_init(){
-
-    DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
-    DDRF = 0xFF;
-    DDRD |= (1<<PD0);   //SPI SS pin
-    DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
-    PORTD |= (1<<PD7);  //enable pullup
-    timer1_init();      //initialize 16 bit timer
-    uart_init(MYUBBR);	//initialize uart
-    sei();
-}//program_init
-
->>>>>>> c31e415e1edc4663d4820f7e7caef68e40dd1dfb
 /************************************************************************************************
  * Name: pirate_mode
  *
@@ -488,22 +409,13 @@ ISR(TIMER1_OVF_vect){
     float_to_bytes(&torque_left, torque_l_bytes);
     float_to_bytes(&steering_angle_float, steering_angle_bytes);
 
-    uart_transmit(torque_r_bytes,4);		//transmit right torque value - float, 4 bytes
-    uart_transmit(torque_l_bytes,4);    		//transmit left torque value - float, 4 bytes
-    uart_transmit(steering_angle_bytes,4);		//transmit steering encoder value - uint16, 2 bytes
+    uart1_transmit(torque_r_bytes,4);		//transmit right torque value - float, 4 bytes
+    uart1_transmit(torque_l_bytes,4);    		//transmit left torque value - float, 4 bytes
+    uart1_transmit(steering_angle_bytes,4);		//transmit steering encoder value - uint16, 2 bytes
 
     spi_init();					//Used to initalize SPI for LCD screen if being used
     PORTF &= ~(1<<PF0);
 }//timer1_isr
-
-<<<<<<< HEAD
-=======
-int main(){
-   //char lcd_data1[16] = {"        L_torque"};
-   //char lcd_data2[16] = {"        R_torque"};
-   //char lcd_data3[16] = {"        "};
-   //char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
->>>>>>> c31e415e1edc4663d4820f7e7caef68e40dd1dfb
 
 /***************************** MAIN *********************************/
 int main(){
@@ -516,18 +428,10 @@ int main(){
     //DDRD |= (1<<PD0);   //SPI SS pin
     DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
     PORTD |= (1<<PD7);  //enable pullup
-<<<<<<< HEAD
     spi_init();
     lcd_init();
     clear_display();
     cursor_home();
-=======
-    //spi_init();
-    //lcd_init();
-    //clear_display();
-    //cursor_home();
-    // spi_encoder_init();
->>>>>>> c31e415e1edc4663d4820f7e7caef68e40dd1dfb
     timer1_init();      //initialize 16 bit timer
     //uart0_init(MYUBBR);	//initialize uart
     uart1_init(MYUBBR);	
@@ -539,7 +443,6 @@ int main(){
 	    if(!(PIND & (1<<PD1))){
 		pirate_mode();	//If toggle goes low, go to sleep
 		_delay_ms(10);
-<<<<<<< HEAD
 	    }
 */
         //format the LCD arrays (We could move this to happen on the interrupt
@@ -548,20 +451,14 @@ int main(){
         for(j = 0; j <= 6; j++) { lcd_data1[j] = lcd_temp[j]; }
         dtostrf(torque_right, 6, 3, lcd_temp);
         for(j = 0; j <= 6; j++) { lcd_data2[j] = lcd_temp[j]; }
-=======
-	} */
-    /*
-    dtostrf(torque_left, 6, 3, lcd_data1);
-    dtostrf(torque_right, 6, 3, lcd_data2);
->>>>>>> c31e415e1edc4663d4820f7e7caef68e40dd1dfb
-
+	
         string2lcd(lcd_data1);
         set_cursor(2, 0);
         string2lcd(lcd_data2);
         _delay_ms(50);
         clear_display();
         cursor_home();
-    */
+   
     }//while
 return 0;
 }//main

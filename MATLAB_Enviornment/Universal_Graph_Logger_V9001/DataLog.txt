@@ -1,1 +1,1 @@
-Time(s),Torque Output 1,Torque Output 2,Steering Wheel Angle (Binary),10.002682,
+Time(s),Torque Output 1,Torque Output 2,Steering Angle (Binary),10.001695,

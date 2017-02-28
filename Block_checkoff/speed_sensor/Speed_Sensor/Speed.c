@@ -15,7 +15,7 @@
 #include <math.h>
 #include "hd44780.h"
 
-#define USART_BAUDRATE 76800
+#define USART_BAUDRATE 115200
 #define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16UL)) - 1 )
 
 #define PI 3.14159
@@ -94,7 +94,7 @@ ISR(INT0_vect) {
 }//ISR
 
 ISR(INT1_vect) {
-    if(speed == 0) {
+    if(speed == 0.5) {
     } else { speed -= 0.25; }
 }//ISR
 
@@ -121,11 +121,11 @@ float theta = 0.01;
 
 //PORTD.0 will increase speed, PORTD.1 will deacrease speed
 //Interrupts will trigger on falling edge.
-/*DDRD |= (0 << PD0) | (0 << PD1);
+DDRD |= (0 << PD0) | (0 << PD1);
 PORTD |= (1 << PD0) | (1 << PD1);
 EICRA |= (1 << ISC01) | (1 << ISC11);
 EIMSK |= (1 << INT0) | (1 << INT1);
-*/
+
 //PORTB.0 set to output
 DDRB =0xFF;
 DDRC |= (1 << PC0);
@@ -137,12 +137,16 @@ clear_display();
 sei();
 
     while(1){
-
+/*
         speed = 40*sin(theta);
         period = distance_per_pulse / (speed * 17.6);
         OCR1A = (period * 16000000) / 64;
         theta += 0.01;
         if(theta > PI) { theta = 0.01; }
+*/
+
+        period = distance_per_pulse / (speed * 17.6);
+        OCR1A = (period * 16000000) / 64;
 
         float_to_bytes(&speed, speed_bytes);
         send_packet(speed_bytes);
@@ -150,7 +154,7 @@ sei();
         clear_display();
         cursor_home();
         string2lcd(lcd_string);
-        _delay_ms(100);
+        _delay_ms(300);
         
     }//while
 

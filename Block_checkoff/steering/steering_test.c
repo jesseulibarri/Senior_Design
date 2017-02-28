@@ -11,7 +11,12 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <string.h>
 #include "hd44780.h"
+
+#define BAUD 115200           	//UART Baud Rate
+#define FOSC 16000000		//Clk frequency
+#define MYUBBR FOSC/16/BAUD-1	//UART UBBR calulation to get 9600 baud
 
 #define nop_a5          0x00
 #define rd_pos          0x10
@@ -40,6 +45,51 @@ void spi_init(void){
     SPSR  = (1<<SPI2X);            //run at double spee
 }//spi_init  
 
+void uart0_init(unsigned char ubrr){
+    
+    //Set Baud Rate at 9600
+    UBRR0H = (unsigned char)(ubrr>>8);
+    UBRR0L = (unsigned char)ubrr;
+
+    //Enable Transmitter and Reciever
+    UCSR0B = (1<<RXEN)|(1<<TXEN);
+    
+    //Set Frame Format, 8 bit data, 2 stop bit, Asynchronous
+    UCSR0C |= (1<<UCSZ01)|(1<<UCSZ00)|(1<<USBS0);
+}//uart1_init
+
+
+/****************************************************************
+ * Name: float_to_bytes
+ *
+ * Description: This function will convert a float to an array
+ *  of bytes so that it can be sent over UART.
+ ****************************************************************/
+void float_to_bytes(float* src, unsigned char* dest) {
+    union {
+        float a;
+        unsigned char bytes[4];
+    } u;
+    u.a = *src;
+    memcpy(dest, u.bytes, 4);
+}//float_to_bytes
+
+void uart0_transmit(uint8_t data_array[]){
+    int i = 0;
+    //Wait for empty transmit buffer
+    while(!(UCSR0A & (1<<UDRE0))) { }
+
+    for(i = 0; i < 4;i++) {
+        UDR0 = data_array[i];
+    while(!(UCSR0A & (1<<UDRE0))) { }
+    _delay_us(100);
+    }
+    //TODO: send terminator if needed
+    UDR0 = '\n';
+    while(!(UCSR0A & (1<<UDRE0))) { }
+
+}//uart1_transmit
+
 
 
 int main() {
@@ -48,16 +98,18 @@ int main() {
 uint8_t high_byte;
 uint8_t low_byte;
 uint16_t angle;
+unsigned char angle_bytes[4];
 //char lcd_data[32] = {"                                "};
-char lcd_data[16] = {"                "};
-char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+//char lcd_data[16] = {"                "};
+//char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 DDRA = (1<<PA0)|(1<<PA1);
+uart0_init(MYUBBR);
 
-spi_init();
-lcd_init();
-clear_display();
-cursor_home();
+//spi_init();
+//lcd_init();
+//clear_display();
+//cursor_home();
 
 //make sure that the sensor is initialized
 _delay_ms(200);
@@ -104,10 +156,10 @@ while(1) {
 spi_encoder_init();    
 
 PORTA |= (1<<PA1);
-PORTD &= ~(1<<PB0);     //set select line low
+PORTB &= ~(1<<PB0);     //set select line low
 SPDR = rd_pos;          //send get position command
 while(bit_is_clear(SPSR, SPIF)) {}
-PORTD |= (1<<PB0);      //set select line high
+PORTB |= (1<<PB0);      //set select line high
 PORTA &= ~(1<<PA1);
 _delay_us(20);
 
@@ -115,17 +167,17 @@ _delay_us(20);
 while(SPDR != rd_pos) {
 
     static uint8_t i = 0;
-    PORTD &= ~(1<<PD0);     //ss goes low
+    PORTB &= ~(1<<PD0);     //ss goes low
     SPDR = nop_a5;          //send noop
     while(bit_is_clear(SPSR, SPIF)) {}
-    PORTD |= (1<<PD0);      //ss goes high
+    PORTB |= (1<<PD0);      //ss goes high
     _delay_us(20);          //wait
     if(i == 20) {
         PORTA |= (1<<PA1);
-        PORTD &= ~(1<<PD0);     //set select line low
+        PORTB &= ~(1<<PD0);     //set select line low
         SPDR = rd_pos;          //send get position command
         while(bit_is_clear(SPSR, SPIF)) {}
-        PORTD |= (1<<PD0);      //set select line high
+        PORTB |= (1<<PD0);      //set select line high
         PORTA &= ~(1<<PA1);
         _delay_us(20);
     }//if
@@ -134,24 +186,28 @@ i++;
 }
 
 //encoder is ready, read the upper byte (top 4 bits of the 12 total)
-PORTD &= ~(1<<PB0);     //set select line low
+PORTB &= ~(1<<PB0);     //set select line low
 SPDR = nop_a5;          //send nop command
 while(bit_is_clear(SPSR, SPIF)) {}  //wait for position to be received
-PORTD |= (1<<PD0);
+PORTB |= (1<<PD0);
 high_byte = SPDR;       //store posistion
 
 _delay_us(20);
 
-PORTD &= ~(1<<PD0);
+PORTB &= ~(1<<PD0);
 SPDR = nop_a5;
 while(bit_is_clear(SPSR, SPIF)) {}  //wait for position to be received
-PORTD |= (1<<PD0);
+PORTB |= (1<<PD0);
 low_byte = SPDR;
 
 //combine low and high bytes into a single variable
 angle = (high_byte << 8) | (low_byte);
+//this part is to run on our microcontroller for block checkoff
+float temp = (float)angle;
+float_to_bytes(&temp, angle_bytes);
+uart0_transmit(angle_bytes);
 
-
+/*
 spi_init();
 
 lcd_data[0] = numbers[angle/1000 % 10];
@@ -160,10 +216,10 @@ lcd_data[2] = numbers[angle/10 % 10];
 lcd_data[3] = numbers[angle % 10];
 
 string2lcd(lcd_data);
-
+*/
 _delay_ms(100);
 
-clear_display();
+//clear_display();
 
 }//while
 

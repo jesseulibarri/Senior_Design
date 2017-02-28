@@ -1,8 +1,8 @@
-PRG             =uart_rx_to_lcd
+PRG             =tx
 #PRG				=uart_test
 
-OBJS            =uart_rx_to_lcd.o uart_functions.o hd44780.o
-SRCS            =uart_rx_to_lcd.c uart_functions.c hd44780.c
+OBJS            =tx.o uart_functions.o hd44780.o
+SRCS            =tx.c uart_functions.c hd44780.c
 
 MCU_TARGET     = atmega128
 #MCU_TARGET     = atmega48

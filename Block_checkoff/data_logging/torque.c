@@ -1,10 +1,16 @@
 /************************************************************************************************
+ * Motor Torque Calculation and Data Logging
+ *
  * Author: Shane Licari
- * Date: 2/14/17
+ * Contributers: Eli Y. Jesse U.
+ * Date: 2/28/2017
  *
  * Description: This program will calculate a motor torque
  *  based off of a steering angle while ramping the torque
- *  at a certain rate.
+ *  at a certain rate. It will then take the calculated 
+ *  steering angle and the output motor torque, both 1 and 2, 
+ *  type cast and/or convert them into a float, then send 
+ *  them via UART at 76800 Baud to the data logger.
  *************************************************************************************************/
 
 #include <avr/io.h>
@@ -74,7 +80,7 @@ void spi_encoder_init(){
 
     //Set data direction for SPI and set pullup for MISO
     DDRB |= (1<<PB0)|(1<<PB1)|(1<<PB2)|(0<<PB3);
-    PORTB |= (1<<PB3); //MISO line
+    PORTB |= (1<<PB3); 			//MISO line
     DDRD |= (1<<PD0);
   
     //Enable SPI, shift LSB first, mast mode, clk low on idle,
@@ -127,38 +133,37 @@ uint16_t get_angle(){
     uint8_t low_byte;
     uint16_t angle;
 
-    spi_encoder_init();	//Initialize the SPI protocol for the steering encoder
-    //_delay_us(20);
-    PORTD &= ~(1<<PD0); //Set Select Line Low
-    SPDR = rd_pos;      //Send get position command
-    while(bit_is_clear(SPSR, SPIF)){} //Wait for SPI transmission
-    PORTD |= (1<<PD0);  //Set Select Line High
-    _delay_us(20);	//Wait
+    spi_encoder_init();					//Initialize the SPI protocol for the steering encoder
+    PORTD &= ~(1<<PD0); 				//Set Select Line Low
+    SPDR = rd_pos;      				//Send get position command
+    while(bit_is_clear(SPSR, SPIF)){} 	//Wait for SPI transmission
+    PORTD |= (1<<PD0);  				//Set Select Line High
+    _delay_us(20);						//Wait
 
     //Wait for Encoder Ready Response
     while(SPDR != rd_pos){    
-        PORTD &= ~(1<<PD0);     //Set Select Line Low
-        SPDR = nop_a5;          //Send no-op
+        PORTD &= ~(1<<PD0);     		//Set Select Line Low
+        SPDR = nop_a5;          		//Send no-op
         while(bit_is_clear(SPSR, SPIF)){}
-        PORTD |= (1<<PD0);      //Set Select Line High
-        _delay_us(20);          //Wait
+        PORTD |= (1<<PD0);      		//Set Select Line High
+        _delay_us(20);          		//Wait
     }//while
 
     //Encoder is ready, read the upper byte (top 4 bits of the 12 total)
-    PORTD &= ~(1<<PD0);     //Set Select Line Low
-    SPDR = nop_a5;          //Send no-op
+    PORTD &= ~(1<<PD0);     			//Set Select Line Low
+    SPDR = nop_a5;          			//Send no-op
     while(bit_is_clear(SPSR, SPIF)){}   //Wait for Position to be Received
-    PORTD |= (1<<PD0);      //Set Select Line High
-    high_byte = SPDR;       //Store Position
-    _delay_us(20);          //Wait
-    PORTD &= ~(1<<PD0);     //Set Select Line Low
-    SPDR = nop_a5;           //Send no-op
+    PORTD |= (1<<PD0);      			//Set Select Line High
+    high_byte = SPDR;       			//Store Position
+    _delay_us(20);          			//Wait
+    PORTD &= ~(1<<PD0);     			//Set Select Line Low
+    SPDR = nop_a5;           			//Send no-op
     while(bit_is_clear(SPSR, SPIF)){}   //Wait for Position to Be received
-    PORTD |= (1<<PD0);      //Set Select Line High
+    PORTD |= (1<<PD0);      			//Set Select Line High
     low_byte = SPDR;
 
     //Cancatonate the high and low byte of the steering 
-    //angle to a 16 bit integer and return the angle
+    //angle to a 16-bit integer and return the angle
     angle = (high_byte<<8)|(low_byte);	
     return angle;
 }//get_angle
@@ -174,7 +179,6 @@ uint16_t get_angle(){
  *	turning left and right to calculate a difference in torque (electronic differential).
  *	This function also implements a safety feature that doesnt let the torque ramp up
  *	past a set max torque value which can be changed.
- *
  ************************************************************************************************/
 void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle){
     
@@ -184,10 +188,9 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
     static uint8_t max_torque = 25;
     uint8_t user_mode = PIND | 0x7F;
 
-    general_torque += 0.5;	//This variable is used for the ramping feature
-    angle = get_angle();	//get steering angle reading from encoder
-    //angle = 10;
-    *steer_angle = angle;	//modify the global steering angle variable
+    general_torque += 0.5;				//This variable is used for the ramping feature
+    angle = get_angle();				//get steering angle reading from encoder
+    *steer_angle = angle;				//modify the global steering angle variable
     
     switch(user_mode){
 
@@ -202,15 +205,15 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
             }
             //We are turning right
             if(angle >= 0 && angle <= 2048){
-                torque_ratio = ((-0.00031)*angle)+(0.99972);	//Calculate torque ratio
-                *torque_right = general_torque*torque_ratio;	//Update right motor torque
-                *torque_left = general_torque;			//Update left motor torque
+                torque_ratio = ((-0.00031)*angle)+(0.99972);		//Calculate torque ratio
+                *torque_right = general_torque*torque_ratio;		//Update right motor torque
+                *torque_left = general_torque;						//Update left motor torque
             }
             //We are turning left
             else{
                 torque_ratio = ((1.033)*log((double)angle))-(7.59);	//Log function takes a double so had to typecast
-                *torque_left = general_torque*torque_ratio;		//Update left motor torque
-                *torque_right = general_torque;				//Update right motor torque
+                *torque_left = general_torque*torque_ratio;			//Update left motor torque
+                *torque_right = general_torque;						//Update right motor torque
             }
             break;
         //Cruise Mode
@@ -233,7 +236,6 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
  *
  * Description: This function is used to initialize UART1 on the atmega128 so
  *	we can send torque values and steering angle to the simulation on matlab.
- *
  ************************************************************************************************/
 void uart_init(unsigned char ubrr){
     
@@ -258,7 +260,6 @@ void uart_init(unsigned char ubrr){
  *  will be converted to a 4 byte float, which leaves a total of 12 bytes to be
  *	transmitted. Uart can only transmit 8 bits at a time thats why we use an array
  * 	to frame the data into 8 bit segments and sent back-to-back as floats. 
- *
  ************************************************************************************************/
 void uart_transmit(uint8_t data_array[], int n){
 	
@@ -275,15 +276,6 @@ void uart_transmit(uint8_t data_array[], int n){
 
 
 /************************************************************************************************
- * Name: ISR for pirate mode function
-************************************************************************************************/
-//ISR for the pirate mode function
-ISR(INT1_vect){
-	
-    EIMSK &= ~(1<<INT1);
-}//ISR
-
-/************************************************************************************************
  * Name: ISR for 16-bit timer, sends 4 floats of data to be logged
  ************************************************************************************************/
 ISR(TIMER1_OVF_vect){
@@ -298,11 +290,11 @@ ISR(TIMER1_OVF_vect){
     float_to_bytes(&torque_left, torque_l_bytes);
     float_to_bytes(&steering_angle_float, steering_angle_bytes);
 
-    uart_transmit(torque_r_bytes,4);		//transmit right torque value - float, 4 bytes
+    uart_transmit(torque_r_bytes,4);			//transmit right torque value - float, 4 bytes
     uart_transmit(torque_l_bytes,4);    		//transmit left torque value - float, 4 bytes
     uart_transmit(steering_angle_bytes,4);		//transmit steering encoder value - uint16, 2 bytes
 
-    spi_init();					//Used to initalize SPI for LCD screen if being used
+    spi_init();									//Used to initalize SPI for LCD screen if being used
     PORTF &= ~(1<<PF0);
 }//timer1_isr
 
@@ -313,10 +305,10 @@ int main(){
 	
     DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
     DDRF = 0xFF;
-    DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
-    PORTD |= (1<<PD7);  //enable pullup
-    timer1_init();      //initialize 16 bit timer
-    uart_init(MYUBBR);	//initialize uart
+    DDRD &= ~(1<<PD7)|(1<<PD6);  			//Configure Port D Pin 7, 6 for input
+    PORTD |= (1<<PD7);  					//enable pullup
+    timer1_init();      					//initialize 16 bit timer
+    uart_init(MYUBBR);						//initialize uart
     sei();
 
     while(1){

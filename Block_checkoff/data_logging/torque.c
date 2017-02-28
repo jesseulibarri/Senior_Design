@@ -166,18 +166,15 @@ uint16_t get_angle(){
 /************************************************************************************************
  * Name: motor_torque
  *
- * Description: This funcion is has 3 input arguments all which are passed by pointer
- *	reference beccause these arguments are modified in the function. This function
+ *  Description: This funcion is has 3 input arguments all which are passed by pointer
+ *	reference because these arguments are modified in the function. This function
  *	is used to calculate a torque ration between the rear wheels of the car based
- *	on a steering angle. As well this function inlcudes an acceleration mode which
- * 	is used to ramp up the speed of the care while still checking if the car is 
+ *	on a steering angle. This function inlcudes an acceleration mode,
+ * 	used to ramp up the output torque, while still checking if the car is 
  *	turning left and right to calculate a difference in torque (electronic differential).
  *	This function also implements a safety feature that doesnt let the torque ramp up
  *	past a set max torque value which can be changed.
  *
- *	TODO: We need to work on the cruise control switch case and implement the speed sensor
- *		calculation. Need to ask Brian if we can cut torque to motors when not accelerating
- *		or if we have to ramp the torque down before going into sleep mode. 
  ************************************************************************************************/
 void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle){
     
@@ -237,13 +234,10 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
  * Description: This function is used to initialize UART1 on the atmega128 so
  *	we can send torque values and steering angle to the simulation on matlab.
  *
- * 	TODO:Eventually we will need to initialize UART2 when we communicate to
- *		the two differn't motor controller boards but for the simulation
- *		and block checkoff one uart line is sufficient.  
  ************************************************************************************************/
 void uart_init(unsigned char ubrr){
     
-    //Set Baud Rate at 9600
+    //Set Baud Rate at 76800
     UBRR1H = (unsigned char)(ubrr>>8);
     UBRR1L = (unsigned char)ubrr;
 
@@ -260,14 +254,11 @@ void uart_init(unsigned char ubrr){
  * Description: This function has a 8 bit data array as an input argument. This array
  * 	will be formatted as a 10 byte frame that contains two torque values and a
  *	steering angle that will be sent over uart 10 times a second. Each torque
- *	value will be 4 bytes, 2 bytes for the integer part and 2 bytes for the fraction
- *	part. The steering angle will be 2 bytes which leaves a total of 10 bytes to be
+ *	value will be 4 bytes, sent as a float in 4 8-bit pieces. The steering angle 
+ *  will be converted to a 4 byte float, which leaves a total of 12 bytes to be
  *	transmitted. Uart can only transmit 8 bits at a time thats why we use an array
- * 	to frame the data into 8 bit segments. 
+ * 	to frame the data into 8 bit segments and sent back-to-back as floats. 
  *
- *	TODO: We need to add flag bits after every byte is sent so we can keep data together.
- *		We also might need to add a hand shake feature or error checking so the data
- *		being sent is reliable and not garbage.
  ************************************************************************************************/
 void uart_transmit(uint8_t data_array[], int n){
 	
@@ -282,54 +273,6 @@ void uart_transmit(uint8_t data_array[], int n){
     }
 }//uart_transmit
 
-/************************************************************************************************
- * Name: program_init
- *
- * Description: This function is used to initialize the timer and uart and is called
- *	when the controller wakes up out of sleep mode.  
- ***********************************************************************************************/
-void program_init(){
-
-    DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
-    DDRF = 0xFF;
-    DDRD |= (1<<PD0);   //SPI SS pin
-    DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
-    PORTD |= (1<<PD7);  //enable pullup
-    timer1_init();      //initialize 16 bit timer
-    uart_init(MYUBBR);	//initialize uart
-    sei();
-}//program_init
-
-/************************************************************************************************
- * Name: pirate_mode
- *
- * Description: This function is used to put the atmega128 into sleep mode when the car is 
- *	not accelerating so we can save power. This function shuts down all sensors and the
- *	12v power converter. The only thing that is not shutdown is the 5v converter so we
- *	can wake the microcontroller up with a rising edge interrupt using a toggle switch.
- *
- * 	TODO: We need to look into the feasability of using the acceleration button to go 
- *		into sleep mode whenever its not being pressed and waking up when acceleration
- *		mode is engadged. Aslo need to look into debounce circuitry or software 
- *		debounding so this feature is fail safe.  
- ************************************************************************************************/
-void pirate_mode(){
-	
-    //Configure interrupt 0 so a rising edge will wake up the controller from sleep mode
-    EICRA |= (1<<ISC11)|(1<<ISC10); //Generate aysnchronous interrupt request on rising edge
-    EIMSK |= (1<<INT1);  //Enable external interrupt 0
-
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN); //Enable power down mode, set sleep enable bit
-                                         //in the MCUCR register
-    PORTB &= ~((1<<speed1_relay)|(1<<speed2_relay)|(1<<pc_relay)); //Turn off relay circuits
-    cli();  //Clear global interrupt
-    sleep_enable(); //Set sleep enable bit in MCUCR register
-    sei();          //Set global interrupt bit
-    sleep_cpu();    //CPU is sleeping
-    sleep_disable();   //CPU wakes up on rising edge ISR is executed
-    program_init();
-    PORTB |= (1<<speed1_relay)|(1<<speed2_relay)|(1<<pc_relay); //Turn on relay circuits
-}//pirate_mode
 
 /************************************************************************************************
  * Name: ISR for pirate mode function
@@ -341,7 +284,7 @@ ISR(INT1_vect){
 }//ISR
 
 /************************************************************************************************
- * Name: ISR for 16-bit timer
+ * Name: ISR for 16-bit timer, sends 4 floats of data to be logged
  ************************************************************************************************/
 ISR(TIMER1_OVF_vect){
 	
@@ -370,7 +313,6 @@ int main(){
 	
     DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
     DDRF = 0xFF;
-    //DDRD |= (1<<PD0);   //SPI SS pin
     DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
     PORTD |= (1<<PD7);  //enable pullup
     timer1_init();      //initialize 16 bit timer

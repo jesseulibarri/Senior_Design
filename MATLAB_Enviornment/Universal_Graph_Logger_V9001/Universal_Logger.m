@@ -20,7 +20,7 @@ try
     %you would like to sample for input.
     serialPort = 'COM4';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
-    num_of_in_float = 3;                %Define # of Float/packet
+    num_of_in_float = 2;                %Define # of Float/packet
     delay = 0.001;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
@@ -37,9 +37,9 @@ try
 
     %Choose which input float to graph (float_to_graph,then
     %indicate the maximum and minimum value that it can be.
-    float_to_graph = 3;                 %Define which float to graph     
+    float_to_graph = 1;                 %Define which float to graph     
     min = 0;                            %Define y-min
-    max = 5000;                           %Define y-max
+    max = 25;                           %Define y-max
 
     %Define Function Variables
     time = 0;

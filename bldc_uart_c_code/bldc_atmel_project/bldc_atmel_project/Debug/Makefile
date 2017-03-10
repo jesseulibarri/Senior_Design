@@ -57,6 +57,7 @@ C_SRCS +=  \
 ../src/bldc_interface_uart.c \
 ../src/buffer.c \
 ../src/crc.c \
+../src/hd44780.c \
 ../src/packet.c \
 ../src/ASF/mega/boards/stk600/rcx_x/init.c \
 ../src/main.c
@@ -73,6 +74,7 @@ src/bldc_interface.o \
 src/bldc_interface_uart.o \
 src/buffer.o \
 src/crc.o \
+src/hd44780.o \
 src/packet.o \
 src/ASF/mega/boards/stk600/rcx_x/init.o \
 src/main.o
@@ -82,6 +84,7 @@ src/bldc_interface.o \
 src/bldc_interface_uart.o \
 src/buffer.o \
 src/crc.o \
+src/hd44780.o \
 src/packet.o \
 src/ASF/mega/boards/stk600/rcx_x/init.o \
 src/main.o
@@ -91,6 +94,7 @@ src/bldc_interface.d \
 src/bldc_interface_uart.d \
 src/buffer.d \
 src/crc.d \
+src/hd44780.d \
 src/packet.d \
 src/ASF/mega/boards/stk600/rcx_x/init.d \
 src/main.d
@@ -100,6 +104,7 @@ src/bldc_interface.d \
 src/bldc_interface_uart.d \
 src/buffer.d \
 src/crc.d \
+src/hd44780.d \
 src/packet.d \
 src/ASF/mega/boards/stk600/rcx_x/init.d \
 src/main.d
@@ -118,6 +123,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

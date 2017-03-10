@@ -10,6 +10,8 @@ src\buffer.c
 
 src\crc.c
 
+src\hd44780.c
+
 src\packet.c
 
 src\ASF\mega\boards\stk600\rcx_x\init.c

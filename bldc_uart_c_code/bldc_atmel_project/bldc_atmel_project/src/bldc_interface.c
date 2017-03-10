@@ -506,7 +506,6 @@ void bldc_interface_set_duty_cycle(float dutyCycle) {
 
 void bldc_interface_set_current(float current) {
 	int32_t send_index = 0;
-	fwd_can_append(send_buffer, &send_index);
 	send_buffer[send_index++] = COMM_SET_CURRENT;
 	buffer_append_float32(send_buffer, current, 1000.0, &send_index);
 	send_packet_no_fwd(send_buffer, send_index);

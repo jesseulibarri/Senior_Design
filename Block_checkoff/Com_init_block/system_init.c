@@ -5,8 +5,9 @@
 #include <string.h>
 #include <util/delay.h>
 #include "math.h"
-#include "uart_functions.h"
+//#include "uart_functions.h"
 
+//#define F_CPU 16000000
 #define ON  1
 #define OFF 0
 #define TIRE_DIAM       22
@@ -15,6 +16,9 @@
 #define SPEED2_RELAY    5
 #define PC_RELAY        6
 #define PIRATE_SWITCH   7
+
+#define USART_BAUDRATE 115200
+#define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16UL)) - 1 )
 
 //Global Variables
 double tire_circ;
@@ -68,7 +72,7 @@ void system_init() {
     TCCR0 = (0 << WGM01) | (0 << WGM00) | \
             (0 << CS01) | (1 << CS00);      //Normal mode, 8 prescale
     while(!((ASSR & 0b0111) == 0)) {}       //spin till registers finish updating
-   
+
     ///*** Calculate the system needed constants ***/
     uint8_t j;
     tire_circ = TIRE_DIAM * M_PI;
@@ -80,66 +84,65 @@ void system_init() {
 
     /****** Datalogging *******/
     if(datalogging) { 
-
+       
         //Set SS, MOSI, SCK as output
-        DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2);
+        DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2) |(0 << PB3);
         //Configure SPI (Slave mode, clk low on idle, rising edge sample)
-        SPCR = (1<<SPE)|(1<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR1)|(0<<SPR0);
+        SPCR = (1<<SPE)|(1<<MSTR)|(0<<CPOL)|(0<<CPHA);//|(1<<SPR1)|(0<<SPR0);
         SPSR = (1<<SPI2X);
 
     }//if datalogging
     
-    /******** ADC *********/
-    //Initalize ADC and the ports
-    DDRF &= ~(1<<PF1);  //Port F bit 1 is ADC input
-    PORTF &= ~(1<<PF1); //Port F bit 1 pull up has to be off
-
-    ADMUX = (0<<REFS1)|(1<<REFS0)|(1<<MUX0);    //Single ended input, Port F bit 0, 
-                                                //right adjusted, 10 bit
-    //ADC enabled, One shot mode, ADC complete interrupt enabled, clk prescalar 128 (125khz)
-    ADCSRA = (1<<ADEN)|(1<<ADIE)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
-
     /****** UART0 *******/
-    //uart_init();
-    UCSR0B |= (1 << RXEN0) | (1 << TXEN0);      //Enable TX, RX
-    UCSR0C |= (0<<UMSEL0)|(0<<USBS0)|(1<<UCSZ00)|(1<<UCSZ01);   //Async, no parity, 1 stop bit
-                                                                // 8-bit char size
-    UBRR0H = (51 >> 8);     //set baudrate to 38.4k
-    UBRR0L = 51;
+    //my_uart_init();
+    //rx and tx enable, receive interrupt enabled, 8 bit characters
+    UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
+//  UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
+
+    //async operation, no parity,  one stop bit, 8-bit characters
+    UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00);
+    UBRR0H = (BAUDVALUE >>8 ); //load upper byte of the baud rate into UBRR 
+    UBRR0L =  BAUDVALUE;       //load lower byte of the baud rate into UBRR 
 
     /****** UART2 *******/
-    uart1_init();
-/*    UCSR1B |= (1 << RXEN1) | (1 << TXEN1);      //Enable TX, RX
-    UCSR1C |= (0<<UMSEL1)|(0<<USBS1)|(1<<UCSZ10)|(1<<UCSZ11);   //Async, no parity, 1 stop bit
-                                                                // 8-bit char size
-    UBRR1H = (51 >> 8);      //set baudrate to 38.4k
-    UBRR1L = 51;
-*/  
-    
+    //my_uart1_init();
+    //rx and tx enable, receive interrupt enabled, 8 bit characters
+    //UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
+    UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
+
+    //async operation, no parity,  one stop bit, 8-bit characters
+    UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10);
+    UBRR1H = (BAUDVALUE >>8 ); //load upper byte of the baud rate into UBRR 
+    UBRR1L =  BAUDVALUE;       //load lower byte of the baud rate into UBRR 
+
     /****** For Block Checkoff *******/
     
-    //Send a value via UART
+/*    //Send a value via UART
     uint8_t i;
     char characters[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     for(i = 0; i < 10; i++) {
-        uart1_putc(characters[i]);
+        //uart_putc(characters[i]);
+        while (!(UCSR0A&(1<<UDRE0)));    // Wait for previous transmissions
+        UDR0 = characters[i];;    // Send data byte
+        while (!(UCSR0A&(1<<UDRE0)));    // Wait for previous transmissions
+
         _delay_ms(1000);
     }
-
+*/
     //*********** Send SPI Data **********
-    //Send a value to the bar graph via SPI
+/*    //Send a value to the bar graph via SPI
     DDRF = (1 << PF6) | (1 << PF5);  //set data direction for bar graph poke
 
     _delay_ms(500);
     for(i = 1; i < 11; i++) {
         SPDR = i;
         while(bit_is_clear(SPSR, SPIF)) {} // wait until data is sent
-        //********** Bar Graph Portion *******************
+        ********** Bar Graph Portion *******************
         PORTF |= (1 << PF6);      // move graph data from shift to storage reg.
         PORTF &= ~(1 << PF6);     // change 3-state back to high Z
         _delay_ms(1000);
     }
-
+*/
     /******************** End Testing **************************/
 
 

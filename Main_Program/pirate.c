@@ -6,6 +6,7 @@
 #include <util/delay.h>
 #include <stdlib.h>
 #include "pirate.h"
+#include "system_init.h"
 
 
 /*********************************************************************
@@ -24,21 +25,15 @@ void pirate_mode() {
     
     EICRA = (1<<ISC00) | (1<<ISC01);   //Generate aysnchronous interrupt request on rising edge
     EIMSK = (1<<INT0);                 //Enable external interrupt 0
-
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);    //Enable power down mode, set sleep enable bit 
                                             //in the MCUCR register
-
     PORTB &= ~((1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY));  //Turn off relay circuits
-    
     cli();  //clear global interrupt
-    
-    
     sleep_enable();         //Set sleep enable bit in MCUCR register
-   // sleep_bod_disable();  //Disable brown out detector
     sei();                  //Set global interrupt bit
     sleep_cpu();            //CPU is sleeping
     sleep_disable();        //CPU wakes up on rising edge ISR is executed
-
+    system_init();
     PORTB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Turn on relay circuits
 
 }//pirate_mode

@@ -16,6 +16,10 @@
 #include <string.h>
 
 #include "bldc_interface.h"
+#include "bldc_interface_uart.h"
+#include "buffer.h"
+#include "packet.h"
+#include "crc.h"
 #include "hd44780.h"
 
 #define nop_a5  0x00		
@@ -26,9 +30,10 @@
 #define pirate_switch 1     	//Port D Pin 1
 #define BAUD 76800           	//UART Baud Rate
 #define FOSC 16000000			//Clk frequency
-#define MYUBBR FOSC/16/BAUD-1	//UART UBBR calulation to get 9600 baud
+#define MYUBBR FOSC/16/BAUD-1	//UART UBBR calculation to get 9600 baud
 
 //Global Variables
+float setcurrent = 0.0;
 float torque_right = 0.0;
 unsigned char torque_r_bytes[4];
 float torque_left = 0.0;
@@ -40,7 +45,7 @@ float steering_angle_float = 0.0;
 /*************************************************************************************************
  * Name: timer1_init
  *
- * Description: This 16 bit timer is used at 10Hz. Everytime the timer
+ * Description: This 16 bit timer is used at 10Hz. Every time the timer
  * 	reaches the top value (OCR1A) the timer over flow flag is set
  *	and a interrupt is triggered 10 times a second. This will be 
  *	used to update motor torque values in the ISR. This function has
@@ -74,13 +79,13 @@ void timer1_init(){
  ************************************************************************************************/
 //void spi_encoder_init(){
 //
-//    //Set data direction for SPI and set pullup for MISO
+//    //Set data direction for SPI and set pull up for MISO
 //    DDRB |= (1<<PB0)|(1<<PB1)|(1<<PB2)|(0<<PB3);
 //    PORTB |= (1<<PB3); //MISO line
 //    DDRD |= (1<<PD0);
 //  
 //    //Enable SPI, shift LSB first, mast mode, clk low on idle,
-//    //data sampled on rising edge, clk/16 = 1MHz datarate
+//    //data sampled on rising edge, clk/16 = 1MHz data rate
 //    SPCR = (1<<SPE)|(0<<DORD)|(1<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR0);
 //}//spi_encoder_init
 
@@ -118,8 +123,8 @@ void float_to_bytes(float* src, unsigned char* dest) {
  *
  * Description: This function is used to get a 12 bit value from the steering
  *	encoder from 0-4096 which corresponds to 0-360 degrees. The steering
- * 	encoder uses SPI for comminication so we can only read 8 bits at a 
- * 	time which is why we ask for two 8 bit values and cacatonate them
+ * 	encoder uses SPI for communication so we can only read 8 bits at a 
+ * 	time which is why we ask for two 8 bit values and concatonate them
  * 	together in a 16 bit integer and then this function returns that
  * 	16 bit int. 
  ************************************************************************************************/
@@ -159,7 +164,7 @@ void float_to_bytes(float* src, unsigned char* dest) {
     PORTD |= (1<<PD0);      //Set Select Line High
     low_byte = SPDR;
 
-    //Cancatonate the high and low byte of the steering 
+    //Concatenates the high and low byte of the steering 
     //angle to a 16 bit integer and return the angle
     angle = (high_byte<<8)|(low_byte);	
     return angle;
@@ -168,13 +173,13 @@ void float_to_bytes(float* src, unsigned char* dest) {
 /************************************************************************************************
  * Name: motor_torque
  *
- * Description: This funcion is has 3 input arguments all which are passed by pointer
- *	reference beccause these arguments are modified in the function. This function
+ * Description: This function is has 3 input arguments all which are passed by pointer
+ *	reference because these arguments are modified in the function. This function
  *	is used to calculate a torque ration between the rear wheels of the car based
- *	on a steering angle. As well this function inlcudes an acceleration mode which
+ *	on a steering angle. As well this function includes an acceleration mode which
  * 	is used to ramp up the speed of the care while still checking if the car is 
  *	turning left and right to calculate a difference in torque (electronic differential).
- *	This function also implements a safety feature that doesnt let the torque ramp up
+ *	This function also implements a safety feature that doesn't let the torque ramp up
  *	past a set max torque value which can be changed.
  *
  *	TODO: We need to work on the cruise control switch case and implement the speed sensor
@@ -240,7 +245,7 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
  *	we can send torque values and steering angle to the simulation on matlab.
  *
  * 	TODO:Eventually we will need to initialize UART2 when we communicate to
- *		the two differn't motor controller boards but for the simulation
+ *		the two different motor controller boards but for the simulation
  *		and block checkoff one uart line is sufficient.  
  ************************************************************************************************/
 void uart_init(unsigned char ubrr){
@@ -271,14 +276,15 @@ void uart_init(unsigned char ubrr){
  *		We also might need to add a hand shake feature or error checking so the data
  *		being sent is reliable and not garbage.
  ************************************************************************************************/
-void uart_transmit(uint8_t data_array[], int n){
+static void send_packet(unsigned char *data, unsigned int len){
 	
     int i = 0;
+	
     //Wait for empty transmit buffer
     while(!(UCSR1A & (1<<UDRE1))) { }
 
-    for(i = 0; i < n;i++) {
-        UDR1 = data_array[i];
+    for(i = 0; i < len;i++) {
+        UDR1 = data[i];
     while(!(UCSR1A & (1<<UDRE1))) { }
     _delay_us(100);
     }
@@ -307,20 +313,23 @@ void program_init(){
  ************************************************************************************************/
 ISR(TIMER1_OVF_vect){
 	
+	bldc_interface_uart_init(send_packet);
+		
 	//ISR for the 16 bit timer
     PORTB ^= (1<<PB7);
     PORTF |= (1<<PF0);
     motor_torque(&torque_right, &torque_left, &steering_angle);	//Update motor torques
     steering_angle_float = (float)steering_angle;
 
-    float_to_bytes(&torque_right, torque_r_bytes);
-    float_to_bytes(&torque_left, torque_l_bytes);
+    //float_to_bytes(&torque_right, torque_r_bytes);
+    //float_to_bytes(&torque_left, torque_l_bytes);
     //float_to_bytes(&steering_angle_float, steering_angle_bytes);
-    
-	send_packet_bldc_interface(unsigned char *torque_r_bytes, unsigned int 4);
-	
-    uart_transmit(torque_r_bytes,4);		//transmit right torque value - float, 4 bytes
-    uart_transmit(torque_l_bytes,4);    		//transmit left torque value - float, 4 bytes
+
+	setcurrent = torque_right;
+    bldc_interface_set_current(setcurrent);
+
+    //uart_transmit(torque_r_bytes,4);		//transmit right torque value - float, 4 bytes
+    //uart_transmit(torque_l_bytes,4);    		//transmit left torque value - float, 4 bytes
     //uart_transmit(steering_angle_bytes,4);		//transmit steering encoder value - uint16, 2 bytes
 
 //    spi_init();					//Used to initalize SPI for LCD screen if being used
@@ -328,7 +337,7 @@ ISR(TIMER1_OVF_vect){
 }//timer1_isr
 
 /************************************************************************************************
- * Name: Main program, initalize all required ports, timers and UART. Loop infinitely.
+ * Name: Main program, initialize all required ports, timers and UART. Loop infinitely.
  ************************************************************************************************/
 int main(){
 	

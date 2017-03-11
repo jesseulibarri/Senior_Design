@@ -20,7 +20,7 @@ try
     %you would like to sample for input.
     serialPort = 'COM4';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
-    num_of_char = 9;
+    num_of_char = 10;
     num_of_in_float = 0;                %Define # of Float/packet
     delay = 0.001;                      %Make sure sample faster than resolution
 
@@ -88,12 +88,12 @@ try
 
     %Loop when Plot is Active 
     while ishandle(plotGraph)
-        Rx_data_packet = fread(s, 9, 'uchar')
+        Rx_data_packet = fread(s, 10, 'uchar')
         %Rx_data_packet = fread(s, num_of_in_float, 'float32')        
         %Read data off the serial bus as 32-bit floats.      
 
             %if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))
-            if(~isempty(Rx_data_packet))                
+            if(~isempty(Rx_data_packet) && (Rx_data_packet(1) == 2))                
             %Make sure read data is a Float and not an empty array      
 
                 %Plot some given data
@@ -115,7 +115,7 @@ try
                     set(plotGraph,'XData',time,'YData',data);
                     axis([0 time(count) min max]);
                 end
-            end
+           
 
             %Save all input floats to the log file,
             %first with the current time, followed
@@ -135,7 +135,7 @@ try
                        
             %Allow MATLAB time to Update Plot
             pause(delay);
-
+        end
     end
     
 catch ME

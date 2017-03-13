@@ -18,7 +18,7 @@ try
     %Select the total number of floats, (num_of_in_float), 
     %being sent via serial every cycle; and which speed 
     %you would like to sample for input.
-    serialPort = 'COM4';                %Define COM port #
+    serialPort = 'COM7';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
     num_of_char = 10;
     num_of_in_float = 0;                %Define # of Float/packet
@@ -88,12 +88,15 @@ try
 
     %Loop when Plot is Active 
     while ishandle(plotGraph)
-        Rx_data_packet = fread(s, 10, 'uchar')
+        Rx_data_packet = fread(s, 4, 'uint8')
+        Rx_data_packet = fread(s, 1, 'float32')
+        Rx_data_packet = fread(s, 2, 'uint8')
+        
         %Rx_data_packet = fread(s, num_of_in_float, 'float32')        
         %Read data off the serial bus as 32-bit floats.      
 
             %if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))
-            if(~isempty(Rx_data_packet) && (Rx_data_packet(1) == 2))                
+            if(~isempty(Rx_data_packet))                
             %Make sure read data is a Float and not an empty array      
 
                 %Plot some given data

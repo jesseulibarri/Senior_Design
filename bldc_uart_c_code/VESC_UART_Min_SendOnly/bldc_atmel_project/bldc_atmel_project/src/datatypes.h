@@ -1,0 +1,133 @@
+#ifndef DATATYPES_H_
+#define DATATYPES_H_
+
+#include <stdint.h>
+#include <stdbool.h>
+
+typedef enum {
+	FAULT_CODE_NONE = 0,
+	FAULT_CODE_OVER_VOLTAGE,
+	FAULT_CODE_UNDER_VOLTAGE,
+	FAULT_CODE_DRV8302,
+	FAULT_CODE_ABS_OVER_CURRENT,
+	FAULT_CODE_OVER_TEMP_FET,
+	FAULT_CODE_OVER_TEMP_MOTOR
+} mc_fault_code;
+
+// Nunchuk control types
+typedef enum {
+	CHUK_CTRL_TYPE_NONE = 0,
+	CHUK_CTRL_TYPE_CURRENT,
+	CHUK_CTRL_TYPE_CURRENT_NOREV
+} chuk_control_type;
+
+typedef struct {
+	chuk_control_type ctrl_type;
+	float hyst;
+	float rpm_lim_start;
+	float rpm_lim_end;
+	float ramp_time_pos;
+	float ramp_time_neg;
+	float stick_erpm_per_s_in_cc;
+	bool multi_esc;
+	bool tc;
+	float tc_max_diff;
+} chuk_config;
+
+// NRF Datatypes
+typedef enum {
+	NRF_SPEED_250K = 0,
+	NRF_SPEED_1M,
+	NRF_SPEED_2M
+} NRF_SPEED;
+
+typedef enum {
+	NRF_POWER_M18DBM = 0,
+	NRF_POWER_M12DBM,
+	NRF_POWER_M6DBM,
+	NRF_POWER_0DBM
+} NRF_POWER;
+
+typedef enum {
+	NRF_AW_3 = 0,
+	NRF_AW_4,
+	NRF_AW_5
+} NRF_AW;
+
+typedef enum {
+	NRF_CRC_DISABLED = 0,
+	NRF_CRC_1B,
+	NRF_CRC_2B
+} NRF_CRC;
+
+typedef enum {
+	NRF_RETR_DELAY_250US = 0,
+	NRF_RETR_DELAY_500US,
+	NRF_RETR_DELAY_750US,
+	NRF_RETR_DELAY_1000US,
+	NRF_RETR_DELAY_1250US,
+	NRF_RETR_DELAY_1500US,
+	NRF_RETR_DELAY_1750US,
+	NRF_RETR_DELAY_2000US,
+	NRF_RETR_DELAY_2250US,
+	NRF_RETR_DELAY_2500US,
+	NRF_RETR_DELAY_2750US,
+	NRF_RETR_DELAY_3000US,
+	NRF_RETR_DELAY_3250US,
+	NRF_RETR_DELAY_3500US,
+	NRF_RETR_DELAY_3750US,
+	NRF_RETR_DELAY_4000US
+} NRF_RETR_DELAY;
+
+typedef struct {
+	NRF_SPEED speed;
+	NRF_POWER power;
+	NRF_CRC crc_type;
+	NRF_RETR_DELAY retry_delay;
+	unsigned char retries;
+	unsigned char channel;
+	unsigned char address[3];
+	bool send_crc_ack;
+} nrf_config;
+
+// Communication commands
+typedef enum {
+	COMM_FW_VERSION = 0,
+	COMM_JUMP_TO_BOOTLOADER,
+	COMM_ERASE_NEW_APP,
+	COMM_WRITE_NEW_APP_DATA,
+	COMM_GET_VALUES,
+	COMM_SET_DUTY,
+	COMM_SET_CURRENT,
+	COMM_SET_CURRENT_BRAKE,
+	COMM_SET_RPM,
+	COMM_SET_POS,
+	COMM_SET_DETECT,
+	COMM_SET_SERVO_POS,
+	COMM_SET_MCCONF,
+	COMM_GET_MCCONF,
+	COMM_GET_MCCONF_DEFAULT,
+	COMM_SET_APPCONF,
+	COMM_GET_APPCONF,
+	COMM_GET_APPCONF_DEFAULT,
+	COMM_SAMPLE_PRINT,
+	COMM_TERMINAL_CMD,
+	COMM_PRINT,
+	COMM_ROTOR_POSITION,
+	COMM_EXPERIMENT_SAMPLE,
+	COMM_DETECT_MOTOR_PARAM,
+	COMM_DETECT_MOTOR_R_L,
+	COMM_DETECT_MOTOR_FLUX_LINKAGE,
+	COMM_DETECT_ENCODER,
+	COMM_DETECT_HALL_FOC,
+	COMM_REBOOT,
+	COMM_ALIVE,
+	COMM_GET_DECODED_PPM,
+	COMM_GET_DECODED_ADC,
+	COMM_GET_DECODED_CHUK,
+	COMM_FORWARD_CAN,
+	COMM_SET_CHUCK_DATA,
+	COMM_CUSTOM_APP_DATA
+} COMM_PACKET_ID;
+
+#endif /* DATATYPES_H_ */

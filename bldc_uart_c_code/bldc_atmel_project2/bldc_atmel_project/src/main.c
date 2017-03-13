@@ -342,10 +342,10 @@ ISR(TIMER1_OVF_vect){
     //float_to_bytes(&torque_left, torque_l_bytes);
     //float_to_bytes(&steering_angle_float, steering_angle_bytes);
 
-	//setcurrent = torque_right;
-    //bldc_interface_set_current(setcurrent);
+	setcurrent = torque_right;
+    bldc_interface_set_current(setcurrent);
 
-	bldc_interface_set_current(25);
+	//bldc_interface_set_current(25);
 
     //uart_transmit(torque_r_bytes,4);		//transmit right torque value - float, 4 bytes
     //uart_transmit(torque_l_bytes,4);    		//transmit left torque value - float, 4 bytes

@@ -25,9 +25,11 @@ try
     delay = 0.001;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
-    Log_Title = 'DataLog.txt';
+    Log_Title = 'VESC_Log_Packet.txt';
+    Log_Torque = 'VESC_Log_Values.txt';
     fileID = fopen(Log_Title,'w');
-    fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Torque Output 1','Torque Output 2','Steering Wheel Angle (Binary)');
+    fileID2 = fopen(Log_Torque, 'w');
+    fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','StartByte(2)','PayloadSize(#ofBytes)','Command','Payload2','Payload3','Payload4','Payload5','CRCByte1','CRCByte2','EndByte(3)');
 
     %Other User Defined Properties
     plotTitle = 'Steering Wheel Angle (Binary) vs Time';   %Plot title
@@ -88,14 +90,8 @@ try
 
     %Loop when Plot is Active 
     while ishandle(plotGraph)
-        Rx_data_packet = fread(s, 4, 'uint8')
-        Rx_data_packet = fread(s, 1, 'float32')
-        Rx_data_packet = fread(s, 2, 'uint8')
-        
-        %Rx_data_packet = fread(s, num_of_in_float, 'float32')        
-        %Read data off the serial bus as 32-bit floats.      
-
-            %if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))
+        Rx_data_packet = fread(s, 10, 'uint8')
+       
             if(~isempty(Rx_data_packet))                
             %Make sure read data is a Float and not an empty array      
 
@@ -105,8 +101,14 @@ try
                 %Extract Elapsed Time
 
                 %Extract user selected data to graph
-                %data(count) = Rx_data_packet(float_to_graph);
-                data(count) = Rx_data_packet(1);
+                A = [Rx_data_packet(6), Rx_data_packet(7)];
+                A = uint8(A);
+                Afloat = typecast( fliplr(A) , 'int16');
+                data(count) = (Afloat / 1000);
+                
+                fprintf(fileID2, '%f,',time(count));
+                fprintf(fileID2,'%u',data(count));
+                fprintf(fileID2,'\r\n');
                 
                 %Adjust the graph's X-axis according to 'Scroll Width'.
                 %It is adjusted using the current 'time' and 'count'. 
@@ -150,6 +152,7 @@ end
 fclose(s);
 %Close log file
 fclose(fileID);
+fclose(fileID2);
 %Clear out all of the used variables and terminate the script.
 clear count Rx_data_packet delay max min plotGraph plotGrid plotTitle ...
        scrollWidth serialPort xLabel yLabel A ans data fileID s time;

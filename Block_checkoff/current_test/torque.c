@@ -70,7 +70,7 @@ void timer1_init(){
  * Description: This function is used to initialize the timer and uart and is called
  *	when the controller wakes up out of sleep mode.  
  ***************************************************************************************/
-void program_init(){
+/*void program_init(){
 
     DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
     DDRF = 0xFF;
@@ -78,10 +78,10 @@ void program_init(){
     DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
     PORTD |= (1<<PD7);  //enable pullup
     timer1_init();      //initialize 16 bit timer
-    uart1_init(MYUBBR);	//initialize uart
+    //uart1_init(MYUBBR);	//initialize uart
     sei();
 }//program_init
-
+*/
 
 /****************************************************************
  * Name: spi_encoder_init
@@ -209,7 +209,7 @@ void program_init(){
     DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
     PORTD |= (1<<PD7);  //enable pullup
     timer1_init();      //initialize 16 bit timer
-    uart_init(MYUBBR);	//initialize uart
+    uart0_init(MYUBBR);	//initialize uart
     sei();
 }//program_init
 
@@ -255,32 +255,32 @@ uint16_t get_angle(){
 
     spi_encoder_init();	//Initialize the SPI protocol for the steering encoder
     //_delay_us(20);
-    PORTD &= ~(1<<PD0); //Set Select Line Low
+    PORTA &= ~(1<<PD0); //Set Select Line Low
     SPDR = rd_pos;      //Send get position command
     while(bit_is_clear(SPSR, SPIF)){} //Wait for SPI transmission
-    PORTD |= (1<<PD0);  //Set Select Line High
+    PORTA |= (1<<PD0);  //Set Select Line High
     _delay_us(20);	//Wait
 
     //Wait for Encoder Ready Response
     while(SPDR != rd_pos){    
-        PORTD &= ~(1<<PD0);     //Set Select Line Low
+        PORTA &= ~(1<<PD0);     //Set Select Line Low
         SPDR = nop_a5;          //Send no-op
         while(bit_is_clear(SPSR, SPIF)){}
-        PORTD |= (1<<PD0);      //Set Select Line High
+        PORTA |= (1<<PD0);      //Set Select Line High
         _delay_us(20);          //Wait
     }//while
 
     //Encoder is ready, read the upper byte (top 4 bits of the 12 total)
-    PORTD &= ~(1<<PD0);     //Set Select Line Low
+    PORTA &= ~(1<<PD0);     //Set Select Line Low
     SPDR = nop_a5;          //Send no-op
     while(bit_is_clear(SPSR, SPIF)){}   //Wait for Position to be Received
-    PORTD |= (1<<PD0);      //Set Select Line High
+    PORTA |= (1<<PD0);      //Set Select Line High
     high_byte = SPDR;       //Store Position
     _delay_us(20);          //Wait
-    PORTD &= ~(1<<PD0);     //Set Select Line Low
+    PORTA &= ~(1<<PD0);     //Set Select Line Low
     SPDR = nop_a5;           //Send no-op
     while(bit_is_clear(SPSR, SPIF)){}   //Wait for Position to Be received
-    PORTD |= (1<<PD0);      //Set Select Line High
+    PORTA |= (1<<PD0);      //Set Select Line High
     low_byte = SPDR;
 
     //spi_init(); //re-enable lcd screen spi config
@@ -372,7 +372,7 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
  *		mode is engadged. Aslo need to look into debounce circuitry or software 
  *		debounding so this feature is fail safe.  
  ************************************************************************************************/
-void pirate_mode(){
+/*void pirate_mode(){
 
     //Configure interrupt 0 so a rising edge will wake up the controller from sleep mode
     EICRA |= (1<<ISC11)|(1<<ISC10); //Generate aysnchronous interrupt request on rising edge
@@ -389,7 +389,7 @@ void pirate_mode(){
     program_init();
     PORTB |= (1<<speed1_relay)|(1<<speed2_relay)|(1<<pc_relay); //Turn on relay circuits
 }//pirate_mode
-
+*/
 
 
 /***************************** ISRs *********************************/
@@ -409,9 +409,9 @@ ISR(TIMER1_OVF_vect){
     float_to_bytes(&torque_left, torque_l_bytes);
     float_to_bytes(&steering_angle_float, steering_angle_bytes);
 
-    uart1_transmit(torque_r_bytes,4);		//transmit right torque value - float, 4 bytes
-    uart1_transmit(torque_l_bytes,4);    		//transmit left torque value - float, 4 bytes
-    uart1_transmit(steering_angle_bytes,4);		//transmit steering encoder value - uint16, 2 bytes
+    uart0_transmit(torque_r_bytes);		//transmit right torque value - float, 4 bytes
+    uart0_transmit(torque_l_bytes);    		//transmit left torque value - float, 4 bytes
+    uart0_transmit(steering_angle_bytes);		//transmit steering encoder value - uint16, 2 bytes
 
     spi_init();					//Used to initalize SPI for LCD screen if being used
     PORTF &= ~(1<<PF0);
@@ -425,6 +425,8 @@ int main(){
     uint8_t j;
     DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
     DDRF = 0xFF;
+    DDRA |= (1<<PA0);
+    PORTA |= (1<<PA0);
     //DDRD |= (1<<PD0);   //SPI SS pin
     DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
     PORTD |= (1<<PD7);  //enable pullup
@@ -434,22 +436,22 @@ int main(){
     cursor_home();
     timer1_init();      //initialize 16 bit timer
     //uart0_init(MYUBBR);	//initialize uart
-    uart1_init(MYUBBR);	
+    uart0_init(MYUBBR);	
     sei();
 
     //This is for the LED array to look at current draw
-    DDRA = 0xFF; //configure port for output
+    DDRA |= 0b11111110; //configure port for output
     
     while(1){
 
-        PORTA ^= (1<<PA0)|(1<<PA2)|(1<<PA4)|(1<<PA6);
-
+        PORTA ^= (1<<PA2)|(1<<PA4)|(1<<PA6);
+/*
         //Enable for pirate mode  
 	    if(!(PIND & (1<<PD1))){
 		pirate_mode();	//If toggle goes low, go to sleep
 		_delay_ms(10);
 	    }
-
+*/
         //format the LCD arrays (We could move this to happen on the interrupt
         //  if we so deside)
         dtostrf(torque_left, 6, 3, lcd_temp);

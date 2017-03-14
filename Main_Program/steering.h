@@ -7,7 +7,8 @@
 #ifndef STEERING_H
 #define STEERING_H
 
-
-float calc_angle(uint16_t, const float, const float);
+void calibrate_spi_steering();
+uint16_t get_angle();
+float calc_angle(uint16_t adc_result, const float SF, const float deg_offset);
 
 #endif

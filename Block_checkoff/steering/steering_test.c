@@ -100,16 +100,16 @@ uint8_t low_byte;
 uint16_t angle;
 unsigned char angle_bytes[4];
 //char lcd_data[32] = {"                                "};
-//char lcd_data[16] = {"                "};
-//char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+char lcd_data[16] = {"                "};
+char numbers[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 DDRA = (1<<PA0)|(1<<PA1);
 uart0_init(MYUBBR);
 
-//spi_init();
-//lcd_init();
-//clear_display();
-//cursor_home();
+spi_init();
+lcd_init();
+clear_display();
+cursor_home();
 
 //make sure that the sensor is initialized
 _delay_ms(200);
@@ -139,9 +139,9 @@ while(SPDR != 0x80) {
     _delay_us(20);
     PORTA &= ~(1 << PA0);
 }
-
-//_delay_ms(5000);
 */
+//_delay_ms(5000);
+
 
 while(1) {
     
@@ -207,7 +207,7 @@ float temp = (float)angle;
 float_to_bytes(&temp, angle_bytes);
 uart0_transmit(angle_bytes);
 
-/*
+
 spi_init();
 
 lcd_data[0] = numbers[angle/1000 % 10];
@@ -216,10 +216,10 @@ lcd_data[2] = numbers[angle/10 % 10];
 lcd_data[3] = numbers[angle % 10];
 
 string2lcd(lcd_data);
-*/
+
 _delay_ms(100);
 
-//clear_display();
+clear_display();
 
 }//while
 

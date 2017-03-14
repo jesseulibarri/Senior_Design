@@ -18,10 +18,9 @@ try
     %Select the total number of floats, (num_of_in_float), 
     %being sent via serial every cycle; and which speed 
     %you would like to sample for input.
-    serialPort = 'COM4';                %Define COM port #
+    serialPort = 'COM7';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
-    num_of_char = 9;
-    num_of_in_float = 0;                %Define # of Float/packet
+    num_of_in_float = 3;                %Define # of Float/packet
     delay = 0.001;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
@@ -30,24 +29,23 @@ try
     fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Torque Output 1','Torque Output 2','Steering Wheel Angle (Binary)');
 
     %Other User Defined Properties
-    plotTitle = 'Steering Wheel Angle (Binary) vs Time';   %Plot title
+    plotTitle = 'Steering Wheel Angle vs Time';   %Plot title
     xLabel = 'Elapsed Time(s)';         %X-axis label
-    yLabel = 'Steering Wheel Angle (Binary)';        %Y-axis label
+    yLabel = 'Steering Wheel Angle';        %Y-axis label
     plotGrid = 'on';                    %'off' to turn off grid
     scrollWidth = 20;                   %Display period in plot, plot entire data log if <= 0
 
     %Choose which input float to graph (float_to_graph,then
     %indicate the maximum and minimum value that it can be.
-    float_to_graph = 1;                 %Define which float to graph     
+    float_to_graph = 3;                 %Define which float to graph     
     min = 0;                            %Define y-min
-    max = 25;                           %Define y-max
+    max = 5000;                           %Define y-max
 
     %Define Function Variables
     time = 0;
     data = 0;
     count = 0;
-    num_of_bytes = (num_of_char);
-    %num_of_bytes = (num_of_in_float*4);
+    num_of_bytes = (num_of_in_float*4);
 
     %Set up Plot
     plotGraph = plot(time,data,'-mo','LineWidth',1,'MarkerEdgeColor','k','MarkerFaceColor',[.49 1 .63],'MarkerSize',2);
@@ -88,12 +86,11 @@ try
 
     %Loop when Plot is Active 
     while ishandle(plotGraph)
-        Rx_data_packet = fread(s, 9, 'uchar')
-        %Rx_data_packet = fread(s, num_of_in_float, 'float32')        
+
+        Rx_data_packet = fread(s, num_of_in_float, 'float32')        
         %Read data off the serial bus as 32-bit floats.      
 
-            %if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))
-            if(~isempty(Rx_data_packet))                
+            if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
             %Make sure read data is a Float and not an empty array      
 
                 %Plot some given data
@@ -102,9 +99,8 @@ try
                 %Extract Elapsed Time
 
                 %Extract user selected data to graph
-                %data(count) = Rx_data_packet(float_to_graph);
-                data(count) = Rx_data_packet(1);
-                
+                data(count) = Rx_data_packet(float_to_graph);
+
                 %Adjust the graph's X-axis according to 'Scroll Width'.
                 %It is adjusted using the current 'time' and 'count'. 
                 if(scrollWidth > 0)
@@ -121,18 +117,12 @@ try
             %first with the current time, followed
             %by all of the read floats, ending with
             %a new-line. Log is CSV compatable.
-%             fprintf(fileID,'%f,',toc);
-%             for i = 1:num_of_in_float
-%                 fprintf(fileID,'%f,',Rx_data_packet(i));  
-%             end
-%             fprintf(fileID,'\r\n');
-            
             fprintf(fileID,'%f,',toc);
-            for i = 1:num_of_char
-                fprintf(fileID,'%u,',Rx_data_packet(i));  
+            for i = 1:num_of_in_float
+                fprintf(fileID,'%f,',Rx_data_packet(i));  
             end
             fprintf(fileID,'\r\n');
-                       
+
             %Allow MATLAB time to Update Plot
             pause(delay);
 

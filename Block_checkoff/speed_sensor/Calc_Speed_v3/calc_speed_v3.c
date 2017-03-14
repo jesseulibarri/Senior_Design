@@ -49,7 +49,7 @@ float distance_per_pulse;
 //float speed;
 float avg_speed = 1.0;
 unsigned char avg_speed_bytes[4];
-uint16_t timestamp_dif = 10000;
+uint16_t timestamp_dif = 20000;
 //uint16_t times1[10] = {1};
 //unsigned char rx_buf[4];
 //unsigned char tx_buf[8];
@@ -270,7 +270,7 @@ uint16_t calc_avg(uint16_t *array) {
  * Description: This function 
  * **************************************************************************/
 //Exponential Moving Average
-#define N 16
+#define N 10
 float ema(float avg, float sample)
 {
     float alpha = 2.0/(N+1);

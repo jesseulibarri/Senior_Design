@@ -1,0 +1,152 @@
+/* Simscape target specific file.
+ * This file is generated for the Simscape network associated with the solver block 'shell_elec_electric_vehicle/Solver Configuration'.
+ */
+
+#include "ne_ds.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_ic.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_ds_struct.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_externals.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_external_struct.h"
+
+int32_T shell_elec_electric_vehicle_442b803b_1_ds_ic(const NeDynamicSystem *t0,
+  const NeDynamicSystemInput *t2, NeDsMethodOutput *t3)
+{
+  PmRealVector out;
+  real_T DP_R_idx_0;
+  (void)t0;
+  DP_R_idx_0 = t2->mDP_R.mX[0];
+  out = t3->mIC;
+  out.mX[0] = DP_R_idx_0;
+  out.mX[1] = 0.0;
+  out.mX[2] = 564642.0;
+  out.mX[3] = 0.0;
+  out.mX[4] = 850.0;
+  out.mX[5] = 0.2;
+  out.mX[6] = 293.15;
+  out.mX[7] = 1.01325;
+  out.mX[8] = 293.15;
+  out.mX[9] = 1.01325;
+  out.mX[10] = 293.15;
+  out.mX[11] = 1.01325;
+  out.mX[12] = 0.0;
+  out.mX[13] = 293.15;
+  out.mX[14] = 293.15;
+  out.mX[15] = 1.01325;
+  out.mX[16] = 0.0;
+  out.mX[17] = 0.0;
+  out.mX[18] = 0.0;
+  out.mX[19] = 0.0;
+  out.mX[20] = 0.0;
+  out.mX[21] = 0.0;
+  out.mX[22] = 0.0;
+  out.mX[23] = 0.0;
+  out.mX[24] = 0.0;
+  out.mX[25] = 0.0;
+  out.mX[26] = 0.0;
+  out.mX[27] = 1.0;
+  out.mX[28] = 0.0;
+  out.mX[29] = 111600.0;
+  out.mX[30] = 0.0;
+  out.mX[31] = 0.0;
+  out.mX[32] = 300.0;
+  out.mX[33] = 1.0;
+  out.mX[34] = 0.0;
+  out.mX[35] = 0.0;
+  out.mX[36] = 300.0;
+  out.mX[37] = 1.0;
+  out.mX[38] = 0.0;
+  out.mX[39] = 300.0;
+  out.mX[40] = 300.0;
+  out.mX[41] = 1.0;
+  out.mX[42] = 1000.0;
+  out.mX[43] = 1000.0;
+  out.mX[44] = 85.0;
+  out.mX[45] = 85.0;
+  out.mX[46] = 85.0;
+  out.mX[47] = 293.15;
+  out.mX[48] = 300.0;
+  out.mX[49] = 1000.0;
+  out.mX[50] = 1000.0;
+  out.mX[51] = 85.0;
+  out.mX[52] = 85.0;
+  out.mX[53] = 300.0;
+  out.mX[54] = 1.0;
+  out.mX[55] = 3.66;
+  out.mX[56] = 300.0;
+  out.mX[57] = 3.66;
+  out.mX[58] = 300.0;
+  out.mX[59] = 0.0;
+  out.mX[60] = 0.0;
+  out.mX[61] = 1.0;
+  out.mX[62] = 0.0;
+  out.mX[63] = 1000.0;
+  out.mX[64] = 1000.0;
+  out.mX[65] = 1000.0;
+  out.mX[66] = 85.0;
+  out.mX[67] = 85.0;
+  out.mX[68] = 85.0;
+  out.mX[69] = 300.0;
+  out.mX[70] = 1.0;
+  out.mX[71] = 300.0;
+  out.mX[72] = 1.0;
+  out.mX[73] = 3.66;
+  out.mX[74] = 300.0;
+  out.mX[75] = 3.66;
+  out.mX[76] = 300.0;
+  out.mX[77] = 0.0;
+  out.mX[78] = 0.0;
+  out.mX[79] = 1.0;
+  out.mX[80] = 1000.0;
+  out.mX[81] = 1000.0;
+  out.mX[82] = 1000.0;
+  out.mX[83] = 85.0;
+  out.mX[84] = 85.0;
+  out.mX[85] = 85.0;
+  out.mX[86] = 300.0;
+  out.mX[87] = 1.0;
+  out.mX[88] = 0.0;
+  out.mX[89] = 300.0;
+  out.mX[90] = 300.0;
+  out.mX[91] = 1000.0;
+  out.mX[92] = 1000.0;
+  out.mX[93] = 85.0;
+  out.mX[94] = 85.0;
+  out.mX[95] = 85.0;
+  out.mX[96] = 3.66;
+  out.mX[97] = 300.0;
+  out.mX[98] = 3.66;
+  out.mX[99] = 300.0;
+  out.mX[100] = 1000.0;
+  out.mX[101] = 1000.0;
+  out.mX[102] = 1000.0;
+  out.mX[103] = 85.0;
+  out.mX[104] = 85.0;
+  out.mX[105] = 85.0;
+  out.mX[106] = 0.0;
+  out.mX[107] = 0.0;
+  out.mX[108] = 0.0;
+  out.mX[109] = 0.0;
+  out.mX[110] = 3.66;
+  out.mX[111] = 300.0;
+  out.mX[112] = 3.66;
+  out.mX[113] = 300.0;
+  out.mX[114] = 0.0;
+  out.mX[115] = 1000.0;
+  out.mX[116] = 1000.0;
+  out.mX[117] = 1000.0;
+  out.mX[118] = 85.0;
+  out.mX[119] = 85.0;
+  out.mX[120] = 85.0;
+  out.mX[121] = 0.0;
+  out.mX[122] = 0.0;
+  out.mX[123] = 0.0;
+  out.mX[124] = 0.0;
+  out.mX[125] = 0.0;
+  out.mX[126] = 0.0;
+  out.mX[127] = 1.0;
+  out.mX[128] = 0.0;
+  out.mX[129] = 1.0;
+  (void)t0;
+  (void)t3;
+  return 0;
+}

@@ -167,7 +167,7 @@ try
                 emf = (Vxi*Vemf)
                 Vm_f = Vm_i - emf
                 Pmax_f = Imax*Vm_f
-                Imax_f = (Pmax_f/Vm_i)
+                Imax_f = (Pmax_f/Vm_f)
                 %Recieve the Torque (currrent) command from controller
                 Im = Rx_data_packet(1)
                 
@@ -176,7 +176,7 @@ try
                 Pcurr = Im*Vm_f;
                 if(Pcurr > Pmax)
                     fprintf('Motor Max Power Reached')
-                    Im = Imax_f
+                    Im = Imax
                 end
                  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 

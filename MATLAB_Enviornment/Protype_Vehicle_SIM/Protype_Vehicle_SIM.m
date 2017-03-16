@@ -179,7 +179,8 @@ try
                 
                 Vxfmph = 2.23694*(Vxf);
                 %Send = uint8(Vxfmph)
-                Send = num2str(uint8(Vxfmph))
+                Send = num2str(Vxfmph,'%.1f')
+                %Send = num2str(Vxfmph)
                 %fwrite(s, Send)
                 fprintf(s,'%s',Send)
                 fprintf(s, 'G')

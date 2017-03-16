@@ -83,8 +83,7 @@ void accelerate(float* torque_right, float* torque_left, uint16_t angle, float b
  * Description: 
  ***************************************************************************************************/
 void cruise(float* torque_right, float* torque_left, uint16_t angle, float b_torque, float target_speed, float current_speed, float* integral){
-    
-    
+    float torque_ratio;    
     float error = 0; 
     float iteration_time = 0.100;
     float Kp = 1;
@@ -93,10 +92,10 @@ void cruise(float* torque_right, float* torque_left, uint16_t angle, float b_tor
     //float bias;
     float output;
 
-    *error = target_speed - current_speed;
-    *integral = *integral + ((*error)*iteration_time);
+    error = target_speed - current_speed;
+    *integral = *integral + (error*iteration_time);
     //derivative = (error - error_prior)/iteration_time
-    output = Kp*(*error) + Ki*(*integral);    //+Kd*derivative + bias
+    output = Kp*error + Ki*(*integral);    //+Kd*derivative + bias
     //error_prior = error
     
     if(output < 0){

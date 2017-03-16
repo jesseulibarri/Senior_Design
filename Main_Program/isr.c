@@ -39,8 +39,8 @@ float integral = 0;
 ISR(TIMER1_OVF_vect) {
 
     uint8_t user_mode = PIND | 0x3F; //Mask everything out except PORTD.6 and 7
-    steering_angle = get_angle();
-/
+    steering_angle = 0;// get_angle();
+
     //Start ADC conversion to get steering angle
     ADCSRA |= (1 << ADSC);                  //Poke ADSC and start conversion
     while(bit_is_clear(ADCSRA, ADIF)) { }   //loop while interrupt flag not set
@@ -76,8 +76,8 @@ ISR(TIMER1_OVF_vect) {
             float_to_bytes(&torque_left, torque_l_bytes);
             float_to_bytes(&speed, speed_bytes);
             uart0_uchar(torque_r_bytes);
-            uart0_uchar(torque_l_bytes);
-            uart0_uchar(speed_bytes);
+            //uart0_uchar(torque_l_bytes);
+            //uart0_uchar(speed_bytes);
 
             break;
 
@@ -95,8 +95,8 @@ ISR(TIMER1_OVF_vect) {
             float_to_bytes(&torque_left, torque_l_bytes);
             float_to_bytes(&speed, speed_bytes);
             uart0_uchar(torque_r_bytes);
-            uart0_uchar(torque_l_bytes);
-            uart0_uchar(speed_bytes);
+            //uart0_uchar(torque_l_bytes);
+            //uart0_uchar(speed_bytes);
 
             break;
 

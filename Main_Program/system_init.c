@@ -49,10 +49,10 @@ void system_init() {
     sei();
 
     /******** IO *********/
-    DDRD |= (1<<ACCELERATE_B) | (1<<CRUISE_B);  //Accelerate and cruise (input) buttons on PORTA.0-1
+    DDRD |= (1<<ACCELERATE_B) | (1<<CRUISE_B);  //Accelerate and cruise (input) buttons on PORTD.0-1
     DDRB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Output for relay circuits
     DDRD |= (1<<PIRATE_SWITCH);             //Pirate mode enable on PORTD.0 (INT0)
-    PORTA |= (1<<ACCELERATE_B) | (1<<CRUISE_B); //Set pullup resistors
+    PORTD |= (1<<ACCELERATE_B) | (1<<CRUISE_B); //Set pullup resistors
     PORTB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Turn on relay circuits
     PORTD |= (1<<PIRATE_SWITCH);            //Set high
 

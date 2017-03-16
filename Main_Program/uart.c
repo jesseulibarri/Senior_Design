@@ -17,7 +17,7 @@ void uart0_init(){
     UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
-    UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00);
+    UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00) | (1<<USBS0);
     UBRR0H = (BAUDVALUE >>8 ); //load upper byte of the baud rate into UBRR 
     UBRR0L =  BAUDVALUE;       //load lower byte of the baud rate into UBRR 
 }//uart0_init
@@ -34,9 +34,9 @@ void uart1_init(){
     UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
-    UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10);
-    UBRR1H = (BAUDVALUE_1 >>8 ); //load upper byte of the baud rate into UBRR 
-    UBRR1L =  BAUDVALUE_1;       //load lower byte of the baud rate into UBRR 
+    UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10) | (1<<USBS1);
+    UBRR1H = (BAUDVALUE >>8 ); //load upper byte of the baud rate into UBRR 
+    UBRR1L =  BAUDVALUE;       //load lower byte of the baud rate into UBRR 
 }//uart1_init
 //******************************************************************
 
@@ -79,4 +79,42 @@ void uart1_init(){
     UDR1 = '\n';
     while(!(UCSR1A & (1<<UDRE1))) { } 
 */
-}//uart1_uchar
+}/***************************************************************************************
+*
+*
+*
+****************************************************************************************/
+void uart0_transmit(uint8_t data_array[], int n){
+
+	int i = 0;
+	
+	//Wait for empty transmit buffer
+	while(!(UCSR0A & (1<<UDRE0))) {}
+
+	for(i=0; i<n; i++){
+		UDR0 = data_array[i];
+	while(!(UCSR0A & (1<<UDRE0))) {}
+	_delay_us(100);
+	}
+}//uart1_transmit
+
+/***************************************************************************************
+*
+*
+*
+****************************************************************************************/
+void uart1_transmit(uint8_t data_array[], int n){
+
+	int i = 0;
+	
+	//Wait for empty transmit buffer
+	while(!(UCSR1A & (1<<UDRE1))) {}
+
+	for(i=0; i<n; i++){
+		UDR1 = data_array[i];
+	while(!(UCSR1A & (1<<UDRE1))) {}
+	_delay_us(100);
+	}
+}//uart1_transmit
+
+

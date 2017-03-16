@@ -59,6 +59,16 @@ ISR(TIMER1_OVF_vect) {
                 torque_right = 0;
                 torque_left = 0;
             }
+
+            float_to_bytes(&torque_right, torque_r_bytes);
+            float_to_bytes(&torque_left, torque_l_bytes);
+            float_to_bytes(&speed, speed_bytes);
+            uart0_transmit(torque_r_bytes);
+            //uart0_uchar(torque_l_bytes);
+            //uart0_uchar(speed_bytes);
+
+
+
             break;
         //Accelerate button is pushed
         case ACCELERATE:
@@ -75,7 +85,7 @@ ISR(TIMER1_OVF_vect) {
             float_to_bytes(&torque_right, torque_r_bytes);
             float_to_bytes(&torque_left, torque_l_bytes);
             float_to_bytes(&speed, speed_bytes);
-            uart0_uchar(torque_r_bytes);
+            uart0_transmit(torque_r_bytes);
             //uart0_uchar(torque_l_bytes);
             //uart0_uchar(speed_bytes);
 

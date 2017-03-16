@@ -16,9 +16,12 @@ PORTD |= (1 << PD0);
 
     while(1) {
         if(PIND == 0xFE) {
-        PORTB ^= (1 << PB0);
-        //_delay_ms(200);
+        PORTB = (1 << PB0);
+       // _delay_ms(200);
         }
+        else{
+            PORTB &= ~(1<<PB0);
+         }
     }
 
 return 0;

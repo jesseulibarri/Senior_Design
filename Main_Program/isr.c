@@ -29,7 +29,7 @@ float cruise_speed;
 uint16_t steering_angle;
 float base_torque;
 uint16_t timestamp_history;
-
+float integral = 0;
 /*********************************************************************
  * ISR: timer1
  *
@@ -40,17 +40,18 @@ ISR(TIMER1_OVF_vect) {
 
     uint8_t user_mode = PIND | 0x3F; //Mask everything out except PORTD.6 and 7
     steering_angle = get_angle();
-/*
+/
     //Start ADC conversion to get steering angle
     ADCSRA |= (1 << ADSC);                  //Poke ADSC and start conversion
     while(bit_is_clear(ADCSRA, ADIF)) { }   //loop while interrupt flag not set
     ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
-*/
+
     
     switch(user_mode) 
     {
         //Accelerate button was let go
         case NO_INPUT:
+            integral = 0;
             speed = calc_speed(timestamp_history, speed);
             cruise_speed = speed;
             if(torque_right != 0) {
@@ -61,6 +62,7 @@ ISR(TIMER1_OVF_vect) {
             break;
         //Accelerate button is pushed
         case ACCELERATE:
+            integral = 0;
             base_torque = base_torque + 0.5;
             if(base_torque > MAX_TORQUE_CUR) { base_torque = MAX_TORQUE_CUR; }
 
@@ -86,7 +88,7 @@ ISR(TIMER1_OVF_vect) {
 
             //Calculate new values for the motor controllers
             speed = calc_speed(timestamp_history, speed);
-            cruise(&torque_right, &torque_left, steering_angle, base_torque, cruise_speed);
+            cruise(&torque_right, &torque_left, steering_angle, base_torque, cruise_speed, speed, &integral);
 
             //Convert floats to bytes and send on uart
             float_to_bytes(&torque_right, torque_r_bytes);

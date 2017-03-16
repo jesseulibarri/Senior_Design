@@ -51,6 +51,8 @@ ISR(TIMER1_OVF_vect) {
     {
         //Accelerate button was let go
         case NO_INPUT:
+            speed = calc_speed(timestamp_history, speed);
+            cruise_speed = speed;
             if(torque_right != 0) {
                 base_torque = 0;
                 torque_right = 0;
@@ -60,10 +62,11 @@ ISR(TIMER1_OVF_vect) {
         //Accelerate button is pushed
         case ACCELERATE:
             base_torque = base_torque + 0.5;
-            if(base_torque > MAX_TORQUE_CUR) { base_torque = 0; }
+            if(base_torque > MAX_TORQUE_CUR) { base_torque = MAX_TORQUE_CUR; }
 
             //Calculate new values for the motor controllers
             speed = calc_speed(timestamp_history, speed);
+            cruise_speed = speed;
             accelerate(&torque_right, &torque_left, steering_angle, base_torque);
                 
             //Convert floats to bytes and send on uart
@@ -79,7 +82,7 @@ ISR(TIMER1_OVF_vect) {
         //Cruise button is pushed
         case CRUISE:
             base_torque = base_torque + 0.5;
-            if(base_torque > MAX_TORQUE_CUR) { base_torque = 0; }
+            if(base_torque > MAX_TORQUE_CUR) { base_torque = MAX_TORQUE_CUR; }
 
             //Calculate new values for the motor controllers
             speed = calc_speed(timestamp_history, speed);

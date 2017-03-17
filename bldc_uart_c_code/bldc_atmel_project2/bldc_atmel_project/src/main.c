@@ -262,19 +262,8 @@ void uart_init(unsigned char ubrr){
 }//uart_init
 
 /************************************************************************************************
- * Name: uart_transmit
- *
- * Description: This function has a 8 bit data array as an input argument. This array
- * 	will be formatted as a 10 byte frame that contains two torque values and a
- *	steering angle that will be sent over uart 10 times a second. Each torque
- *	value will be 4 bytes, 2 bytes for the integer part and 2 bytes for the fraction
- *	part. The steering angle will be 2 bytes which leaves a total of 10 bytes to be
- *	transmitted. Uart can only transmit 8 bits at a time thats why we use an array
- * 	to frame the data into 8 bit segments. 
- *
- *	TODO: We need to add flag bits after every byte is sent so we can keep data together.
- *		We also might need to add a hand shake feature or error checking so the data
- *		being sent is reliable and not garbage.
+ * Name: send_packet
+ *	This function sends 8-bits of data, one element at a time through a given array of length 'len'
  ************************************************************************************************/
 static void send_packet(unsigned char *data, unsigned int len){
 	
@@ -317,11 +306,11 @@ void program_init(){
 
     DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
     DDRF = 0xFF;
-    DDRD |= (1<<PD0);   //SPI SS pin
-    DDRD &= ~(1<<PD7)|(1<<PD6);  //Configure Port D Pin 7, 6 for input
-    PORTD |= (1<<PD7);  //enable pullup
-    timer1_init();      //initialize 16 bit timer
-    uart_init(MYUBBR);	//initialize uart
+    DDRD |= (1<<PD0);   			//SPI SS pin
+    DDRD &= ~(1<<PD7)|(1<<PD6);  	//Configure Port D Pin 7, 6 for input
+    PORTD |= (1<<PD7);  			//enable pullup
+    timer1_init();      			//initialize 16 bit timer
+    uart_init(MYUBBR);				//initialize uart
     sei();
 }//program_init
 
@@ -329,8 +318,8 @@ void program_init(){
  * Name: ISR for 16-bit timer
  ************************************************************************************************/
 ISR(TIMER1_OVF_vect){
-	
-	bldc_interface_uart_init(send_packet);
+	//Call this function and pass it your UART send_packet function
+	bldc_interface_uart_init(send_packet);///////////////////////////////////////////////////////////////////////////////////////THIS
 		
 	//ISR for the 16 bit timer
     PORTB ^= (1<<PB7);
@@ -343,15 +332,11 @@ ISR(TIMER1_OVF_vect){
     //float_to_bytes(&steering_angle_float, steering_angle_bytes);
 
 	setcurrent = torque_right;
-    bldc_interface_set_current(setcurrent);
+    bldc_interface_set_current(setcurrent); /////////////////////////////////////////////////////////////////////////////////////THIS
 
 	//bldc_interface_set_current(25);
 
-    //uart_transmit(torque_r_bytes,4);		//transmit right torque value - float, 4 bytes
-    //uart_transmit(torque_l_bytes,4);    		//transmit left torque value - float, 4 bytes
-    //uart_transmit(steering_angle_bytes,4);		//transmit steering encoder value - uint16, 2 bytes
-
-//    spi_init();					//Used to initalize SPI for LCD screen if being used
+	//spi_init();					//Used to initalize SPI for LCD screen if being used
     PORTF &= ~(1<<PF0);
 }//timer1_isr
 

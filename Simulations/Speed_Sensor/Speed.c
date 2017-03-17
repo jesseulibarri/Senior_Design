@@ -16,10 +16,11 @@
 
 #define PI 3.14159
 
-uint8_t speed = 20;
+uint8_t speed = 1.0;
 uint8_t tire_diam = 22;
 uint8_t sprocket_teeth = 42;
 uint16_t sixteen_bit_timer_val;
+unsigned char rx_buf[4];
 //char lcd_string_h[16];
 //char lcd_string_l[16];
 //div_t double_components;
@@ -53,6 +54,18 @@ void format_lcd_array(double number) {
 
 }
 */
+
+ISR(USART1_RX_vect) {
+    static uint8_t i = 0;
+    char data = UDR1;
+    if(data == '\n') {
+        i = 0;
+    } else {
+        rx_buf[i] = data;
+        i++;
+    }
+}//ISR
+
 void timer1_init() {
     // Fast PWM mode, TOP in OCR1A, OC pin disconnected, prescale 64
     TCCR1A |= (1 << WGM10) | (1 << WGM11);
@@ -80,28 +93,53 @@ ISR(TIMER1_OVF_vect) {
 
 }
 
+//******************************************************************
+//                            uart1_init
+//
+//RXD1 is PORT D bit 2
+//TXD1 is PORT D bit 3
+
+void uart1_init(){
+//rx and tx enable, receive interrupt enabled, 8 bit characters
+UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
+//  UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
+
+//async operation, no parity,  one stop bit, 8-bit characters
+  UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10);
+  UBRR1H = (BAUDVALUE_1 >>8 ); //load upper byte of the baud rate into UBRR 
+  UBRR1L =  BAUDVALUE_1;       //load lower byte of the baud rate into UBRR 
+
+}
+
 /******************** MAIN *************************/
 int main()
 {
-
+speed = rx_buf;
 double tire_circ = tire_diam * PI;
 double distance_per_pulse = tire_circ / sprocket_teeth;
 // 1 mph = 17.6 in/sec
 double period = distance_per_pulse / (speed * 17.6);
 sixteen_bit_timer_val = ((double)period * 16000000) / 64;
+float theta = 0.01;
 
 //PORTB.0 set to output
 DDRB =0xFF;
 DDRC |= (1 << PC0);
 timer1_init();
 SPI_init();
+uart1_init();
 lcd_init();
 clear_display();
 sei();
 
     while(1){
         format_lcd_array(speed);
+        
+		period = distance_per_pulse / (speed * 17.6);
+        OCR1A = (period * 16000000) / 64;
 
+        float_to_bytes(&speed, speed_bytes);
+        send_packet(speed_bytes);
         /*
         //send value to lcd screen
         string2lcd(lcd_string_h);

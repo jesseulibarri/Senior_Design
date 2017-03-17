@@ -2,7 +2,7 @@
 %   Motor/Wheel Parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 B = 0.5;        %Magnetic Flux Density (T)
-Vemf = 0.05;    %Back EMF constant
+Vemf = 0.5;    %Back EMF constant
 Im = 10;        %Current supplied to the motor (A)
 Vm_i = 48;        %Voltage supplied to the motor (V)
 G = 12;         %Gear ratio from motor to wheel (Nw/Nm)
@@ -40,7 +40,7 @@ Vxfmph = 0;     %Velocity in mph
 Fxf = 0;        %Longitudinal forces on the vehicle at the front and rear wheel ground contact points, respectively (N)
 Fxr = 0;        %Longitudinal forces on the vehicle at the front and rear wheel ground contact points, respectively (N)
 beta = 0;       %Incline angle (rad)
-dt = 1;         %Change in time between calculations (s)
+dt = 0.1;         %Change in time between calculations (s)
 
 Fzf = 0.5*m*g*cos(B);       %Vertical load forces on the vehicle at the front and rear ground contact points, respectively (N)
 Fzr = 0.5*m*g*cos(B);       %Vertical load forces on the vehicle at the front and rear ground contact points, respectively (N)
@@ -181,19 +181,20 @@ try
                  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
                 N = (Fzr + Fzf);            %Normal force of vehicle
-                Fu = N*urub;              %Force of kenetic friction on vehicle in motion
-                                               
-                Fxr = m*((2*B*Im*L*r)/(((Jl/R)*G)+((Jm/R)*(1/G))));%Force exerted from the motor on the rear wheel
-                Fx = (Fxf + Fxr); %Net Force propelling the vehicle forward, sum of the forces applied by each wheel
+                Fu = N*urub;              %Force of kenetic friction on vehicle in motion                              
+                Fxr = m*((2*B*Im*L*r)/(((Jl/R)*G)+((Jm/R)*(1/G))))%Force exerted from the motor on the rear wheel
                 
+                Fd = -0.5*Cd*p*A*(Vxi^2) %Aerodynamic drag force (N) acting in oposition to the direction of motion                  
+                Fx = (Fxf + Fxr) %Net Force propelling the vehicle forward, sum of the forces applied by each wheel
                 if(Fx > Fu)
                     Fx = Fx - Fu;
                 end
-                
-                Fd = -0.5*Cd*p*A*(Vxi^2); %Aerodynamic drag force (N) acting in oposition to the direction of motion
-                
                 Ax = (Fx + Fd - (m*g*sin(beta)))/m; %Current acceleration of vehicle, Net force acting on the vehicle divided by the mass of the vehicle
-                Vxd = dt*Ax;    %Acceleration times change in time equals the change in velocity
+                if(Ax < 0)
+                    Ax = 0;
+                end
+                Ax
+                Vxd = dt*Ax    %Acceleration times change in time equals the change in velocity
                 Vxf = Vxi + Vxd; %Initial velocity plus the change in velocity equals final velocity
 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

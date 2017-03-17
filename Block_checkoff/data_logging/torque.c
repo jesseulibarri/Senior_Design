@@ -189,7 +189,8 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
     uint8_t user_mode = PIND | 0x7F;
 
     general_torque += 0.5;				//This variable is used for the ramping feature
-    angle = get_angle();				//get steering angle reading from encoder
+    angle = 0;
+    //angle = get_angle();				//get steering angle reading from encoder
     *steer_angle = angle;				//modify the global steering angle variable
     
     switch(user_mode){
@@ -291,8 +292,8 @@ ISR(TIMER1_OVF_vect){
     float_to_bytes(&steering_angle_float, steering_angle_bytes);
 
     uart_transmit(torque_r_bytes,4);			//transmit right torque value - float, 4 bytes
-    uart_transmit(torque_l_bytes,4);    		//transmit left torque value - float, 4 bytes
-    uart_transmit(steering_angle_bytes,4);		//transmit steering encoder value - uint16, 2 bytes
+   // uart_transmit(torque_l_bytes,4);    		//transmit left torque value - float, 4 bytes
+   // uart_transmit(steering_angle_bytes,4);		//transmit steering encoder value - uint16, 2 bytes
 
     spi_init();									//Used to initalize SPI for LCD screen if being used
     PORTF &= ~(1<<PF0);

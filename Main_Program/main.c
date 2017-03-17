@@ -8,10 +8,6 @@
  *  ****************************************************/
 
 #include "system_init.h"
-//#include "isr.c"
-//#include "speed.h"
-//#include "user_io.h"
-
 
 
 int main()

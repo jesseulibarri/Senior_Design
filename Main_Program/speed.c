@@ -1,28 +1,25 @@
 
 #include <avr/io.h>
+#include <math.h>
+#include "system_init.h"
 #include "speed.h"
-#include "const.h"
-#include "datalogging.h"
-#include "user_io.h"
+#include "steering.h"
 
-float speed1;
-float speed2;
-float target_speed;
-uint16_t times1[10] = {1};
-uint16_t times2[10] = {1};
+#define COUNT_PERIOD    0.016F
 
-/**************************************************************************************
- * Name: calc_avg
- *
- * Description: Calculates the average of elements in an array.
- *************************************************************************************/
-uint16_t calc_avg(uint16_t *array) {
-    uint8_t j;
-    uint16_t sum = 0;
-    for(j = 0; j < 10; j++) { sum = sum + array[j]; }
-    uint16_t avg = sum / 10;
+/*****************************************************************************
+ * Name: Exponential Moving Average
+ *  
+ * Description: This function 
+ * **************************************************************************/
+//Exponential Moving Average
+#define N 10
+float ema(float avg, float sample)
+{
+    float alpha = 2.0/(N+1);
+    avg = alpha * sample + (1.0-alpha) * avg;
     return avg;
-}//calc_avg
+}
 
 
 /**************************************************************************************
@@ -30,35 +27,95 @@ uint16_t calc_avg(uint16_t *array) {
  *
  * Description: Calculates the speed based on the incoming speed sensor pulse.
  *************************************************************************************/
-float calc_speed(uint16_t *times) {
+float calc_speed(uint16_t time_dif, float current_avg) {
 
-    uint16_t timestamp_avg_dif = calc_avg(times);
-    float msec = (float)timestamp_avg_dif * COUNT_PERIOD;
+    PORTC |= (1 << PC0);
+
+//    static uint16_t timestamp_avg_dif;
+
+//    timestamp_avg_dif = calc_avg(timestamps);
+    float msec = (float)time_dif * COUNT_PERIOD;
     float seconds = msec / 1000;
-    float speed = (distance_per_pulse / seconds) * (1 / MPH_TO_SEC_PER_IN);
-return speed;
-   
+    float new_speed = (distance_per_pulse/ seconds) * (1 / 17.6);
+    float new_avg = ema(current_avg, new_speed); 
+
+    PORTC &= ~(1 << PC0);
+
+return new_avg;
 }//calc_speed
 
 
-uint8_t motor_torque() {
+/**************************************************************************************************
+ * Name: accelerate
+ *
+ * Description: This funcion is has 3 input arguments all which are passed by pointer
+ *	reference beccause these arguments are modified in the function. This function
+ *	is used to calculate a torque ration between the rear wheels of the car based
+ *	on a steering angle. As well this function inlcudes an acceleration mode which
+ * 	is used to ramp up the speed of the care while still checking if the car is 
+ *	turning left and right to calculate a difference in torque (electronic differential).
+ *	This function also implements a safety feature that doesnt let the torque ramp up
+ *	past a set max torque value which can be changed.
+ ***************************************************************************************************/
 
-    static uint8_t dummy_torque = 0;
-    static uint8_t dummy_torque2;
+void accelerate(float* torque_right, float* torque_left, uint16_t angle, float b_torque){
+    
+    float torque_ratio;
 
-    //TODO: For now, this is just a dummy function as a tester
-    switch(user_mode)
-    {
-        //We are accelerating
-        case 0x01:
-            target_speed = speed1;
-            if(dummy_torque > 25) { dummy_torque = 0; }
-            return dummy_torque++;
+    //We are turning right
+    if(angle >= 0 && angle <= 2048){
+        torque_ratio = ((-0.00031)*angle)+(0.99972);	//Calculate torque ratio
+        *torque_right = b_torque*torque_ratio;	//Update right motor torque
+        *torque_left = b_torque;			//Update left motor torque
+    }
+    //We are turning left
+    else{
+        torque_ratio = ((1.033)*log((double)angle))-(7.59);	//Log function takes a double so had to typecast
+        *torque_left = b_torque*torque_ratio;		//Update left motor torque
+        *torque_right = b_torque;				//Update right motor torque
+    }
+}//accelerate
 
-        //We are cruising
-        case 0x02:
-            if(target_speed < speed1) { dummy_torque2 = 0; }
-            else { dummy_torque2 = 5; }
-            return dummy_torque2;
-    }//switch
-}//motor_torque
+
+/**************************************************************************************************
+ * Name: cruise
+ *
+ * Description: 
+ ***************************************************************************************************/
+void cruise(float* torque_right, float* torque_left, uint16_t angle, float b_torque, float target_speed, float current_speed, float* integral){
+    float torque_ratio;    
+    float error = 0; 
+    float iteration_time = 0.100;
+    float Kp = 1;
+    float Ki = 0.5;
+    //float Kd;
+    //float bias;
+    float output;
+
+    error = target_speed - current_speed;
+    *integral = *integral + (error*iteration_time);
+    //derivative = (error - error_prior)/iteration_time
+    output = Kp*error + Ki*(*integral);    //+Kd*derivative + bias
+    //error_prior = error
+    
+    if(output < 0){
+        b_torque = b_torque - output;
+    }
+    else{
+        b_torque = b_torque + output;
+    }
+
+
+//We are turning right
+    if(angle >= 0 && angle <= 2048){
+        torque_ratio = ((-0.00031)*angle)+(0.99972);	//Calculate torque ratio
+        *torque_right = b_torque*torque_ratio;	//Update right motor torque
+        *torque_left = b_torque;			//Update left motor torque
+    }
+    //We are turning left
+    else{
+        torque_ratio = ((1.033)*log((double)angle))-(7.59);	//Log function takes a double so had to typecast
+        *torque_left = b_torque*torque_ratio;		//Update left motor torque
+        *torque_right = b_torque;				//Update right motor torque
+    }
+}//cruise

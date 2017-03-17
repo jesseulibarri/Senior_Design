@@ -12,6 +12,25 @@
 
 #define ON  1
 #define OFF 0
+#define TIRE_DIAM       22
+#define SPROCKET_TEETH  42
+#define ACCELERATE_B    6
+#define CRUISE_B        7
+#define SPEED1_RELAY    4
+#define SPEED2_RELAY    5
+#define PC_RELAY        6
+#define PIRATE_SWITCH   5
+
+#define PACKET_SIZE    4
+
+#define USART_BAUDRATE 76800  
+#define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16UL)) - 1 )
+
+#define USART1_BAUDRATE 115200  
+#define BAUDVALUE_1  ((F_CPU/(USART1_BAUDRATE * 16UL)) - 1 )
+
+extern float tire_circ;
+extern float distance_per_pulse;
 
 void system_init();
 

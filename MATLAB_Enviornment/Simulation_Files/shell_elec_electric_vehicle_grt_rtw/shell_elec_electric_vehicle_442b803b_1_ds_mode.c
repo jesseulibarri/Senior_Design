@@ -1,0 +1,274 @@
+/* Simscape target specific file.
+ * This file is generated for the Simscape network associated with the solver block 'shell_elec_electric_vehicle/Solver Configuration'.
+ */
+
+#include "ne_ds.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_mode.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_ds_struct.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_externals.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_external_struct.h"
+
+int32_T shell_elec_electric_vehicle_442b803b_1_ds_mode(const NeDynamicSystem *t0,
+  const NeDynamicSystemInput *t4, NeDsMethodOutput *t5)
+{
+  PmIntVector out;
+  real_T intrm_sf_mf_217;
+  real_T intrm_sf_mf_218;
+  boolean_T t1;
+  real_T X_idx_23;
+  real_T X_idx_0;
+  real_T X_idx_5;
+  real_T X_idx_25;
+  real_T X_idx_106;
+  real_T X_idx_16;
+  real_T X_idx_2;
+  real_T X_idx_56;
+  real_T X_idx_70;
+  real_T X_idx_7;
+  real_T X_idx_6;
+  real_T X_idx_74;
+  real_T X_idx_72;
+  real_T X_idx_76;
+  real_T X_idx_9;
+  real_T X_idx_8;
+  real_T X_idx_89;
+  real_T X_idx_87;
+  real_T X_idx_90;
+  real_T X_idx_97;
+  real_T X_idx_99;
+  real_T X_idx_11;
+  real_T X_idx_10;
+  real_T X_idx_111;
+  real_T X_idx_113;
+  real_T X_idx_15;
+  real_T X_idx_13;
+  real_T X_idx_62;
+  real_T X_idx_14;
+  real_T X_idx_54;
+  real_T X_idx_27;
+  real_T X_idx_58;
+  real_T X_idx_39;
+  real_T X_idx_40;
+  real_T X_idx_37;
+  real_T X_idx_32;
+  real_T X_idx_36;
+  real_T X_idx_48;
+  real_T X_idx_47;
+  real_T X_idx_33;
+  real_T X_idx_53;
+  real_T X_idx_69;
+  real_T X_idx_71;
+  real_T X_idx_86;
+  real_T X_idx_17;
+  (void)t0;
+  X_idx_0 = t4->mX.mX[0];
+  X_idx_2 = t4->mX.mX[2];
+  X_idx_5 = t4->mX.mX[5];
+  X_idx_6 = t4->mX.mX[6];
+  X_idx_7 = t4->mX.mX[7];
+  X_idx_8 = t4->mX.mX[8];
+  X_idx_9 = t4->mX.mX[9];
+  X_idx_10 = t4->mX.mX[10];
+  X_idx_11 = t4->mX.mX[11];
+  X_idx_13 = t4->mX.mX[13];
+  X_idx_14 = t4->mX.mX[14];
+  X_idx_15 = t4->mX.mX[15];
+  X_idx_16 = t4->mX.mX[16];
+  X_idx_17 = t4->mX.mX[17];
+  X_idx_23 = t4->mX.mX[23];
+  X_idx_25 = t4->mX.mX[25];
+  X_idx_27 = t4->mX.mX[27];
+  X_idx_32 = t4->mX.mX[32];
+  X_idx_33 = t4->mX.mX[33];
+  X_idx_36 = t4->mX.mX[36];
+  X_idx_37 = t4->mX.mX[37];
+  X_idx_39 = t4->mX.mX[39];
+  X_idx_40 = t4->mX.mX[40];
+  X_idx_47 = t4->mX.mX[47];
+  X_idx_48 = t4->mX.mX[48];
+  X_idx_53 = t4->mX.mX[53];
+  X_idx_54 = t4->mX.mX[54];
+  X_idx_56 = t4->mX.mX[56];
+  X_idx_58 = t4->mX.mX[58];
+  X_idx_62 = t4->mX.mX[62];
+  X_idx_69 = t4->mX.mX[69];
+  X_idx_70 = t4->mX.mX[70];
+  X_idx_71 = t4->mX.mX[71];
+  X_idx_72 = t4->mX.mX[72];
+  X_idx_74 = t4->mX.mX[74];
+  X_idx_76 = t4->mX.mX[76];
+  X_idx_86 = t4->mX.mX[86];
+  X_idx_87 = t4->mX.mX[87];
+  X_idx_89 = t4->mX.mX[89];
+  X_idx_90 = t4->mX.mX[90];
+  X_idx_97 = t4->mX.mX[97];
+  X_idx_99 = t4->mX.mX[99];
+  X_idx_106 = t4->mX.mX[106];
+  X_idx_111 = t4->mX.mX[111];
+  X_idx_113 = t4->mX.mX[113];
+  out = t5->mMODE;
+  intrm_sf_mf_217 = X_idx_16 >= 0.0 ? X_idx_16 : -X_idx_16;
+  if (intrm_sf_mf_217 < 227.27272727272725) {
+    intrm_sf_mf_218 = 220.0;
+  } else {
+    intrm_sf_mf_218 = 50.0 / (intrm_sf_mf_217 == 0.0 ? 1.0E-16 : intrm_sf_mf_217)
+      * 1000.0;
+  }
+
+  if (X_idx_2 < 0.0) {
+    t1 = -X_idx_23 > 0.0;
+  } else {
+    t1 = false;
+  }
+
+  out.mX[0] = (int32_T)(X_idx_56 < 273.16);
+  out.mX[1] = (int32_T)(X_idx_56 <= 373.16);
+  out.mX[2] = (int32_T)(X_idx_70 < 0.1);
+  out.mX[3] = (int32_T)(X_idx_7 <= 500.0);
+  out.mX[4] = (int32_T)(X_idx_7 >= 0.10000000000000002);
+  out.mX[5] = (int32_T)(X_idx_6 <= 373.16);
+  out.mX[6] = (int32_T)(X_idx_6 >= 273.16);
+  out.mX[7] = (int32_T)(X_idx_70 <= 500.0);
+  out.mX[8] = (int32_T)(X_idx_70 >= 0.10000000000000002);
+  out.mX[9] = (int32_T)(X_idx_74 <= 373.16);
+  out.mX[10] = (int32_T)(X_idx_74 >= 273.16);
+  out.mX[11] = (int32_T)(X_idx_72 <= 500.0);
+  out.mX[12] = (int32_T)(X_idx_72 >= 0.10000000000000002);
+  out.mX[13] = (int32_T)(X_idx_70 <= 500.0);
+  out.mX[14] = (int32_T)(X_idx_76 <= 373.16);
+  out.mX[15] = (int32_T)(X_idx_76 >= 273.16);
+  out.mX[16] = (int32_T)(X_idx_9 <= 500.0);
+  out.mX[17] = (int32_T)(X_idx_9 >= 0.10000000000000002);
+  out.mX[18] = (int32_T)(X_idx_8 <= 373.16);
+  out.mX[19] = (int32_T)(X_idx_8 >= 273.16);
+  out.mX[20] = (int32_T)(X_idx_89 <= 373.16);
+  out.mX[21] = (int32_T)(X_idx_89 >= 273.16);
+  out.mX[22] = (int32_T)(X_idx_87 <= 500.0);
+  out.mX[23] = (int32_T)(X_idx_87 >= 0.10000000000000002);
+  out.mX[24] = (int32_T)(X_idx_76 < 273.16);
+  out.mX[25] = (int32_T)(X_idx_90 <= 373.16);
+  out.mX[26] = (int32_T)(X_idx_90 >= 273.16);
+  out.mX[27] = (int32_T)(X_idx_97 <= 373.16);
+  out.mX[28] = (int32_T)(X_idx_97 >= 273.16);
+  out.mX[29] = (int32_T)(X_idx_99 <= 373.16);
+  out.mX[30] = (int32_T)(X_idx_99 >= 273.16);
+  out.mX[31] = (int32_T)(X_idx_11 <= 500.0);
+  out.mX[32] = (int32_T)(X_idx_11 >= 0.10000000000000002);
+  out.mX[33] = (int32_T)(X_idx_10 <= 373.16);
+  out.mX[34] = (int32_T)(X_idx_10 >= 273.16);
+  out.mX[35] = (int32_T)(X_idx_76 <= 373.16);
+  out.mX[36] = (int32_T)(0 || X_idx_23 < 1000.0);
+  out.mX[37] = (int32_T)(0 || X_idx_25 > 0.0);
+  out.mX[38] = (int32_T)(X_idx_111 <= 373.16);
+  out.mX[39] = (int32_T)(X_idx_111 >= 273.16);
+  out.mX[40] = (int32_T)(X_idx_113 <= 373.16);
+  out.mX[41] = (int32_T)(X_idx_113 >= 273.16);
+  out.mX[42] = (int32_T)(X_idx_15 <= 500.0);
+  out.mX[43] = (int32_T)(X_idx_15 >= 0.10000000000000002);
+  out.mX[44] = (int32_T)(X_idx_13 <= 373.16);
+  out.mX[45] = (int32_T)(X_idx_13 >= 273.16);
+  out.mX[46] = (int32_T)(X_idx_72 < 0.1);
+  out.mX[47] = (int32_T)(X_idx_62 * 100.0 >= 0.0);
+  out.mX[48] = (int32_T)(X_idx_62 * 100.0 <= 2.5);
+  out.mX[49] = (int32_T)(0 || X_idx_106 * 0.0022666666666666668 + 400.0 > 0.0);
+  out.mX[50] = (int32_T)(X_idx_14 > 0.0);
+  out.mX[51] = (int32_T)(X_idx_72 <= 500.0);
+  out.mX[52] = (int32_T)(X_idx_97 < 273.16);
+  out.mX[53] = (int32_T)(X_idx_97 <= 373.16);
+  out.mX[54] = (int32_T)(X_idx_99 < 273.16);
+  out.mX[55] = (int32_T)(X_idx_99 <= 373.16);
+  out.mX[56] = (int32_T)(X_idx_54 < 0.1);
+  out.mX[57] = (int32_T)(X_idx_111 < 273.16);
+  out.mX[58] = (int32_T)(X_idx_111 <= 373.16);
+  out.mX[59] = (int32_T)(X_idx_113 < 273.16);
+  out.mX[60] = (int32_T)(X_idx_113 <= 373.16);
+  out.mX[61] = (int32_T)(X_idx_87 < 0.1);
+  out.mX[62] = (int32_T)(X_idx_87 <= 500.0);
+  out.mX[63] = (int32_T)(X_idx_27 < 0.0);
+  out.mX[64] = (int32_T)(X_idx_27 <= 1.0);
+  out.mX[65] = (int32_T)(X_idx_0 < 278.15);
+  out.mX[66] = (int32_T)(X_idx_0 <= 313.15);
+  out.mX[67] = (int32_T)(X_idx_54 <= 500.0);
+  out.mX[68] = (int32_T)t1;
+  out.mX[69] = (int32_T)(X_idx_6 < 273.16);
+  out.mX[70] = (int32_T)(X_idx_6 <= 373.16);
+  out.mX[71] = (int32_T)(X_idx_7 < 0.1);
+  out.mX[72] = (int32_T)(X_idx_7 <= 500.0);
+  out.mX[73] = (int32_T)(X_idx_8 < 273.16);
+  out.mX[74] = (int32_T)(X_idx_8 <= 373.16);
+  out.mX[75] = (int32_T)(X_idx_9 < 0.1);
+  out.mX[76] = (int32_T)(X_idx_9 <= 500.0);
+  out.mX[77] = (int32_T)(X_idx_10 < 273.16);
+  out.mX[78] = (int32_T)(X_idx_58 < 273.16);
+  out.mX[79] = (int32_T)(X_idx_10 <= 373.16);
+  out.mX[80] = (int32_T)(X_idx_11 < 0.1);
+  out.mX[81] = (int32_T)(X_idx_11 <= 500.0);
+  out.mX[82] = (int32_T)(X_idx_13 < 273.16);
+  out.mX[83] = (int32_T)(X_idx_13 <= 373.16);
+  out.mX[84] = (int32_T)(X_idx_15 < 0.1);
+  out.mX[85] = (int32_T)(X_idx_15 <= 500.0);
+  out.mX[86] = (int32_T)(X_idx_39 < 273.16);
+  out.mX[87] = (int32_T)(X_idx_39 <= 373.16);
+  out.mX[88] = (int32_T)(X_idx_40 < 273.16);
+  out.mX[89] = (int32_T)(X_idx_58 <= 373.16);
+  out.mX[90] = (int32_T)(X_idx_40 <= 373.16);
+  out.mX[91] = (int32_T)(X_idx_37 < 0.1);
+  out.mX[92] = (int32_T)(X_idx_37 <= 500.0);
+  out.mX[93] = (int32_T)(X_idx_32 < 273.16);
+  out.mX[94] = (int32_T)(X_idx_32 <= 373.16);
+  out.mX[95] = (int32_T)(X_idx_36 < 273.16);
+  out.mX[96] = (int32_T)(X_idx_36 <= 373.16);
+  out.mX[97] = (int32_T)(X_idx_48 < 273.16);
+  out.mX[98] = (int32_T)(X_idx_48 <= 373.16);
+  out.mX[99] = (int32_T)(X_idx_47 < 273.16);
+  out.mX[100] = (int32_T)(X_idx_33 < 0.1);
+  out.mX[101] = (int32_T)(X_idx_47 <= 373.16);
+  out.mX[102] = (int32_T)(X_idx_53 < 273.16);
+  out.mX[103] = (int32_T)(X_idx_53 <= 373.16);
+  out.mX[104] = (int32_T)(X_idx_69 < 273.16);
+  out.mX[105] = (int32_T)(X_idx_69 <= 373.16);
+  out.mX[106] = (int32_T)(X_idx_71 < 273.16);
+  out.mX[107] = (int32_T)(X_idx_71 <= 373.16);
+  out.mX[108] = (int32_T)(X_idx_89 < 273.16);
+  out.mX[109] = (int32_T)(X_idx_89 <= 373.16);
+  out.mX[110] = (int32_T)(X_idx_90 < 273.16);
+  out.mX[111] = (int32_T)(X_idx_33 <= 500.0);
+  out.mX[112] = (int32_T)(X_idx_90 <= 373.16);
+  out.mX[113] = (int32_T)(X_idx_86 < 273.16);
+  out.mX[114] = (int32_T)(X_idx_86 <= 373.16);
+  out.mX[115] = (int32_T)((0.1 - X_idx_106 * (X_idx_106 * 0.00026666666666666668
+    + 400.0) * 0.001 + X_idx_106 * X_idx_106 * 4.9967328298324985E-5) /
+    (X_idx_25 == 0.0 ? 1.0E-16 : X_idx_25) * 1000.0 > 1000.0);
+  out.mX[116] = (int32_T)(X_idx_62 * 100.0 < 0.0);
+  out.mX[117] = (int32_T)(X_idx_62 * 100.0 <= 2.5);
+  out.mX[118] = (int32_T)(X_idx_17 > intrm_sf_mf_218);
+  out.mX[119] = (int32_T)(intrm_sf_mf_217 < 227.27272727272725);
+  out.mX[120] = (int32_T)(X_idx_16 >= 0.0);
+  out.mX[121] = (int32_T)(X_idx_17 < -intrm_sf_mf_218);
+  out.mX[122] = (int32_T)(X_idx_74 < 273.16);
+  out.mX[123] = (int32_T)(X_idx_0 > 0.0);
+  out.mX[124] = (int32_T)(X_idx_33 <= 500.0);
+  out.mX[125] = (int32_T)(X_idx_33 >= 0.10000000000000002);
+  out.mX[126] = (int32_T)(X_idx_39 <= 373.16);
+  out.mX[127] = (int32_T)(X_idx_39 >= 273.16);
+  out.mX[128] = (int32_T)(X_idx_37 <= 500.0);
+  out.mX[129] = (int32_T)(X_idx_37 >= 0.10000000000000002);
+  out.mX[130] = (int32_T)(X_idx_40 <= 373.16);
+  out.mX[131] = (int32_T)(X_idx_40 >= 273.16);
+  out.mX[132] = (int32_T)(X_idx_48 <= 373.16);
+  out.mX[133] = (int32_T)(X_idx_74 <= 373.16);
+  out.mX[134] = (int32_T)(X_idx_48 >= 273.16);
+  out.mX[135] = (int32_T)(X_idx_47 <= 373.16);
+  out.mX[136] = (int32_T)(X_idx_47 >= 273.16);
+  out.mX[137] = (int32_T)(X_idx_5 * 0.0078539816339744835 + 0.001 >
+    1.0000000000000001E-7);
+  out.mX[138] = (int32_T)(X_idx_54 <= 500.0);
+  out.mX[139] = (int32_T)(X_idx_54 >= 0.10000000000000002);
+  out.mX[140] = (int32_T)(X_idx_56 <= 373.16);
+  out.mX[141] = (int32_T)(X_idx_56 >= 273.16);
+  out.mX[142] = (int32_T)(X_idx_58 <= 373.16);
+  out.mX[143] = (int32_T)(X_idx_58 >= 273.16);
+  (void)t0;
+  (void)t5;
+  return 0;
+}

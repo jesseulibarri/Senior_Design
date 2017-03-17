@@ -82,6 +82,7 @@ void spi_encoder_init(){
     DDRB |= (1<<PB0)|(1<<PB1)|(1<<PB2)|(0<<PB3);
     PORTB |= (1<<PB3); 			//MISO line
     DDRD |= (1<<PD0);
+    DDRA |= (1<<PA0);
   
     //Enable SPI, shift LSB first, mast mode, clk low on idle,
     //data sampled on rising edge, clk/16 = 1MHz datarate
@@ -106,7 +107,7 @@ void spi_init(void){
  *
  * Description: This function is used to transfer a given float
  * by reference to a 4 byte, 8-bit array for transmission.  
-/************************************************************************************************/
+************************************************************************************************/
 void float_to_bytes(float* src, unsigned char* dest) {
 	
     union {
@@ -134,32 +135,32 @@ uint16_t get_angle(){
     uint16_t angle;
 
     spi_encoder_init();					//Initialize the SPI protocol for the steering encoder
-    PORTD &= ~(1<<PD0); 				//Set Select Line Low
+    PORTA &= ~(1<<PD0); 				//Set Select Line Low
     SPDR = rd_pos;      				//Send get position command
     while(bit_is_clear(SPSR, SPIF)){} 	//Wait for SPI transmission
-    PORTD |= (1<<PD0);  				//Set Select Line High
+    PORTA |= (1<<PD0);  				//Set Select Line High
     _delay_us(20);						//Wait
 
     //Wait for Encoder Ready Response
     while(SPDR != rd_pos){    
-        PORTD &= ~(1<<PD0);     		//Set Select Line Low
+        PORTA &= ~(1<<PD0);     		//Set Select Line Low
         SPDR = nop_a5;          		//Send no-op
         while(bit_is_clear(SPSR, SPIF)){}
-        PORTD |= (1<<PD0);      		//Set Select Line High
+        PORTA |= (1<<PD0);      		//Set Select Line High
         _delay_us(20);          		//Wait
     }//while
 
     //Encoder is ready, read the upper byte (top 4 bits of the 12 total)
-    PORTD &= ~(1<<PD0);     			//Set Select Line Low
+    PORTA &= ~(1<<PD0);     			//Set Select Line Low
     SPDR = nop_a5;          			//Send no-op
     while(bit_is_clear(SPSR, SPIF)){}   //Wait for Position to be Received
-    PORTD |= (1<<PD0);      			//Set Select Line High
+    PORTA |= (1<<PD0);      			//Set Select Line High
     high_byte = SPDR;       			//Store Position
     _delay_us(20);          			//Wait
-    PORTD &= ~(1<<PD0);     			//Set Select Line Low
+    PORTA &= ~(1<<PD0);     			//Set Select Line Low
     SPDR = nop_a5;           			//Send no-op
     while(bit_is_clear(SPSR, SPIF)){}   //Wait for Position to Be received
-    PORTD |= (1<<PD0);      			//Set Select Line High
+    PORTA |= (1<<PD0);      			//Set Select Line High
     low_byte = SPDR;
 
     //Cancatonate the high and low byte of the steering 
@@ -186,7 +187,7 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
     float torque_ratio;
     static float general_torque = 0;
     static uint8_t max_torque = 25;
-    uint8_t user_mode = PIND | 0x7F;
+    uint8_t user_mode = PIND | 0xFE;
 
     general_torque += 0.5;				//This variable is used for the ramping feature
     angle = 0;
@@ -199,7 +200,7 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
         case 0x00:
             break;
         //Accelerating Mode, Ramp Up
-        case 0x7F:
+        case 0xFE:
             //Prevent torque from exceeding max torque
             if(general_torque > max_torque){
                 general_torque = max_torque;
@@ -241,14 +242,14 @@ void motor_torque(float* torque_right, float* torque_left, uint16_t* steer_angle
 void uart_init(unsigned char ubrr){
     
     //Set Baud Rate at 76800
-    UBRR1H = (unsigned char)(ubrr>>8);
-    UBRR1L = (unsigned char)ubrr;
+    UBRR0H = (unsigned char)(ubrr>>8);
+    UBRR0L = (unsigned char)ubrr;
 
     //Enable Transmitter and Reciever
-    UCSR1B = (1<<RXEN)|(1<<TXEN);
+    UCSR0B = (1<<RXEN)|(1<<TXEN);
     
     //Set Frame Format, 8 bit data, 2 stop bit, Asynchronous
-    UCSR1C |= (1<<UCSZ11)|(1<<UCSZ10)|(1<<USBS1);
+    UCSR0C |= (1<<UCSZ01)|(1<<UCSZ00)|(1<<USBS0);
 }//uart_init
 
 /************************************************************************************************
@@ -266,11 +267,11 @@ void uart_transmit(uint8_t data_array[], int n){
 	
     int i = 0;
     //Wait for empty transmit buffer
-    while(!(UCSR1A & (1<<UDRE1))) { }
+    while(!(UCSR0A & (1<<UDRE0))) { }
 
     for(i = 0; i < n;i++) {
-        UDR1 = data_array[i];
-    while(!(UCSR1A & (1<<UDRE1))) { }
+        UDR0 = data_array[i];
+    while(!(UCSR0A & (1<<UDRE0))) { }
     _delay_us(100);
     }
 }//uart_transmit
@@ -295,7 +296,7 @@ ISR(TIMER1_OVF_vect){
    // uart_transmit(torque_l_bytes,4);    		//transmit left torque value - float, 4 bytes
    // uart_transmit(steering_angle_bytes,4);		//transmit steering encoder value - uint16, 2 bytes
 
-    spi_init();									//Used to initalize SPI for LCD screen if being used
+    //spi_init();									//Used to initalize SPI for LCD screen if being used
     PORTF &= ~(1<<PF0);
 }//timer1_isr
 
@@ -306,10 +307,12 @@ int main(){
 	
     DDRB |= (1<<PB7)|(1<<PB6)|(1<<PB5)|(1<<PB4);
     DDRF = 0xFF;
-    DDRD &= ~(1<<PD7)|(1<<PD6);  			//Configure Port D Pin 7, 6 for input
-    PORTD |= (1<<PD7);  					//enable pullup
+    DDRD &= ~((1<<PD7)|(1<<PD6)|(1<<PD0));  			//Configure Port D Pin 7, 6 for input
+    DDRD |= (0<<PD0);
+    PORTD |= (1<<PD7)|(1<<PD0);  					//enable pullup
     timer1_init();      					//initialize 16 bit timer
     uart_init(MYUBBR);						//initialize uart
+    spi_encoder_init();
     sei();
 
     while(1){

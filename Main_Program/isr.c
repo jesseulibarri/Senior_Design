@@ -6,97 +6,118 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "speed.h"
-#include "datalogging.h"
+#include "steering.h"
 #include "system_init.h"
-#include "user_io.h"
 #include "pirate.h"
+#include "conversions.h"
+#include "uart.h"
+
+#define NO_INPUT        0xFF
+#define ACCELERATE      0x7F
+#define CRUISE          0x3F
+#define PIRATE          0xDF
+#define MAX_TORQUE_CUR  25
 
 
+float torque_right = 0.0;
+unsigned char torque_r_bytes[4];
+float torque_left = 0.0;
+unsigned char torque_l_bytes[4];
+float speed;
+unsigned char speed_bytes[4];
+float cruise_speed;
+uint16_t steering_angle;
+float base_torque;
+uint16_t timestamp_history;
+float integral = 0;
 /*********************************************************************
- * ISR: timer0
+ * ISR: timer1
  *
  * Description: This interrupt handles all of the main program timing.
- *  Set to 16Hz
+ *  Set to 10Hz
  *********************************************************************/
-ISR(TIMER0_OVF_vect) {
+ISR(TIMER1_OVF_vect) {
 
-    uint8_t torque1;
-    uint8_t torque2;
+    uint8_t user_mode = PIND | 0x3F; //Mask everything out except PORTD.6 and 7
+    steering_angle = 0;// get_angle();
 
-    user_mode = PINA;
+    //Start ADC conversion to get steering angle
+    ADCSRA |= (1 << ADSC);                  //Poke ADSC and start conversion
+    while(bit_is_clear(ADCSRA, ADIF)) { }   //loop while interrupt flag not set
+    ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
 
+    
     switch(user_mode) 
     {
         //Accelerate button was let go
-        case 0x00:
+        case NO_INPUT:
+            integral = 0;
+            speed = calc_speed(timestamp_history, speed);
+            cruise_speed = speed;
+            if(torque_right != 0) {
+                base_torque = 0;
+                torque_right = 0;
+                torque_left = 0;
+            }
+
+            float_to_bytes(&torque_right, torque_r_bytes);
+            float_to_bytes(&torque_left, torque_l_bytes);
+            float_to_bytes(&speed, speed_bytes);
+            uart0_transmit(torque_r_bytes);
+            //uart0_uchar(torque_l_bytes);
+            //uart0_uchar(speed_bytes);
+
+
+
+            break;
+        //Accelerate button is pushed
+        case ACCELERATE:
+            integral = 0;
+            base_torque = base_torque + 0.5;
+            if(base_torque > MAX_TORQUE_CUR) { base_torque = MAX_TORQUE_CUR; }
+
+            //Calculate new values for the motor controllers
+            speed = calc_speed(timestamp_history, speed);
+            cruise_speed = speed;
+            accelerate(&torque_right, &torque_left, steering_angle, base_torque);
+                
+            //Convert floats to bytes and send on uart
+            float_to_bytes(&torque_right, torque_r_bytes);
+            float_to_bytes(&torque_left, torque_l_bytes);
+            float_to_bytes(&speed, speed_bytes);
+            uart0_transmit(torque_r_bytes);
+            //uart0_uchar(torque_l_bytes);
+            //uart0_uchar(speed_bytes);
+
+            break;
+
+        //Cruise button is pushed
+        case CRUISE:
+            base_torque = base_torque + 0.5;
+            if(base_torque > MAX_TORQUE_CUR) { base_torque = MAX_TORQUE_CUR; }
+
+            //Calculate new values for the motor controllers
+            speed = calc_speed(timestamp_history, speed);
+            cruise(&torque_right, &torque_left, steering_angle, base_torque, cruise_speed, speed, &integral);
+
+            //Convert floats to bytes and send on uart
+            float_to_bytes(&torque_right, torque_r_bytes);
+            float_to_bytes(&torque_left, torque_l_bytes);
+            float_to_bytes(&speed, speed_bytes);
+            uart0_uchar(torque_r_bytes);
+            //uart0_uchar(torque_l_bytes);
+            //uart0_uchar(speed_bytes);
+
+            break;
+
+        case PIRATE:
+
             pirate_mode();
-            system_init();
-            break;
-        //Accelerate button is pushed
-        case 0x01:
 
-            speed1 = calc_speed(&times1);
-            //speed two will not be needed if we only use one speed sensor
-            speed2 = calc_speed(&times2);
-
-            //TODO: This will go away if we use the SPI steering sensor
-            //Start ADC conversion to get steering angle
-            ADCSRA |= (1 << ADSC);                  //Poke ADSC and start conversion
-            while(bit_is_clear(ADCSRA, ADIF)) { }   //loop while interrupt flag not set
-            ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
-
-            //TODO: Calculate new values for the motor controllers
-            torque1 = motor_torque();
-            torque2 = motor_torque();
-            //TODO: Build UART frame
-            // frame(some_number_1);
-
-            //***** Set data to LCD *******
-            UDR0 = torque1;
-            while(bit_is_clear(UCSR0A, TXC0)) {}
-            UDR1 = torque2;
-            while(bit_is_clear(UCSR1A, TXC1)) {}
-            // frame(some_number_2);
-            //TODO: UART0 send
-            // tx_UART0(frame1);
-            //TODO: UART1 send
-            // tx_UART1(frame2);
             break;
 
-        //Accelerate button is pushed
-        case 0x02:
-
-            speed1 = calc_speed(&times1);
-            //speed two will not be needed if we only use one speed sensor
-            speed2 = calc_speed(&times2);
-
-            //TODO: This will go away if we use the SPI steering sensor
-            //Start ADC conversion to get steering angle
-            ADCSRA |= (1 << ADSC);                  //Poke ADSC and start conversion
-            while(bit_is_clear(ADCSRA, ADIF)) { }   //loop while interrupt flag not set
-            ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
-
-            //TODO: Calculate new values for the motor controllers
-            torque1 = motor_torque();
-            torque1 = motor_torque();
-            //TODO: Build UART frame
-
-            //***********
-            UDR0 = torque1;
-            while(bit_is_clear(UCSR0A, TXC0)) {}
-            UDR1 = torque2;
-            while(bit_is_clear(UCSR1A, TXC1)) {}
-
-            // frame(some_number_1);
-            // frame(some_number_2);
-            //TODO: UART0 send
-            // tx_UART0(frame1);
-            //TODO: UART1 send
-            // tx_UART1(frame2);
-            break;
     }//switch
-
-}//timer0_ISR
+}//timer1_ISR
 
 
 /*********************************************************************
@@ -116,35 +137,6 @@ ISR(INT0_vect){
 
 }//ISR
 
-
-/*********************************************************************
- * ISR: speed_sensor_1
- *
- * Description: This interrupt will occur every time the speed sensor
- *  sends a pulse the uC. The interrupt will capture the timestamp
- *  that the pulse came in at, it will shift all the old timestamps
- *  in the time array to make room for the new one. It will then put
- *  the new stamp in position zero. As the car travels,
- *  the stamps will constantly be shifted through the array. 
- *********************************************************************/
-ISR(TIMER1_CAPT_vect) {
-
-    uint8_t k;
-    uint16_t timestamp = ICR1;
-    static uint16_t timestamp_hist1 = 0;
-
-    //shift difference history over to make room for new
-    for(k = 9; k >= 0; k--) { times1[k+1] = times1[k]; }
-     
-    //wrap around at the end of the timer
-    if(timestamp < timestamp_hist1) { times1[0] = 65535 - timestamp_hist1 + timestamp; }
-    else { times1[0] = timestamp - timestamp_hist1; }
-              
-    timestamp_hist1 = timestamp;
-    
-}
-
-
 /*********************************************************************
  * ISR: speed_sensor_2
  *
@@ -152,18 +144,14 @@ ISR(TIMER1_CAPT_vect) {
  *********************************************************************/
 ISR(TIMER3_CAPT_vect) {
 
-    uint8_t k;
     uint16_t timestamp = ICR3;
-    static uint16_t timestamp_hist2 = 0;
+    static uint16_t timestamp_hist = 0;
 
-    //shift difference history over to make room for new
-    for(k = 9; k >= 0; k--) { times2[k+1] = times2[k]; }
-    
     //wrap around at the end of the timer
-    if(timestamp < timestamp_hist2) { times2[0] = 65535 - timestamp_hist2 + timestamp; }
-    else { times2[0] = timestamp - timestamp_hist2; }
+    if(timestamp < timestamp_hist) { timestamp_history = 65535 - timestamp_hist + timestamp; }
+    else { timestamp_history = timestamp - timestamp_hist; }
            
-    timestamp_hist2 = timestamp;
+    timestamp_hist = timestamp;
 
 }
 

@@ -1,0 +1,150 @@
+/* Simscape target specific file.
+ * This file is generated for the Simscape network associated with the solver block 'shell_elec_electric_vehicle/Solver Configuration'.
+ */
+
+#include "ne_ds.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_vmf.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_ds_struct.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_externals.h"
+#include "shell_elec_electric_vehicle_442b803b_1_ds_external_struct.h"
+
+int32_T shell_elec_electric_vehicle_442b803b_1_ds_vmf(const NeDynamicSystem *ds,
+  const NeDynamicSystemInput *t1, NeDsMethodOutput *t2)
+{
+  PmBoolVector out;
+  (void)t1;
+  out = t2->mVMF;
+  out.mX[0] = false;
+  out.mX[1] = true;
+  out.mX[2] = false;
+  out.mX[3] = false;
+  out.mX[4] = true;
+  out.mX[5] = false;
+  out.mX[6] = false;
+  out.mX[7] = false;
+  out.mX[8] = false;
+  out.mX[9] = false;
+  out.mX[10] = false;
+  out.mX[11] = false;
+  out.mX[12] = false;
+  out.mX[13] = false;
+  out.mX[14] = false;
+  out.mX[15] = false;
+  out.mX[16] = false;
+  out.mX[17] = false;
+  out.mX[18] = false;
+  out.mX[19] = false;
+  out.mX[20] = false;
+  out.mX[21] = false;
+  out.mX[22] = true;
+  out.mX[23] = true;
+  out.mX[24] = true;
+  out.mX[25] = true;
+  out.mX[26] = true;
+  out.mX[27] = true;
+  out.mX[28] = true;
+  out.mX[29] = false;
+  out.mX[30] = false;
+  out.mX[31] = true;
+  out.mX[32] = true;
+  out.mX[33] = true;
+  out.mX[34] = true;
+  out.mX[35] = true;
+  out.mX[36] = true;
+  out.mX[37] = true;
+  out.mX[38] = true;
+  out.mX[39] = true;
+  out.mX[40] = true;
+  out.mX[41] = true;
+  out.mX[42] = true;
+  out.mX[43] = true;
+  out.mX[44] = true;
+  out.mX[45] = true;
+  out.mX[46] = true;
+  out.mX[47] = true;
+  out.mX[48] = false;
+  out.mX[49] = true;
+  out.mX[50] = true;
+  out.mX[51] = true;
+  out.mX[52] = true;
+  out.mX[53] = true;
+  out.mX[54] = true;
+  out.mX[55] = true;
+  out.mX[56] = true;
+  out.mX[57] = true;
+  out.mX[58] = true;
+  out.mX[59] = true;
+  out.mX[60] = true;
+  out.mX[61] = true;
+  out.mX[62] = true;
+  out.mX[63] = true;
+  out.mX[64] = true;
+  out.mX[65] = true;
+  out.mX[66] = true;
+  out.mX[67] = true;
+  out.mX[68] = true;
+  out.mX[69] = true;
+  out.mX[70] = true;
+  out.mX[71] = true;
+  out.mX[72] = true;
+  out.mX[73] = true;
+  out.mX[74] = true;
+  out.mX[75] = true;
+  out.mX[76] = true;
+  out.mX[77] = true;
+  out.mX[78] = true;
+  out.mX[79] = true;
+  out.mX[80] = true;
+  out.mX[81] = true;
+  out.mX[82] = true;
+  out.mX[83] = true;
+  out.mX[84] = true;
+  out.mX[85] = true;
+  out.mX[86] = true;
+  out.mX[87] = true;
+  out.mX[88] = true;
+  out.mX[89] = true;
+  out.mX[90] = true;
+  out.mX[91] = true;
+  out.mX[92] = true;
+  out.mX[93] = true;
+  out.mX[94] = true;
+  out.mX[95] = true;
+  out.mX[96] = true;
+  out.mX[97] = true;
+  out.mX[98] = true;
+  out.mX[99] = true;
+  out.mX[100] = true;
+  out.mX[101] = true;
+  out.mX[102] = true;
+  out.mX[103] = true;
+  out.mX[104] = true;
+  out.mX[105] = true;
+  out.mX[106] = true;
+  out.mX[107] = true;
+  out.mX[108] = true;
+  out.mX[109] = true;
+  out.mX[110] = true;
+  out.mX[111] = true;
+  out.mX[112] = true;
+  out.mX[113] = true;
+  out.mX[114] = true;
+  out.mX[115] = true;
+  out.mX[116] = true;
+  out.mX[117] = true;
+  out.mX[118] = true;
+  out.mX[119] = true;
+  out.mX[120] = false;
+  out.mX[121] = true;
+  out.mX[122] = true;
+  out.mX[123] = true;
+  out.mX[124] = true;
+  out.mX[125] = true;
+  out.mX[126] = true;
+  out.mX[127] = true;
+  out.mX[128] = true;
+  out.mX[129] = false;
+  (void)ds;
+  (void)t2;
+  return 0;
+}

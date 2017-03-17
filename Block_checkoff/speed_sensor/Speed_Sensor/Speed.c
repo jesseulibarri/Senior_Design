@@ -90,7 +90,11 @@ void float_to_bytes(float* src, unsigned char* dest) {
 
 ISR(INT0_vect) {
     if(speed == 40) {
-    } else { speed += 0.25; }
+    } else { 
+        PORTB |= (1 << PB6);
+        speed += 0.25;
+        PORTB &= ~(1 << PB6);
+    }
 }//ISR
 
 ISR(INT1_vect) {
@@ -101,10 +105,8 @@ ISR(INT1_vect) {
 ISR(TIMER1_OVF_vect) {
 
     PORTB |= (1 << PB7);
-    PORTB |= (1 << PB6);
     _delay_us(10);
     PORTB &= ~(1 << PB7);
-    PORTB &= ~(1 << PB6);
 
 }//ISR
 

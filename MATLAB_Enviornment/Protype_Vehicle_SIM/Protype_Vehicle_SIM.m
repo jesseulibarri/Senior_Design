@@ -44,7 +44,7 @@ dt = 1;         %Change in time between calculations (s)
 
 Fzf = 0.5*m*g*cos(B);       %Vertical load forces on the vehicle at the front and rear ground contact points, respectively (N)
 Fzr = 0.5*m*g*cos(B);       %Vertical load forces on the vehicle at the front and rear ground contact points, respectively (N)
-urub = 0.699;               %Kinetic coefficient of rubber
+urub = 0.0055;               %Kinetic coefficient of rolling bike tires
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   Linear Motion Calculations:
@@ -181,10 +181,15 @@ try
                  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
                 N = (Fzr + Fzf);            %Normal force of vehicle
-                %Fu = 1*N*urub;              %Force of kenetic friction on vehicle in motion
-                
+                Fu = N*urub;              %Force of kenetic friction on vehicle in motion
+                                               
                 Fxr = m*((2*B*Im*L*r)/(((Jl/R)*G)+((Jm/R)*(1/G))));%Force exerted from the motor on the rear wheel
                 Fx = (Fxf + Fxr); %Net Force propelling the vehicle forward, sum of the forces applied by each wheel
+                
+                if(Fx > Fu)
+                    Fx = Fx - Fu;
+                end
+                
                 Fd = -0.5*Cd*p*A*(Vxi^2); %Aerodynamic drag force (N) acting in oposition to the direction of motion
                 
                 Ax = (Fx + Fd - (m*g*sin(beta)))/m; %Current acceleration of vehicle, Net force acting on the vehicle divided by the mass of the vehicle

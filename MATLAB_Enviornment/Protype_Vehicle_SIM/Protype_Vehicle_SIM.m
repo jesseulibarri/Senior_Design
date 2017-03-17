@@ -76,7 +76,7 @@ try
     %Select the total number of floats, (num_of_in_float), 
     %being sent via serial every cycle; and which speed 
     %you would like to sample for input.
-    serialPort = 'COM4';                %Define COM port #
+    serialPort = 'COM7';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
     num_of_in_float = 1;                %Define # of Float/packet
     delay = 0.01;                      %Make sure sample faster than resolution
@@ -164,10 +164,11 @@ try
                 %Calculate back EMF at the current linear speed, current 
                 %voltage available, then lastly, the maximum current the 
                 %motor can accept at the given speed.
-                emf = (Vxi*Vemf)
-                Vm_f = Vm_i - emf
-                Pmax_f = Imax*Vm_f
-                Imax_f = (Pmax_f/Vm_i)
+                emf = (Vxi*Vemf);
+                Vm_f = Vm_i - emf;
+                Pmax_f = Imax*Vm_f;
+                Imax_f = (Pmax_f/Vm_i);
+                
                 %Recieve the Torque (currrent) command from controller
                 Im = Rx_data_packet(1)
                 
@@ -179,27 +180,24 @@ try
                     Im = Imax_f
                 end
                  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                
-                N = (Fzr + Fzf);            %Normal force of vehicle
-                Fu = N*urub;              %Force of kenetic friction on vehicle in motion                              
+                N = abs(Fzr + Fzf)            %Normal force of vehicle
+                Fu = -(N*urub)              %Force of kenetic friction on vehicle in motion                              
                 Fxr = m*((2*B*Im*L*r)/(((Jl/R)*G)+((Jm/R)*(1/G))))%Force exerted from the motor on the rear wheel
-                
-                Fd = -0.5*Cd*p*A*(Vxi^2) %Aerodynamic drag force (N) acting in oposition to the direction of motion                  
-                Fx = (Fxf + Fxr) %Net Force propelling the vehicle forward, sum of the forces applied by each wheel
-                if(Fx > Fu)
-                    Fx = Fx - Fu;
-                end
-                Ax = (Fx + Fd - (m*g*sin(beta)))/m; %Current acceleration of vehicle, Net force acting on the vehicle divided by the mass of the vehicle
-                if(Ax < 0)
-                    Ax = 0;
-                end
-                Ax
-                Vxd = dt*Ax    %Acceleration times change in time equals the change in velocity
-                Vxf = Vxi + Vxd; %Initial velocity plus the change in velocity equals final velocity
 
+                Fd = -0.5*(Cd*p*A*(Vxi^2)) %Aerodynamic drag force (N) acting in oposition to the direction of motion                  
+                Fx_m = (Fxf + Fxr) %Net Force propelling the vehicle forward, sum of the forces applied by each wheel
+                Fnet = ((Fx_m + Fd) - (m*g*sin(beta)));
+                Ax = Fnet/m; %Current acceleration of vehicle, Net force acting on the vehicle divided by the mass of the vehicle
+
+                Vxd = dt*Ax    %Acceleration times change in time equals the change in velocity
+                if(Vxi + Vxd > 0)
+                    Vxf = Vxi + Vxd %Initial velocity plus the change in velocity equals final velocity
+                else
+                    Vxf = 0
+                end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
-                Vxfmph = 2.23694*(Vxf);
+                Vxfmph = 2.23694*(Vxf)
                 %Send = uint8(Vxfmph)
                 Send = num2str(Vxfmph,'%.1f')
                 %Send = num2str(Vxfmph)

@@ -105,6 +105,13 @@ void cruise(float* torque_right, float* torque_left, uint16_t angle, float b_tor
     else{
         b_torque = b_torque + output;
     }
+    
+    if(b_torque <= 0){
+        b_torque = 0.0;
+    }
+    if(b_torque > 25){
+        b_torque = 25;
+    }
 
     set_differential_torque(torque_right, torque_left, angle, b_torque);
 }//cruise

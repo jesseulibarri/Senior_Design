@@ -64,7 +64,7 @@ try
     %you would like to sample for input.
     serialPort = 'COM4';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
-    num_of_in_float = 2;                %Define # of Float/packet
+    num_of_in_float = 1;                %Define # of Float/packet
     delay = 0.01;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
@@ -133,7 +133,7 @@ try
     %Loop when Plot is Active 
     while ishandle(plotGraph)
 
-        Rx_data_packet = fread(s, num_of_in_float, 'float32')        
+        Rx_data_packet = fread(s, num_of_in_float, 'float32');        
         %Read data off the serial bus as 32-bit floats.      
 
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
@@ -175,37 +175,33 @@ try
                 %Calculate back EMF at the current linear speed, current 
                 %voltage available, then lastly, the maximum current the 
                 %motor can accept at the given speed.
-                Vemf = (Vxi*Cemf);
+                Vemf = (Vxi*Cemf)
                 %Recieve the Torque (currrent) command from controller
-%                 RecievedCurrent = Rx_data_packet(1)
-%                 RecievedSpeed = Rx_data_packet(2)
-                Imset = Rx_data_packet(1);
-                if(Imset > Imax)
-                   fprintf('Target Current Too High') 
-                   Im = Imax;
-                else
-                    if(Vemf < Vbatt)
-                        Vcurr = Vbatt - Vemf;                
-                        Pcurr = Vcurr*Im;
-                       
-                        if(Pmax-Pcurr > 0)
-                            Imax = (Pmax-Pcurr)/Vbatt;
-                            if(Imset < Imax)
-                                Im = Imset;
-                            else
-                                fprintf('Invalid Target Current')
-                            end
-                        else
-                            fprintf('Motor Maximum Power Reached')
-                            Im = Imax;
+                Imset = Rx_data_packet(1)
+                
+                if(Vemf < Vbatt)
+                    Vcurr = Vbatt - Vemf                  
+                    Pcurr = Vcurr*Im
+
+                    if(Pmax-Pcurr > 0)
+                        Imax = (Pmax-Pcurr)/Vbatt
+                        if(Imset < Imax)
+                            Im = Imset
                         end
-                        %Check if current power is less than the available motor
-                        %power, if not set current to maximum available. 
                     else
-                        Im = 0;
-                        Imax = 0;
-                        fprintf('Motor Maximum Speed Reached')
+                        fprintf('Motor Maximum Power Reached')
+                        Im = Imax;
                     end
+                    %Check if current power is less than the available motor
+                    %power, if not set current to maximum available. 
+                else
+                    Im = 0
+                    fprintf('Motor Maximum Speed Reached')
+                end
+                if(Imset > Imax)
+                   Im = Imax
+                else
+                   Im = Imset
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %   Linear Motion Calculations:
@@ -217,33 +213,32 @@ try
                 %   aerodynamic drag slows it down. For simplicity, the drag is assumed to act through the CG.
                 %
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%               
-                N = (Fzr + Fzf);            %Normal force of vehicle                          
-                Fxr = m*((2*B*Im*L*r)/(((Jl/R)*G)+((Jm/R)*(1/G))));%Force exerted from the motor on the rear wheel
-                Fx = (Fxf + Fxr); %Net Force propelling the vehicle forward, sum of the forces applied by each wheel 
-                %Ff = ((1/(Vxi+Statf))*N*Kincf)              %Force of kenetic friction on vehicle in motion                   
-                Ff = N*Kincf;
-                Fd = -0.5*Cd*p*A*(Vxi^2); %Aerodynamic drag force (N) acting in oposition to the direction of motion
-                Fnet = Fx + Ff + Fd - (m*g*sin(beta));
+                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                N = abs(Fzr + Fzf)            %Normal force of vehicle
+                Fu = -(N*urub)              %Force of kenetic friction on vehicle in motion                              
+                Fxr = m*((2*B*Im*L*r)/(((Jl/R)*G)+((Jm/R)*(1/G))))%Force exerted from the motor on the rear wheel
 
-                Ax = (Fnet)/m; %Current acceleration of vehicle, Net force acting on the vehicle divided by the mass of the vehicle
+                Fd = -0.5*(Cd*p*A*(Vxi^2)) %Aerodynamic drag force (N) acting in oposition to the direction of motion                  
+                Fx_m = (Fxf + Fxr) %Net Force propelling the vehicle forward, sum of the forces applied by each wheel
+                Fnet = ((Fx_m + Fd) - (m*g*sin(beta)));
+                Ax = Fnet/m; %Current acceleration of vehicle, Net force acting on the vehicle divided by the mass of the vehicle
 
-                Vxd = dt*Ax  ;  %Acceleration times change in time equals the change in velocity
-                Vxf = Vxi + Vxd; %Initial velocity plus the change in velocity equals final velocity
-                if(Vxf - Vxi < 0 && Vxf < 0)
-                    Vxf = 0;
+                Vxd = dt*Ax    %Acceleration times change in time equals the change in velocity
+                if(Vxi + Vxd > 0)
+                    Vxf = Vxi + Vxd %Initial velocity plus the change in velocity equals final velocity
+                else
+                    Vxf = 0
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
-                Vxfmph = 2.23694*(Vxf);
-
-                Send = num2str(Vxfmph,'%.1f');
+                Vxfmph = 2.23694*(Vxf)
+                %Send = uint8(Vxfmph)
+                Send = num2str(Vxfmph,'%.1f')
+                %Send = num2str(Vxfmph)
+                %fwrite(s, Send)
                 fprintf(s,'%s',Send)
                 fprintf(s, 'G')
-                pause(delay);
-                
-                %Send = uint8(Vxfmph)                
-                %fwrite(s, uint8(Vxfmph))
-                %SendingSpeed = uint8(Vxfmph)               
+                %pause(delay);
                 
                 %Extract user selected data to graph
                 data(count) = Vxfmph;

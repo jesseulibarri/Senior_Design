@@ -64,7 +64,7 @@ try
     %you would like to sample for input.
     serialPort = 'COM4';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
-    num_of_in_float = 2;                %Define # of Float/packet
+    num_of_in_float = 1;                %Define # of Float/packet
     delay = 0.01;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
@@ -133,7 +133,7 @@ try
     %Loop when Plot is Active 
     while ishandle(plotGraph)
 
-        Rx_data_packet = fread(s, num_of_in_float, 'float32')        
+        Rx_data_packet = fread(s, num_of_in_float, 'float32');        
         %Read data off the serial bus as 32-bit floats.      
 
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
@@ -177,8 +177,7 @@ try
                 %motor can accept at the given speed.
                 Vemf = (Vxi*Cemf);
                 %Recieve the Torque (currrent) command from controller
-%                 RecievedCurrent = Rx_data_packet(1)
-%                 RecievedSpeed = Rx_data_packet(2)
+                RecievedCurrent = Rx_data_packet(1)
                 Imset = Rx_data_packet(1);
                 if(Imset > Imax)
                    fprintf('Target Current Too High') 
@@ -203,7 +202,6 @@ try
                         %power, if not set current to maximum available. 
                     else
                         Im = 0;
-                        Imax = 0;
                         fprintf('Motor Maximum Speed Reached')
                     end
                 end
@@ -219,8 +217,7 @@ try
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%               
                 N = (Fzr + Fzf);            %Normal force of vehicle                          
                 Fxr = m*((2*B*Im*L*r)/(((Jl/R)*G)+((Jm/R)*(1/G))));%Force exerted from the motor on the rear wheel
-                Fx = (Fxf + Fxr); %Net Force propelling the vehicle forward, sum of the forces applied by each wheel 
-                %Ff = ((1/(Vxi+Statf))*N*Kincf)              %Force of kenetic friction on vehicle in motion                   
+                Fx = (Fxf + Fxr); %Net Force propelling the vehicle forward, sum of the forces applied by each wheel                
                 Ff = N*Kincf;
                 Fd = -0.5*Cd*p*A*(Vxi^2); %Aerodynamic drag force (N) acting in oposition to the direction of motion
                 Fnet = Fx + Ff + Fd - (m*g*sin(beta));
@@ -235,15 +232,14 @@ try
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
                 Vxfmph = 2.23694*(Vxf);
-
+                %Send = uint8(Vxfmph)
                 Send = num2str(Vxfmph,'%.1f');
-                fprintf(s,'%s',Send)
-                fprintf(s, 'G')
-                pause(delay);
-                
-                %Send = uint8(Vxfmph)                
-                %fwrite(s, uint8(Vxfmph))
-                %SendingSpeed = uint8(Vxfmph)               
+                %Send = num2str(Vxfmph)
+                fwrite(s, uint8(Vxfmph))
+                SendingSpeed = uint8(Vxfmph)
+                %fprintf(s,'%s',Send)
+                %fprintf(s, 'G')
+                %pause(delay);
                 
                 %Extract user selected data to graph
                 data(count) = Vxfmph;

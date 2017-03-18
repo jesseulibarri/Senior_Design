@@ -4,6 +4,7 @@
  * *****************************************************/
 
 #include <avr/io.h>
+#include <stdio.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "speed.h"
@@ -34,7 +35,9 @@ float steering_angle_float = 0.0;
 float base_torque = 0.0;
 uint16_t timestamp_history;
 float integral = 0.0;
-unsigned char rx_buff[4];
+uint8_t rx_buff[] = {0, 0, 0, 0};
+
+
 /*********************************************************************
  * ISR: timer1
  *
@@ -42,6 +45,11 @@ unsigned char rx_buff[4];
  *  Set to 10Hz
  *********************************************************************/
 ISR(TIMER1_OVF_vect) {
+	
+	
+	USART0_RX(&rx_buff, 4);
+	uart1_uint8_transmit(rx_buff, 4);
+	
 /**
     uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
     steering_angle = 1;// get_angle();
@@ -116,7 +124,7 @@ ISR(TIMER1_OVF_vect) {
             //float_to_bytes(&torque_left, torque_l_bytes);
             //float_to_bytes(&speed, speed_bytes);
 	    	uart1_uint8_transmit(torque_r_bytes, 4);
-            //uart1_uint8_transmit(speed_bytes, 4);
+            //uuart1_uint8_transmit(1, 1);art1_uint8_transmit(speed_bytes, 4);
             //uart0_uchar(torque_l_bytes);
             //uart0_uchar(speed_bytes);
 
@@ -169,26 +177,23 @@ ISR(INT0_vect){
 
 }*/
 
-ISR(USART0_RX_vect){
+/**ISR(USART0_RX_vect){
 	static uint8_t i = 0;
-	//cli();
+
 	DDRB |= (1<<PB6);
-	PORTB |= (1<<PB6);
+	PORTB ^= (1<<PB6);
+	_delay_ms(10);
 	
-    char data = UDR0;
+    unsigned char data = UDR0;
     if(data == 'G') {
         i = 0;
-	//speed = (float)atof(rx_buff);
-	//float_to_bytes(&speed, speed_bytes);
-    uart1_uint8_transmit(1, 1);
-    }
+	}
 	else {
         rx_buff[i] = data;
         i++;
     }
 
-	//sei();
-}
+}**/
 
 
 

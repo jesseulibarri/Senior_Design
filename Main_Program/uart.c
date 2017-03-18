@@ -1,5 +1,6 @@
 
 #include <avr/io.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <util/delay.h>
 #include "uart.h"
@@ -96,8 +97,8 @@ void uart0_uint8_transmit(uint8_t data_array[], int n){
 
 	for(i=0; i<n; i++){
 		UDR0 = data_array[i];
-	while(!(UCSR0A & (1<<UDRE0))) {}
-	_delay_us(100);
+		while(!(UCSR0A & (1<<UDRE0))) {}
+		_delay_us(10);
 	}
 }//uart1_transmit
 
@@ -115,8 +116,8 @@ void uart1_uint8_transmit(uint8_t data_array[], int n){
 
 	for(i=0; i<n; i++){
 		UDR1 = data_array[i];
-	while(!(UCSR1A & (1<<UDRE1))) {}
-	_delay_us(100);
+		while(!(UCSR1A & (1<<UDRE1))) {}
+		_delay_us(10);
 	}
 }//uart1_transmit
 
@@ -126,11 +127,30 @@ void uart1_uint8_transmit(uint8_t data_array[], int n){
  *  Description: Recieve an unsigned 8 bit int from matlab that will simulate a feedback
  *      speed.
  ****************************************************************************************/
-void uart1_uint8_receive(){
 
+/**unsigned char USART_Receive( )
+{
+	int i = 0;
+	usigned char data[4];
+// Wait for data to be received 
+while ( !(UCSRA & (1<<RXC)) )
+;
+//Get and return received data from buffer 
+	for(i=0; i<4; i++){
+	data[i] = UDR0;
+	while ( !(UCSRA & (1<<RXC)) )
+	}
+return data;
+}**/
 
-
-}
-
-
+void USART0_RX(uint8_t* rx_buf, uint8_t n) {
+    int i = 0;
+	while ( !(UCSR0A & (1<<RXC0)) ) {}
+	for(i=0;i<n;i++){
+		uint8_t data = UDR0;
+        rx_buf[i] = data;
+		while ( !(UCSR0A & (1<<RXC0)) ) {}
+		
+	}
+}//Usart variable size RX funxtion int8 with delay
 

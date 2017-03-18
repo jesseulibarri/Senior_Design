@@ -35,8 +35,8 @@ p = 1.2;        %Mass density of air (kg/m3)
 %   Active Forces on System
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Ax = 0;         %Longitudinal vehicle acceleration (m/s^2)
-Vxi = 10;       %Initial Longitudinal vehicle velocity (m/s)
-Vxf = 10;        %Final Longitudinal vehicle velocity (m/s)
+Vxi = 20;       %Initial Longitudinal vehicle velocity (m/s)
+Vxf = 0;        %Final Longitudinal vehicle velocity (m/s)
 Vxd = 0;        %Change in velocity (m/s)
 Vxfmph = 0;     %Velocity in mph
 Fxf = 0;        %Longitudinal forces on the vehicle at the front and rear wheel ground contact points, respectively (N)
@@ -110,17 +110,15 @@ try
 
     %Create and Configure Serial COM Port with user settings
     s = serial(serialPort);
-    %s.InputBufferSize = num_of_bytes;
-    %s.InputBufferSize = 1;
-    set(s,'Terminator','LF');
+    s.InputBufferSize = num_of_bytes;
+    set(s,'Terminator','G');
     set(s,'BaudRate', baudrate);
     set(s,'DataBits', 8);
     set(s,'Parity','none');
     set(s,'StopBits', 1);
     set(s,'FlowControl','none');
-    %set(s,'InputBufferSize', num_of_bytes);
-    set(s,'InputBufferSize', 4);    
-    set(s,'OutputBufferSize', 4);
+    set(s,'InputBufferSize', num_of_bytes);
+    set(s,'OutputBufferSize', 5);
     set(s,'BytesAvailableFcnCount', num_of_bytes);
     set(s,'BytesAvailableFcnMode','byte');
 
@@ -132,15 +130,48 @@ try
     %This timer's value can be accessed as by a subsequent call to 'toc'. 
     tic
 
-    %Loop when Plot is Active 
-    while ishandle(plotGraph)
-                number = 1;
-                fwrite(s, number, 'uint8')
-        %Rx_data_packet = fread(s, num_of_in_float, 'float32')        
-        %Read data off the serial bus as 32-bit floats.      
-
-        Rx_data_packet = fread(s, 4, 'uint8') 
+% % % % %     Vxfmph = 42.555;
+% % % % %     Send = num2str(Vxfmph,'%.1f');
+% % % % %     Send
+% % % % %     fprintf(s,'%s',Send)
+% % % % %     
+% % % % % %     Vxfmph = 42.5;                
+% % % % % %     send = num2str(Vxfmph,'%.1f')               
+% % % % % %     fwrite(s,send,'uchar')
+% % % % %      fprintf(s, 'G')   
+% % % %     
+% % % %         %Send = num2str(Vxfmph,'%.1f');
+% % % %         
+% % % % %         Send = num2hex(Send)
+% % % % %         intArray = uint8(Send)
+% % % % %         Send = num2str
+% % % % %         fprintf(s,'%s',Send)
+% % % %         Vxfmph = 45.5;
+% % % %         Send = num2str(Vxfmph,'%.1f')                
+% % % %         fwrite(s,send,'uchar')
         
+
+        %Send As String(1) or Uchar(0)
+        String = 1;
+        %Recieve As Float32(1) or Uchar Array(0)
+        Float = 0;
+        %Send all G to make Shane shut the fuck up.
+        GCASE = 0;
+        
+        %Loop when Plot is Active 
+     while ishandle(plotGraph) 
+       try
+        
+        if(Float == 1)
+            Rx_data_packet = fread(s, num_of_in_float, 'float32')
+        else
+            Rx_data_packet = fread(s, 4, 'uchar')
+            %Read data off the serial bus as 32-bit floats.      
+        end
+            
+        catch ME
+        fprintf(1, 'No message recieved - Timeout.\r\n');
+        end   
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
             %Make sure read data is a Float and not an empty array      
            
@@ -182,10 +213,8 @@ try
                 %motor can accept at the given speed.
                 Vemf = (Vxi*Cemf);
                 %Recieve the Torque (currrent) command from controller
-%                 RecievedCurrent = Rx_data_packet(1)
-%                 RecievedSpeed = Rx_data_packet(2)
-                Imset = Rx_data_packet(0);
-                %Imset = 3;
+                RecievedCurrent = Rx_data_packet(1);
+                Imset = Rx_data_packet(1);
                 if(Imset > Imax)
                    fprintf('Target Current Too High') 
                    Im = Imax;
@@ -196,7 +225,7 @@ try
                        
                         if(Pmax-Pcurr > 0)
                             Imax = (Pmax-Pcurr)/Vbatt;
-                            if(Imset < Imax)
+                            if(Imset < Imax && Imset <= 0)
                                 Im = Imset;
                             else
                                 fprintf('Invalid Target Current')
@@ -209,7 +238,6 @@ try
                         %power, if not set current to maximum available. 
                     else
                         Im = 0;
-                        Imax = 0;
                         fprintf('Motor Maximum Speed Reached')
                     end
                 end
@@ -241,27 +269,43 @@ try
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
                 Vxfmph = 2.23694*(Vxf);
-
-%                 Send = num2str(1111)
-%                 fprintf(s,'%uint8',Send)
-%                 pause(delay);
-%                 fprintf(s, 'G')
-%                 pause(.1);
                 
-                %Send = uint8(Vxfmph)                
+                %Send = uint8(Vxfmph)
+                %Send = num2str(Vxfmph,'%.1f');
+                %fprintf(s,'%s',Send)
+                Vxfmph = 45.552;
+%                 if(String == 1)
+%                     SendString = Vxfmph
+%                     %fprintf(s,'%.1s',SendString);
+                if(String == 1)
+                    SendString = num2str(Vxfmph,'%.1f');
+                    SendString
+                    fprintf(s,'%s',SendString);
+                    %pause(delay)
+%                 if(String == 1)
+%                     SendString = num2str(Vxfmph,'%.1f');
+%                     SendString
+%                     fprintf(s,'%s',SendString);
+                end
+                if(String == 0)
+                    SendUChar = num2str(Vxfmph,'%.1f')
+                    SendUChar
+                    fwrite(s,SendUChar,'char');
+                    %pause(delay)
+                end
+                if(GCASE == 1)
+                    fprintf(s, 'G')
+                    fprintf(s, 'G')
+                    fprintf(s, 'G')
+                    fprintf(s, 'G')
+                end          
+                fprintf(s, 'G')
+                %fwrite(s,'G','uchar');
+%                 pause(0.01);
+                
+                %Send = num2str(Vxfmph)
                 %fwrite(s, uint8(Vxfmph))
                 %SendingSpeed = uint8(Vxfmph)
-                number = 1;
-                fwrite(s, number, 'uint8')
-                fwrite(s, number, 'uint8')
-                fwrite(s, number, 'uint8')
-                fwrite(s, number, 'uint8')
-                delay(0.2)
-                fprintf(s,'%uint8',number)
-                fprintf(s,'%uint8',number)
-                fprintf(s,'%uint8',number)
-                fprintf(s,'%uint8',number)
-                delay(0.2)
                 
                 %Extract user selected data to graph
                 data(count) = Vxfmph;
@@ -294,7 +338,7 @@ try
             end
             
             %Allow MATLAB time to Update Plot
-            pause(delay);
+
 
     end
     

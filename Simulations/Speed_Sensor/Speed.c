@@ -68,7 +68,7 @@ void USART1_RX(uint8_t *rx_buf[], uint8_t n) {
 uint8_t USART_ReceiveByte(){
   while((UCSRA &(1<<RXC)) == 0);
   return UDR;
-}//
+}//From the book
 
 ISR(USART1_RX_vect) {
     static uint8_t i = 0;

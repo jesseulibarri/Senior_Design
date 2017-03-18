@@ -23,13 +23,14 @@ float torque_right = 0.0;
 unsigned char torque_r_bytes[4];
 float torque_left = 0.0;
 unsigned char torque_l_bytes[4];
-float speed;
+float speed = 0.0;
 unsigned char speed_bytes[4];
-float cruise_speed;
+float cruise_speed = 0.0;
 uint16_t steering_angle;
-float base_torque;
+float steering_angle_float = 0.0;
+float base_torque = 0.0;
 uint16_t timestamp_history;
-float integral = 0;
+float integral = 0.0;
 /*********************************************************************
  * ISR: timer1
  *
@@ -42,9 +43,9 @@ ISR(TIMER1_OVF_vect) {
     steering_angle = 0;// get_angle();
 
     //Start ADC conversion to get steering angle
-    ADCSRA |= (1 << ADSC);                  //Poke ADSC and start conversion
-    while(bit_is_clear(ADCSRA, ADIF)) { }   //loop while interrupt flag not set
-    ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
+   //ADCSRA |= (1 << ADSC);                  //Poke ADSC and start conversion
+   // while(bit_is_clear(ADCSRA, ADIF)) { }   //loop while interrupt flag not set
+   // ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
 
     
     switch(user_mode) 
@@ -52,7 +53,7 @@ ISR(TIMER1_OVF_vect) {
         //Accelerate button was let go
         case NO_INPUT:
             integral = 0;
-            speed = calc_speed(timestamp_history, speed);
+            speed = 5; // calc_speed(timestamp_history, speed);
             cruise_speed = speed;
             if(torque_right != 0) {
                 base_torque = 0;
@@ -63,14 +64,13 @@ ISR(TIMER1_OVF_vect) {
             float_to_bytes(&torque_right, torque_r_bytes);
             float_to_bytes(&torque_left, torque_l_bytes);
             float_to_bytes(&speed, speed_bytes);
-            uart0_transmit(torque_r_bytes);
+            uart1_uint8_transmit(torque_r_bytes,4);
             //uart0_uchar(torque_l_bytes);
             //uart0_uchar(speed_bytes);
 
-
-
             break;
-        //Accelerate button is pushed
+       
+            //Accelerate button is pushed
         case ACCELERATE:
             integral = 0;
             base_torque = base_torque + 0.5;
@@ -79,13 +79,13 @@ ISR(TIMER1_OVF_vect) {
             //Calculate new values for the motor controllers
             speed = calc_speed(timestamp_history, speed);
             cruise_speed = speed;
-            accelerate(&torque_right, &torque_left, steering_angle, base_torque);
+            set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
                 
             //Convert floats to bytes and send on uart
             float_to_bytes(&torque_right, torque_r_bytes);
             float_to_bytes(&torque_left, torque_l_bytes);
             float_to_bytes(&speed, speed_bytes);
-            uart0_transmit(torque_r_bytes);
+            uart1_uint8_transmit(torque_r_bytes,4);
             //uart0_uchar(torque_l_bytes);
             //uart0_uchar(speed_bytes);
 
@@ -104,7 +104,7 @@ ISR(TIMER1_OVF_vect) {
             float_to_bytes(&torque_right, torque_r_bytes);
             float_to_bytes(&torque_left, torque_l_bytes);
             float_to_bytes(&speed, speed_bytes);
-            uart0_uchar(torque_r_bytes);
+            uart1_uint8_transmit(torque_r_bytes,4);
             //uart0_uchar(torque_l_bytes);
             //uart0_uchar(speed_bytes);
 

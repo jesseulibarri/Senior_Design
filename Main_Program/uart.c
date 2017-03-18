@@ -11,15 +11,15 @@
  * Description: RXD0 is PORT E bit 0
  *              TXD0 is PORT E bit 1
  *************************************************************************************/
-void uart0_init(){
+void uart0_init(unsigned char ubrr){
     //rx and tx enable, receive interrupt enabled, 8 bit characters
     //UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
     UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
     UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00) | (1<<USBS0);
-    UBRR0H = (BAUDVALUE >>8 ); //load upper byte of the baud rate into UBRR 
-    UBRR0L =  BAUDVALUE;       //load lower byte of the baud rate into UBRR 
+    UBRR0H = (unsigned char)(ubrr >>8 ); //load upper byte of the baud rate into UBRR 
+    UBRR0L =  (unsigned char)ubrr;       //load lower byte of the baud rate into UBRR 
 }//uart0_init
 
 /**************************************************************************************
@@ -28,15 +28,15 @@ void uart0_init(){
  * Description: RXD1 is PORT D bit 2
  *              TXD1 is PORT D bit 3
  *************************************************************************************/
-void uart1_init(){
+void uart1_init(unsigned char ubrr){
     //rx and tx enable, receive interrupt enabled, 8 bit characters
     //UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
     UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
     UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10) | (1<<USBS1);
-    UBRR1H = (BAUDVALUE >>8 ); //load upper byte of the baud rate into UBRR 
-    UBRR1L =  BAUDVALUE;       //load lower byte of the baud rate into UBRR 
+    UBRR1H = (unsigned char)(ubrr >>8 ); //load upper byte of the baud rate into UBRR 
+    UBRR1L =  (unsigned char)ubrr;       //load lower byte of the baud rate into UBRR 
 }//uart1_init
 //******************************************************************
 
@@ -45,7 +45,7 @@ void uart1_init(){
  *
  * Description: 
  *************************************************************************************/
- void uart0_uchar(unsigned char packet[]) {
+ void uart0_uchar_transmit(unsigned char packet[]) {
     //make sure that nothing else is sending
     while(!(UCSR0A & (1<<UDRE0))) { }
     int8_t i;
@@ -66,7 +66,7 @@ void uart1_init(){
  *
  * Description: 
  *************************************************************************************/
- void uart1_uchar(unsigned char packet[]) {
+ void uart1_uchar_transmit(unsigned char packet[]) {
     //make sure that nothing else is sending
     while(!(UCSR1A & (1<<UDRE1))) { }
     int8_t i;
@@ -84,7 +84,7 @@ void uart1_init(){
 *
 *
 ****************************************************************************************/
-void uart0_transmit(uint8_t data_array[], int n){
+void uart0_uint8_transmit(uint8_t data_array[], int n){
 
 	int i = 0;
 	
@@ -103,7 +103,7 @@ void uart0_transmit(uint8_t data_array[], int n){
 *
 *
 ****************************************************************************************/
-void uart1_transmit(uint8_t data_array[], int n){
+void uart1_uint8_transmit(uint8_t data_array[], int n){
 
 	int i = 0;
 	

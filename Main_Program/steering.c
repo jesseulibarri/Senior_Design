@@ -28,6 +28,28 @@
 //4. The encoder must be power cycled. If the encoder is not power cycled, the position values will not be calculated off the latest
 //zero position. When the encoder is powered on next the new offset will be used for the position calculation.
 
+/***********************************************************************************
+ * Name: spi_encoder_init
+ *
+ * Description: This function configures the SPI protocol for 
+ * using the steering sensor.
+ ***********************************************************************************/
+void spi_encoder_init(){
+
+    //Set data direction for SPI (SS, SCK, MOSI, MISO) and set pullup for MISO
+    DDRB |= (1<<PB0)|(1<<PB1)|(1<<PB2)|(0<<PB3);
+    PORTB |= (1<<PB3);
+
+    //Enable SPI, shift LSB first, master mode, clk low on idle,
+    //data sampled on rising edge, clk/16 = 1MHz datarate
+    SPCR = (1<<SPE)|(0<<DORD)|(1<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR0);
+}//spi_encoder_init
+
+/***********************************************************************************
+ * Name: calibrate_spi_steering
+ *
+ * Description: This function calibrates the SPI steering sensor.
+ ***********************************************************************************/
 void calibrate_spi_steering() {
 
     PORTD &= ~(1<<PD0);     //set select line low
@@ -101,12 +123,3 @@ uint16_t get_angle(){
     return angle;
 }//get_angle
 
-
-float calc_angle(uint16_t adc_result, const float SF, const float deg_offset) {
-
-    float result;
-    result = (adc_result*SF)-(deg_offset);
-    return result;
-
-
-}

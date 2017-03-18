@@ -27,14 +27,14 @@ void pirate_mode() {
     EIMSK = (1<<INT0);                 //Enable external interrupt 0
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);    //Enable power down mode, set sleep enable bit 
                                             //in the MCUCR register
-    PORTB &= ~((1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY));  //Turn off relay circuits
-    cli();  //clear global interrupt
+    PORTD &= ~(1<<PC_ON_OFF);  //Turn off relay circuits
+   // cli();  //clear global interrupt, only needed if storing data before sleep
     sleep_enable();         //Set sleep enable bit in MCUCR register
     sei();                  //Set global interrupt bit
     sleep_cpu();            //CPU is sleeping
     sleep_disable();        //CPU wakes up on rising edge ISR is executed
     system_init();
-    PORTB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Turn on relay circuits
+    PORTD |= (1<<PC_ON_OFF); //Turn on relay circuits
 
 }//pirate_mode
 

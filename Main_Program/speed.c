@@ -58,7 +58,7 @@ return new_avg;
  *	past a set max torque value which can be changed.
  ***************************************************************************************************/
 
-void accelerate(float* torque_right, float* torque_left, uint16_t angle, float b_torque){
+void set_differential_torque(float* torque_right, float* torque_left, uint16_t angle, float b_torque){
     
     float torque_ratio;
 
@@ -83,7 +83,7 @@ void accelerate(float* torque_right, float* torque_left, uint16_t angle, float b
  * Description: 
  ***************************************************************************************************/
 void cruise(float* torque_right, float* torque_left, uint16_t angle, float b_torque, float target_speed, float current_speed, float* integral){
-    float torque_ratio;    
+   // float torque_ratio;    
     float error = 0; 
     float iteration_time = 0.100;
     float Kp = 1;
@@ -91,6 +91,7 @@ void cruise(float* torque_right, float* torque_left, uint16_t angle, float b_tor
     //float Kd;
     //float bias;
     float output;
+
 
     error = target_speed - current_speed;
     *integral = *integral + (error*iteration_time);
@@ -105,17 +106,5 @@ void cruise(float* torque_right, float* torque_left, uint16_t angle, float b_tor
         b_torque = b_torque + output;
     }
 
-
-//We are turning right
-    if(angle >= 0 && angle <= 2048){
-        torque_ratio = ((-0.00031)*angle)+(0.99972);	//Calculate torque ratio
-        *torque_right = b_torque*torque_ratio;	//Update right motor torque
-        *torque_left = b_torque;			//Update left motor torque
-    }
-    //We are turning left
-    else{
-        torque_ratio = ((1.033)*log((double)angle))-(7.59);	//Log function takes a double so had to typecast
-        *torque_left = b_torque*torque_ratio;		//Update left motor torque
-        *torque_right = b_torque;				//Update right motor torque
-    }
+    set_differential_torque(torque_right, torque_left, angle, b_torque);
 }//cruise

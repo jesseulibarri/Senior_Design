@@ -16,12 +16,9 @@
 #define SPROCKET_TEETH  42
 #define ACCELERATE_B    6
 #define CRUISE_B        7
-#define SPEED1_RELAY    4
-#define SPEED2_RELAY    5
-#define PC_RELAY        6
-#define PIRATE_SWITCH   5
-
-#define PACKET_SIZE    4
+#define PIRATE_SWITCH   0
+#define PC_ON_OFF       5
+#define PACKET_SIZE     4
 
 #define USART_BAUDRATE 76800  
 #define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16UL)) - 1 )

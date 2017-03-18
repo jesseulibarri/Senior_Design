@@ -12,6 +12,21 @@
 uint16_t dropped_byte = 0;
 
 /**************************************************************************************
+ * Name: spi_rpi_init
+ *
+ * Description: Initialize SPI for raspberry pi datalogging
+ *************************************************************************************/
+void spi_rpi_init(){
+
+    //Raspberry PI will be master.
+    //Set SS, MOSI, SCK as input, MISO as output
+    DDRB |= (0<<PB0)|(0<<PB1)|(0<<PB2)|(1<<PB3);
+    //Configure SPI (slave mode, clk low on idle, rising edge sample)
+    SPCR = (1<<SPE)|(0<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR1)|(0<<SPR0);
+    SPSR = (1<<SPI2X);
+}//spi_rpi_init
+
+/**************************************************************************************
  * Name: timeout
  *
  * Description: This function is passed a 16 bit integer and breaks it into a high and 

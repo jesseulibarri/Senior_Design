@@ -1,7 +1,7 @@
 PRG             =main
 
-OBJS            =main.o conversions.o speed.o system_init.o isr.o pirate.o steering.o uart.o 
-SRCS            =main.c conversions.c speed.c system_init.c isr.c pirate.c steering.c uart.c
+OBJS            =main.o conversions.o speed.o system_init.o isr.o pirate.o steering.o uart.o datalogging.o 
+SRCS            =main.c conversions.c speed.c system_init.c isr.c pirate.c steering.c uart.c dataloggin.c
 
 MCU_TARGET     = atmega128
 #MCU_TARGET     = atmega48

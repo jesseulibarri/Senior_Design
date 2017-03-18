@@ -5,6 +5,7 @@
 #include "system_init.h"
 #include "uart.h"
 #include "steering.h"
+#include "datalogging.h"
 #include "pirate.h"
 
 
@@ -48,21 +49,18 @@ void system_init() {
 
     /******** IO *********/
     DDRD |= (0<<ACCELERATE_B) | (0<<CRUISE_B) | (0<<PIRATE_SWITCH) | (1<<PC_ON_OFF);  //Accelerate, and pirate switch (input) buttons on PORTD 6, 7, 0. Set PC_ON_OFF (output) PORTD 5.
+    DDRB |= (1<<PB7); //input for led indicating 12 power converter on off pin is on
+    PORTB |= (1<<PB7); // turn on led
     PORTD |= (1<<ACCELERATE_B) | (1<<CRUISE_B) | (1<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Set pullup resistors for input pins and turn on PC_ON_OFF pin
 
     ///*** Calculate the system needed constants ***/
     tire_circ = TIRE_DIAM * M_PI;
     distance_per_pulse = tire_circ / SPROCKET_TEETH;
 
-    /****** Datalogging *******/
+    /****** Initialize RPI for Datalogging *******/
     if(datalogging) { 
-        //Raspberry Pi will be master.
-        //Set SS, MOSI, SCK as input, MISO as output
-        DDRB |= (0 << PB0) | (0 << PB1) | (0 << PB2) | (1 << PB3);
-        //Configure SPI (Slave mode, clk low on idle, rising edge sample)
-        SPCR = (1<<SPE)|(0<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR1)|(0<<SPR0);
-        SPSR = (1<<SPI2X);
-
+        
+        spi_rpi_init(); 
     }//if datalogging
 
     /****** spi_steering sensor *******/
@@ -71,17 +69,6 @@ void system_init() {
        spi_encoder_init();
      }//if spi_steering
 
-
-    /******** ADC *********/
-/*    //Initalize ADC and the ports
-    DDRF &= ~(1<<PF1);  //Port F bit 1 is ADC input
-    PORTF &= ~(1<<PF1); //Port F bit 1 pull up has to be off
-
-    ADMUX = (0<<REFS1)|(1<<REFS0)|(1<<MUX0);    //Single ended input, Port F bit 0, 
-                                                //right adjusted, 10 bit
-    //ADC enabled, One shot mode, ADC complete interrupt enabled, clk prescalar 128 (125khz)
-    ADCSRA = (1<<ADEN)|(1<<ADIE)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
-*/
     /****** Initialize UART0 *******/
    uart0_init(BAUDVALUE);
 

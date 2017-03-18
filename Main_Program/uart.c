@@ -30,8 +30,8 @@ void uart0_init(unsigned char ubrr){
  *************************************************************************************/
 void uart1_init(unsigned char ubrr){
     //rx and tx enable, receive interrupt enabled, 8 bit characters
-    //UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
-    UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
+    UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
+   // UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
     UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10) | (1<<USBS1);
@@ -41,7 +41,7 @@ void uart1_init(unsigned char ubrr){
 //******************************************************************
 
 /**************************************************************************************
- * Name: uart0_uchar
+ * Name: uart0_uchar_transmit
  *
  * Description: 
  *************************************************************************************/
@@ -62,7 +62,7 @@ void uart1_init(unsigned char ubrr){
 
 
 /**************************************************************************************
- * Name: uart1_uchar
+ * Name: uart1_uchari_transmit
  *
  * Description: 
  *************************************************************************************/
@@ -79,9 +79,12 @@ void uart1_init(unsigned char ubrr){
     UDR1 = '\n';
     while(!(UCSR1A & (1<<UDRE1))) { } 
 */
-}/***************************************************************************************
+}
+
+/***************************************************************************************
+* Name: uart0_uint8_transmit
 *
-*
+* Description:
 *
 ****************************************************************************************/
 void uart0_uint8_transmit(uint8_t data_array[], int n){
@@ -99,9 +102,9 @@ void uart0_uint8_transmit(uint8_t data_array[], int n){
 }//uart1_transmit
 
 /***************************************************************************************
+* Name: uart1_uint8_transmit
 *
-*
-*
+* Description:
 ****************************************************************************************/
 void uart1_uint8_transmit(uint8_t data_array[], int n){
 
@@ -116,5 +119,18 @@ void uart1_uint8_transmit(uint8_t data_array[], int n){
 	_delay_us(100);
 	}
 }//uart1_transmit
+
+/*****************************************************************************************
+ *  Name: uart1_uint8_receive
+ *
+ *  Description: Recieve an unsigned 8 bit int from matlab that will simulate a feedback
+ *      speed.
+ ****************************************************************************************/
+void uart1_uint8_receive(){
+
+
+
+}
+
 
 

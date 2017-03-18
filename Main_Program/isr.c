@@ -15,7 +15,7 @@
 #define NO_INPUT        0xFF
 #define ACCELERATE      0x7F
 #define CRUISE          0x3F
-#define PIRATE          0xDF
+#define PIRATE          0xFE
 #define MAX_TORQUE_CUR  25
 
 
@@ -31,6 +31,7 @@ float steering_angle_float = 0.0;
 float base_torque = 0.0;
 uint16_t timestamp_history;
 float integral = 0.0;
+uint8_t rx_buff;
 /*********************************************************************
  * ISR: timer1
  *
@@ -39,14 +40,8 @@ float integral = 0.0;
  *********************************************************************/
 ISR(TIMER1_OVF_vect) {
 
-    uint8_t user_mode = PIND | 0x3F; //Mask everything out except PORTD.6 and 7
+    uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
     steering_angle = 0;// get_angle();
-
-    //Start ADC conversion to get steering angle
-   //ADCSRA |= (1 << ADSC);                  //Poke ADSC and start conversion
-   // while(bit_is_clear(ADCSRA, ADIF)) { }   //loop while interrupt flag not set
-   // ADCSRA |= (1<<ADIF);                    //Clear flag by writing a one 
-
     
     switch(user_mode) 
     {
@@ -93,11 +88,12 @@ ISR(TIMER1_OVF_vect) {
 
         //Cruise button is pushed
         case CRUISE:
-            base_torque = base_torque + 0.5;
+            
             if(base_torque > MAX_TORQUE_CUR) { base_torque = MAX_TORQUE_CUR; }
 
             //Calculate new values for the motor controllers
-            speed = calc_speed(timestamp_history, speed);
+            speed = rx_buff; //calc_speed(timestamp_history, speed);
+            cruise_speed = 15;
             cruise(&torque_right, &torque_left, steering_angle, base_torque, cruise_speed, speed, &integral);
 
             //Convert floats to bytes and send on uart
@@ -114,6 +110,9 @@ ISR(TIMER1_OVF_vect) {
 
             pirate_mode();
 
+            break;
+            
+        default:
             break;
 
     }//switch
@@ -132,9 +131,6 @@ ISR(INT0_vect){
     //NOT SURE WHAT THIS IS FOR
     EIMSK &= ~(1<<INT0);
 
-    pirate_mode();
-    system_init();
-
 }//ISR
 
 /*********************************************************************
@@ -152,6 +148,14 @@ ISR(TIMER3_CAPT_vect) {
     else { timestamp_history = timestamp - timestamp_hist; }
            
     timestamp_hist = timestamp;
+
+}
+
+ISR(USART1_RX_vect){
+
+    uint8_t data = UDR1;
+    rx_buff = data;
+
 
 }
 

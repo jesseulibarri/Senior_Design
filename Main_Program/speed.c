@@ -82,8 +82,8 @@ void set_differential_torque(float* torque_right, float* torque_left, uint16_t a
  *
  * Description: 
  ***************************************************************************************************/
-void cruise(float* torque_right, float* torque_left, uint16_t angle, float b_torque, float target_speed, float current_speed, float* integral){
-   // float torque_ratio;    
+void cruise(float* torque_right, float* torque_left, uint16_t angle, float* b_torque, float target_speed, float current_speed, float* integral){
+    float torque_ratio;    
     float error = 0; 
     float iteration_time = 0.100;
     float Kp = 1;
@@ -93,25 +93,30 @@ void cruise(float* torque_right, float* torque_left, uint16_t angle, float b_tor
     float output;
 
 
-    error = target_speed - current_speed;
-    *integral = *integral + (error*iteration_time);
+    //error = target_speed - current_speed;
+   // *integral = *integral + (error*iteration_time);
     //derivative = (error - error_prior)/iteration_time
-    output = Kp*error + Ki*(*integral);    //+Kd*derivative + bias
+   // output = Kp*error + Ki*(*integral);    //+Kd*derivative + bias
     //error_prior = error
     
-    if(output < 0){
-        b_torque = b_torque - output;
+    if(current_speed < target_speed){
+       *b_torque = *b_torque + 1;
     }
     else{
-        b_torque = b_torque + output;
+        *b_torque = 0;
     }
     
-    if(b_torque <= 0){
-        b_torque = 0.0;
+    //We are turning right
+    if(angle >= 0 && angle <= 2048){
+        torque_ratio = ((-0.00031)*angle)+(0.99972);	//Calculate torque ratio
+        *torque_right =(*b_torque)*torque_ratio;	//Update right motor torque
+        *torque_left = (*b_torque);			//Update left motor torque
     }
-    if(b_torque > 25){
-        b_torque = 25;
+    //We are turning left
+    else{
+        torque_ratio = ((1.033)*log((double)angle))-(7.59);	//Log function takes a double so had to typecast
+        *torque_left = (*b_torque)*torque_ratio;		//Update left motor torque
+        *torque_right = *b_torque;				//Update right motor torque
     }
-
-    set_differential_torque(torque_right, torque_left, angle, b_torque);
+   // set_differential_torque(torque_right, torque_left, angle, b_torque);
 }//cruise

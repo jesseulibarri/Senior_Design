@@ -6,7 +6,7 @@
  *  the speed sensors on each wheel.
  *
  **************************************************/
-#define F_CPU 16000000
+//#define F_CPU 16000000
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -15,7 +15,7 @@
 #include <math.h>
 #include "hd44780.h"
 
-#define USART_BAUDRATE 115200
+#define USART_BAUDRATE 76800
 #define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16UL)) - 1 )
 
 #define PI 3.14159
@@ -26,6 +26,10 @@ unsigned char speed_bytes[4];
 uint8_t tire_diam = 22;
 uint8_t sprocket_teeth = 42;
 uint16_t sixteen_bit_timer_val;
+
+double period;
+double distance_per_pulse;
+double tire_circ;
 
 char lcd_string[32];
 
@@ -52,8 +56,8 @@ void SPI_init() {
 
 void uart_init(){
 //rx and tx enable, receive interrupt enabled, 8 bit characters
-//UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
-UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
+UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
+//UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
 
 //async operation, no parity,  one stop bit, 8-bit characters
   UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00);
@@ -73,6 +77,15 @@ void float_to_bytes(float* src, unsigned char* dest) {
 }//float_to_bytes
 
 
+void bytes_to_float(unsigned char* src, float* dest) {
+    union {
+        float a;
+        unsigned char bytes[4];
+    } u;
+    memcpy(u.bytes, src, 4);
+    *dest = u.a;
+}
+
  void send_packet(unsigned char packet[]) {
     //make sure that nothing else is sending
     while(!(UCSR0A & (1<<UDRE0))) { }
@@ -87,6 +100,25 @@ void float_to_bytes(float* src, unsigned char* dest) {
     while(!(UCSR0A & (1<<UDRE0))) { }
 }//send_packet
 
+ISR(USART0_RX_vect) {
+    unsigned char data = UDR0;
+    static uint8_t i = 0;
+    if(data == 'G') {
+        i = 0;
+        //bytes_to_float(speed_bytes, &speed);
+        //dtostrf(speed, 6, 3, lcd_string);
+        clear_display();
+        cursor_home();
+        string2lcd(lcd_string);
+        //_delay_ms(40);
+
+        //period = distance_per_pulse / (speed * 17.6);
+        //OCR1A = (period * 16000000) / 64;
+    } else {
+        lcd_string[i] = data;
+        i++;
+    }
+}//ISR
 
 ISR(INT0_vect) {
     if(speed == 40) {
@@ -113,20 +145,22 @@ ISR(TIMER1_OVF_vect) {
 /******************** MAIN *************************/
 int main()
 {
-
-double tire_circ = tire_diam * PI;
-double distance_per_pulse = tire_circ / sprocket_teeth;
+tire_circ = tire_diam * PI;
+distance_per_pulse = tire_circ / sprocket_teeth;
 // 1 mph = 17.6 in/sec
-double period = distance_per_pulse / (speed * 17.6);
+period = distance_per_pulse / (speed * 17.6);
 sixteen_bit_timer_val = ((double)period * 16000000) / 64;
-float theta = 0.01;
 
+//float theta = 0.01;
+
+/*
 //PORTD.0 will increase speed, PORTD.1 will deacrease speed
 //Interrupts will trigger on falling edge.
 DDRD |= (0 << PD0) | (0 << PD1);
 PORTD |= (1 << PD0) | (1 << PD1);
 EICRA |= (1 << ISC01) | (1 << ISC11);
 EIMSK |= (1 << INT0) | (1 << INT1);
+*/
 
 //PORTB.0 set to output
 DDRB =0xFF;
@@ -147,17 +181,17 @@ sei();
         if(theta > PI) { theta = 0.01; }
 */
 
-        period = distance_per_pulse / (speed * 17.6);
-        OCR1A = (period * 16000000) / 64;
+        //period = distance_per_pulse / (speed * 17.6);
+        //OCR1A = (period * 16000000) / 64;
 
-        float_to_bytes(&speed, speed_bytes);
-        send_packet(speed_bytes);
-        dtostrf(speed, 6, 3, lcd_string);
+        //float_to_bytes(&speed, speed_bytes);
+        //send_packet(speed_bytes);
+       /* dtostrf(speed, 6, 3, lcd_string);
         clear_display();
         cursor_home();
         string2lcd(lcd_string);
-        _delay_ms(300);
-        
+        _delay_ms(40);
+        */
     }//while
 
 return 0;

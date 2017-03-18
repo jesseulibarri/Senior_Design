@@ -27,6 +27,18 @@ void bytes_to_float(unsigned char* src, float* dest) {
 }
 
 ISR(USART0_RX_vect) {
+    static uint8_t i = 0;
+    char data = UDR0;
+    if(data == 'G') {
+        i = 0;
+        clear_display();
+        cursor_home();
+        string2lcd(rx_buf);
+    } else { rx_buf[i] = data; i++; }
+    //_delay_ms(20);
+}
+/*
+ISR(USART0_RX_vect) {
     static uint8_t i;
     unsigned char data  = UDR0;
     if(data == '\n') {
@@ -44,7 +56,7 @@ ISR(USART0_RX_vect) {
     }
 
 }//ISR
-
+*/
 
 int main() {
 

@@ -20,7 +20,7 @@ try
     %you would like to sample for input.
     serialPort = 'COM7';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
-    num_of_char = 10;
+    num_of_char = 1;
     num_of_in_float = 0;                %Define # of Float/packet
     delay = 0.001;                      %Make sure sample faster than resolution
 

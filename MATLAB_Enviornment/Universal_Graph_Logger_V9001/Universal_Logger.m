@@ -18,10 +18,10 @@ try
     %Select the total number of floats, (num_of_in_float), 
     %being sent via serial every cycle; and which speed 
     %you would like to sample for input.
-    serialPort = 'COM7';                %Define COM port #
+    serialPort = 'COM4';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
-    num_of_in_float = 3;                %Define # of Float/packet
-    delay = 0.001;                      %Make sure sample faster than resolution
+    num_of_in_float = 1;                %Define # of Float/packet
+    delay = 0.01;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
     Log_Title = 'DataLog.txt';
@@ -37,9 +37,9 @@ try
 
     %Choose which input float to graph (float_to_graph,then
     %indicate the maximum and minimum value that it can be.
-    float_to_graph = 3;                 %Define which float to graph     
+    float_to_graph = 1;                 %Define which float to graph     
     min = 0;                            %Define y-min
-    max = 5000;                           %Define y-max
+    max = 20;                           %Define y-max
 
     %Define Function Variables
     time = 0;
@@ -86,11 +86,16 @@ try
 
     %Loop when Plot is Active 
     while ishandle(plotGraph)
-
-        Rx_data_packet = fread(s, num_of_in_float, 'float32')        
+            number = 1;
+            fwrite(s, number, 'uint8')
+            fwrite(s, number, 'uint8')
+            fwrite(s, number, 'uint8')
+            fwrite(s, number, 'uint8')
+            
+        Rx_data_packet = fread(s, 4, 'uint8')        
         %Read data off the serial bus as 32-bit floats.      
 
-            if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
+            if(~isempty(Rx_data_packet))  
             %Make sure read data is a Float and not an empty array      
 
                 %Plot some given data

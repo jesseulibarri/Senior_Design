@@ -82,7 +82,7 @@ void set_differential_torque(float* torque_right, float* torque_left, uint16_t a
  *
  * Description: 
  ***************************************************************************************************/
-void cruise(float* torque_right, float* torque_left, uint16_t angle, float* b_torque, float target_speed, float current_speed, float* integral){
+/*void cruise(float* torque_right, float* torque_left, uint16_t angle, float* b_torque, float target_speed, float current_speed, float* integral){
     float torque_ratio;    
     float error = 0; 
     float iteration_time = 0.100;
@@ -119,7 +119,7 @@ void cruise(float* torque_right, float* torque_left, uint16_t angle, float* b_to
         *torque_right = *b_torque;				//Update right motor torque
     }
    // set_differential_torque(torque_right, torque_left, angle, b_torque);
-}//cruise
+}//cruise*/
 
 /**************************************************************************************************
  * Name: OTHER cruise

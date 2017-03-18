@@ -27,15 +27,18 @@ float torque_right = 0.0;
 unsigned char torque_r_bytes[4];
 float torque_left = 0.0;
 unsigned char torque_l_bytes[4];
-float speed = 0.0;
 unsigned char speed_bytes[4];
-float cruise_speed = 20;
+float cruise_speed = 0.0;
 uint16_t steering_angle;
 float steering_angle_float = 0.0;
 float base_torque = 0.0;
 uint16_t timestamp_history;
 float integral = 0.0;
 uint8_t rx_buff[];
+int i = 0;
+static float speed = 0;
+static float cruise_target = 0;
+static int C = 0;
 
 /*********************************************************************
  * ISR: timer1
@@ -48,7 +51,7 @@ ISR(TIMER1_OVF_vect) {
 	///uart1_uint8_transmit(rx_buff, 4);
     uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
     steering_angle = 0;// get_angle();
-	static int C = 0;
+	C = 0;
 	
 	//Fun little fluctuating speed to test cruise
 	for(i = 0; i < 30; i++){
@@ -110,9 +113,9 @@ ISR(TIMER1_OVF_vect) {
 
             break;
 	 case CRUISE:
-			static int C = 0;
+			C = 0;
 			for(C=0; C<1; C++){
-				static float cruise_target = cruise_speed;
+				cruise_target = cruise_speed;
 				//ensures the target cruise is set only once, it will be reset once cruise is left.
 			}
             if(base_torque > MAX_TORQUE_CUR) { base_torque = MAX_TORQUE_CUR; }

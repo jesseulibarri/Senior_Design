@@ -177,11 +177,10 @@ try
                 %motor can accept at the given speed.
                 Vemf = (Vxi*Cemf)
                 %Recieve the Torque (currrent) command from controller
-                Imset = Rx_data_packet(1)
-                if(Imset > Imax)
+                Im = Rx_data_packet(1)
+                if(Im > Imax)
                    Im = Imax
                 else
-                    Im = Imset;
                     if(Vemf < Vbatt)
                         Vcurr = Vbatt - Vemf                  
                         Pcurr = Vcurr*Im

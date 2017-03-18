@@ -55,6 +55,21 @@ void format_lcd_array(double number) {
 }
 */
 
+void USART1_RX(uint8_t *rx_buf[], uint8_t n) {
+    int i = 0;
+	for(i,i<n,n++){
+		uint8_t data = UDR1;
+        rx_buf[i] = data;
+		_delay_us(10);
+        i++;
+	}
+}//Usart variable size RX funxtion int8 with delay
+
+uint8_t USART_ReceiveByte(){
+  while((UCSRA &(1<<RXC)) == 0);
+  return UDR;
+}//
+
 ISR(USART1_RX_vect) {
     static uint8_t i = 0;
     char data = UDR1;
@@ -64,7 +79,7 @@ ISR(USART1_RX_vect) {
         rx_buf[i] = data;
         i++;
     }
-}//ISR
+}//ISR (Char Return)
 
 void timer1_init() {
     // Fast PWM mode, TOP in OCR1A, OC pin disconnected, prescale 64

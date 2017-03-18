@@ -20,7 +20,7 @@
 #define ACCELERATE      0x7F
 #define CRUISE          0xBF
 #define PIRATE          0xFE
-#define MAX_TORQUE_CUR  25
+#define MAX_TORQUE_CUR  15
 
 
 float torque_right = 0.0;
@@ -35,8 +35,7 @@ float steering_angle_float = 0.0;
 float base_torque = 0.0;
 uint16_t timestamp_history;
 float integral = 0.0;
-uint8_t rx_buff[] = {6, 6, 6, 6};
-
+uint8_t rx_buff[];
 
 /*********************************************************************
  * ISR: timer1
@@ -45,35 +44,44 @@ uint8_t rx_buff[] = {6, 6, 6, 6};
  *  Set to 10Hz
  *********************************************************************/
 ISR(TIMER1_OVF_vect) {
-	
-	
 	//USART0_RX(&rx_buff, 4);
 	///uart1_uint8_transmit(rx_buff, 4);
-	
-
     uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
-    steering_angle = 1;// get_angle();
-	speed = 10;
+    steering_angle = 0;// get_angle();
+	static int C = 0;
+	
+	//Fun little fluctuating speed to test cruise
+	for(i = 0; i < 30; i++){
+		speed = speed + 0.1;
+		if(i == 30){
+			for(i = 30; i > 0; i++){
+				speed = speed - 0.1;
+			}
+		}
+	}
+	if(speed < 0)
+		speed = 0;
 	//speed = (float)atof(rx_buff);
 
 	
     switch(user_mode) 
     {
-        //Accelerate button was let go
+        //All button were released
         case NO_INPUT:
-            integral = 0;
+           integral = 0;
            // speed =(float)rx_buff; // calc_speed(timestamp_history, speed);
+		   cruise_speed = speed;
             if(torque_right != 0) {
                 base_torque = 0;
                 torque_right = 0;
                 torque_left = 0;
             }
-			base_torque = 0;
-            float_to_bytes(&torque_right,torque_r_bytes);
+            //float_to_bytes(&torque_right,torque_r_bytes);
 			//float_to_bytes(&speed, speed_bytes);
-            //float_to_bytes(&torque_left, torque_l_bytes);
+            float_to_bytes(&torque_left, torque_l_bytes);
             //float_to_bytes(&speed, speed_bytes);
-            uart1_uint8_transmit(torque_r_bytes,4);
+            
+			uart1_uint8_transmit(torque_l_bytes,4);
 			//uart1_uint8_transmit(speed_bytes, 4);
             //uart0_uchar(torque_l_bytes);
             //uart0_uchar(speed_bytes);
@@ -84,48 +92,51 @@ ISR(TIMER1_OVF_vect) {
             //Accelerate button is pushed
         case ACCELERATE:
             integral = 0;
-            base_torque = base_torque + 0.5;
+			base_torque = base_torque + 0.5;
             if(base_torque > MAX_TORQUE_CUR) { base_torque = MAX_TORQUE_CUR; }
-
-            //Calculate new values for the motor controllers
-            //cruise_speed = 20;
+            
+			//Calculate new values for the motor controllers
+            cruise_speed = speed;
 	    	//cruise_speed = rx_buff; //calc_speed(timestamp_history, speed);
-            //cruise_speed = speed;
             set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
                 
             //Convert floats to bytes and send on uart
-            float_to_bytes(&torque_right, torque_r_bytes);
-            //float_to_bytes(&torque_left, torque_l_bytes);
+            //float_to_bytes(&torque_right, torque_r_bytes);
+            float_to_bytes(&torque_left, torque_l_bytes);
             //float_to_bytes(&speed, speed_bytes);
-            uart1_uint8_transmit(torque_r_bytes,4);
+            uart1_uint8_transmit(torque_l_bytes,4);
             //uart0_uchar(torque_l_bytes);
             //uart0_uchar(speed_bytes);
 
             break;
 	 case CRUISE:
-           
+			static int C = 0;
+			for(C=0; C<1; C++){
+				static float cruise_target = cruise_speed;
+				//ensures the target cruise is set only once, it will be reset once cruise is left.
+			}
             if(base_torque > MAX_TORQUE_CUR) { base_torque = MAX_TORQUE_CUR; }
 			
             //Calculate new values for the motor controllers
             //speed = (float)rx_buff; //calc_speed(timestamp_history, speed);
-            cruise_speed = 20;
             //cruise(&torque_right, &torque_left, steering_angle, &base_torque, cruise_speed, speed, &integral);
-	    	if(speed < cruise_speed){
-			base_torque = base_torque + 2;
-	   	 }
-	    	if(speed > cruise_speed) 
-			base_torque = 0;
-            
+	    	if(speed < cruise_target)
+				base_torque = base_torque + 2;
+	    	if(speed > cruise_target)
+				base_torque = 0;
+			if(speed == cruise_target)
+				cruise_speed = cruise_target;
+			
 	    	set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
 	    
 
             //Convert floats to bytes and send on uart
-            float_to_bytes(&torque_right, torque_r_bytes);
+            //float_to_bytes(&torque_right, torque_r_bytes);
             //float_to_bytes(&speed, speed_bytes);
-            //float_to_bytes(&torque_left, torque_l_bytes);
+            float_to_bytes(&torque_left, torque_l_bytes);
             //float_to_bytes(&speed, speed_bytes);
-	    	uart1_uint8_transmit(torque_r_bytes, 4);
-            //uuart1_uint8_transmit(1, 1);art1_uint8_transmit(speed_bytes, 4);
+	    	uart1_uint8_transmit(torque_l_bytes, 4);
+            //uart1_uint8_transmit(speed_bytes, 4);
             //uart0_uchar(torque_l_bytes);
             //uart0_uchar(speed_bytes);
 
@@ -133,7 +144,7 @@ ISR(TIMER1_OVF_vect) {
 
 
         //Cruise button is pushed
-              case PIRATE:
+            case PIRATE:
 
             pirate_mode();
 
@@ -152,7 +163,7 @@ ISR(TIMER1_OVF_vect) {
  * Description: The pirate mode switch is connected to external
  *  interrupt 0. If triggered, the pirate mode function will be called.
  *********************************************************************/
-
+/*
 ISR(INT0_vect){
 
     //NOT SURE WHAT THIS IS FOR

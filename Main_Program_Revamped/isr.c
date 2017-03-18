@@ -21,8 +21,9 @@
 #define CRUISE          0xBF
 #define PIRATE          0xFE
 #define MAX_TORQUE_CUR  15
-
-
+#define TRUE	1
+#define FALSE   0
+/*
 float torque_right = 0.0;
 unsigned char torque_r_bytes[4];
 float torque_left = 0.0;
@@ -34,11 +35,16 @@ float steering_angle_float = 0.0;
 float base_torque = 0.0;
 uint16_t timestamp_history;
 float integral = 0.0;
-uint8_t rx_buff[];
+*/
+char rx_buff[4];
 int i = 0;
-static float speed = 0;
-static float cruise_target = 0;
-static int C = 0;
+float speed = 0.0;
+//static float cruise_target = 0;
+//static int C = 0;
+uint8_t status;
+volatile char* speed_array = "     ";
+unsigned char output_array[4];
+//char temp[4] = "13.5";
 
 /*********************************************************************
  * ISR: timer1
@@ -49,10 +55,29 @@ static int C = 0;
 ISR(TIMER1_OVF_vect) {
 	//USART0_RX(&rx_buff, 4);
 	///uart1_uint8_transmit(rx_buff, 4);
-    uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
+	
+	//bytes_to_float(speed_array, &speed);
+	//speed = (float)speed_array;
+	//float_to_bytes(&speed, output_array);
+	
+	
+	speed = atof(speed_array);
+	float_to_bytes(&speed, output_array);
+	
+    uart1_uchar_transmit(output_array);
+	if(status){
+		//speed = atof(speed_array);
+		//float_to_bytes(&speed, output_array);
+		UCSR0B |= (1<<RXCIE0);
+		status = FALSE;
+	}
+	
+	
+	/**uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
     steering_angle = 0;// get_angle();
 	C = 0;
-	
+	speed = atof(speed_array);
+	float_to_bytes(&speed, output_array);
 	//Fun little fluctuating speed to test cruise
 	for(i = 0; i < 30; i++){
 		speed = speed + 0.1;
@@ -68,7 +93,7 @@ ISR(TIMER1_OVF_vect) {
 
 	
     switch(user_mode) 
-    {
+    {UCSR0B &= ~(1<<RXCIE0);
         //All button were released
         case NO_INPUT:
            integral = 0;
@@ -124,12 +149,13 @@ ISR(TIMER1_OVF_vect) {
             //speed = (float)rx_buff; //calc_speed(timestamp_history, speed);
             //cruise(&torque_right, &torque_left, steering_angle, &base_torque, cruise_speed, speed, &integral);
 	    	if(speed < cruise_target)
-				base_torque = base_torque + 2;
+				base_torque = base_torquspeed = atof(speed_array);
+	float_to_bytes(&speed, output_array);e + 2;
 	    	if(speed > cruise_target)
 				base_torque = 0;
 			if(speed == cruise_target)
 				cruise_speed = cruise_target;
-			
+			UCSR0B &= ~(1<<RXCIE0);
 	    	set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
 	    
 
@@ -156,20 +182,21 @@ ISR(TIMER1_OVF_vect) {
         default:
             break;
 
-    }//switch
+    }//switch**/
 }//timer1_ISR
 
 
 /*********************************************************************
  * ISR: pirate_mode
- *
- * Description: The pirate mode switch is connected to external
+ *UCSR0B &= ~(1<speed = atof(speed_array);
+	float_to_bytes(&speed, output_array);<RXCIE0);
+ * Descripuart1_uchar_transmit(char* packet);tion: The pirate mode switch is connected to external
  *  interrupt 0. If triggered, the pirate mode function will be called.
  *********************************************************************/
 /*
 ISR(INT0_vect){
-
-    //NOT SURE WHAT THIS IS FOR
+UCSR0B &= ~(1<<RXCIE0);
+    //NOT SURE WHAT THIS IS FOUCSR0B &= ~(1<<RXCIE0);R
     EIMSK &= ~(1<<INT0);
 
 }//ISR
@@ -192,23 +219,24 @@ ISR(INT0_vect){
 
 }*/
 
-/**ISR(USART0_RX_vect){
+ISR(USART0_RX_vect){
 	static uint8_t i = 0;
-
 	DDRB |= (1<<PB6);
 	PORTB ^= (1<<PB6);
-	_delay_ms(10);
 	
-    unsigned char data = UDR0;
+    char data = UDR0;
     if(data == 'G') {
         i = 0;
+		status = TRUE;
+		speed_array = rx_buff;	
+		UCSR0B &= ~(1<<RXCIE0);
 	}
 	else {
         rx_buff[i] = data;
         i++;
     }
 
-}**/
+}
 
 
 

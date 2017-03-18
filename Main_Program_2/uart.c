@@ -31,8 +31,8 @@ void uart0_init(unsigned char ubrr){
  *************************************************************************************/
 void uart1_init(unsigned char ubrr){
     //rx and tx enable, receive interrupt enabled, 8 bit characters
-    //UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
-      UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
+    UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
+    //UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
     UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10) | (1<<USBS1);

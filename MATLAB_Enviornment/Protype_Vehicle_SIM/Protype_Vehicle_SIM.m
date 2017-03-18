@@ -35,8 +35,8 @@ p = 1.2;        %Mass density of air (kg/m3)
 %   Active Forces on System
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Ax = 0;         %Longitudinal vehicle acceleration (m/s^2)
-Vxi = 0;       %Initial Longitudinal vehicle velocity (m/s)
-Vxf = 0;        %Final Longitudinal vehicle velocity (m/s)
+Vxi = 10;       %Initial Longitudinal vehicle velocity (m/s)
+Vxf = 10;        %Final Longitudinal vehicle velocity (m/s)
 Vxd = 0;        %Change in velocity (m/s)
 Vxfmph = 0;     %Velocity in mph
 Fxf = 0;        %Longitudinal forces on the vehicle at the front and rear wheel ground contact points, respectively (N)
@@ -64,7 +64,7 @@ try
     %you would like to sample for input.
     serialPort = 'COM4';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
-    num_of_in_float = 2;                %Define # of Float/packet
+    num_of_in_float = 1;                %Define # of Float/packet
     delay = 0.01;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
@@ -110,15 +110,17 @@ try
 
     %Create and Configure Serial COM Port with user settings
     s = serial(serialPort);
-    s.InputBufferSize = num_of_bytes;
+    %s.InputBufferSize = num_of_bytes;
+    %s.InputBufferSize = 1;
     set(s,'Terminator','LF');
     set(s,'BaudRate', baudrate);
     set(s,'DataBits', 8);
     set(s,'Parity','none');
     set(s,'StopBits', 1);
     set(s,'FlowControl','none');
-    set(s,'InputBufferSize', num_of_bytes);
-    set(s,'OutputBufferSize', 10);
+    %set(s,'InputBufferSize', num_of_bytes);
+    set(s,'InputBufferSize', 4);    
+    set(s,'OutputBufferSize', 4);
     set(s,'BytesAvailableFcnCount', num_of_bytes);
     set(s,'BytesAvailableFcnMode','byte');
 
@@ -132,10 +134,13 @@ try
 
     %Loop when Plot is Active 
     while ishandle(plotGraph)
-
-        Rx_data_packet = fread(s, num_of_in_float, 'float32')        
+                number = 1;
+                fwrite(s, number, 'uint8')
+        %Rx_data_packet = fread(s, num_of_in_float, 'float32')        
         %Read data off the serial bus as 32-bit floats.      
 
+        Rx_data_packet = fread(s, 4, 'uint8') 
+        
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
             %Make sure read data is a Float and not an empty array      
            
@@ -179,7 +184,8 @@ try
                 %Recieve the Torque (currrent) command from controller
 %                 RecievedCurrent = Rx_data_packet(1)
 %                 RecievedSpeed = Rx_data_packet(2)
-                Imset = Rx_data_packet(1);
+                %Imset = Rx_data_packet(0);
+                Imset = 3;
                 if(Imset > Imax)
                    fprintf('Target Current Too High') 
                    Im = Imax;
@@ -236,14 +242,26 @@ try
                 
                 Vxfmph = 2.23694*(Vxf);
 
-                Send = num2str(Vxfmph,'%.1f');
-                fprintf(s,'%s',Send)
-                fprintf(s, 'G')
-                pause(delay);
+%                 Send = num2str(1111)
+%                 fprintf(s,'%uint8',Send)
+%                 pause(delay);
+%                 fprintf(s, 'G')
+%                 pause(.1);
                 
                 %Send = uint8(Vxfmph)                
                 %fwrite(s, uint8(Vxfmph))
-                %SendingSpeed = uint8(Vxfmph)               
+                %SendingSpeed = uint8(Vxfmph)
+                number = 1;
+                fwrite(s, number, 'uint8')
+                fwrite(s, number, 'uint8')
+                fwrite(s, number, 'uint8')
+                fwrite(s, number, 'uint8')
+                delay(0.2)
+                fprintf(s,'%uint8',number)
+                fprintf(s,'%uint8',number)
+                fprintf(s,'%uint8',number)
+                fprintf(s,'%uint8',number)
+                delay(0.2)
                 
                 %Extract user selected data to graph
                 data(count) = Vxfmph;

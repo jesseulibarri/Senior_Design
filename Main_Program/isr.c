@@ -5,12 +5,15 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 #include "speed.h"
 #include "steering.h"
 #include "system_init.h"
 #include "pirate.h"
 #include "conversions.h"
 #include "uart.h"
+#include <string.h>
+#include <stdlib.h>
 
 #define NO_INPUT        0xFF
 #define ACCELERATE      0x7F
@@ -25,13 +28,13 @@ float torque_left = 0.0;
 unsigned char torque_l_bytes[4];
 float speed = 0.0;
 unsigned char speed_bytes[4];
-float cruise_speed = 30;
+float cruise_speed = 20;
 uint16_t steering_angle;
 float steering_angle_float = 0.0;
 float base_torque = 0.0;
 uint16_t timestamp_history;
 float integral = 0.0;
-uint8_t rx_buff;
+unsigned char rx_buff[4];
 /*********************************************************************
  * ISR: timer1
  *
@@ -39,10 +42,12 @@ uint8_t rx_buff;
  *  Set to 10Hz
  *********************************************************************/
 ISR(TIMER1_OVF_vect) {
-
+/**
     uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
     steering_angle = 1;// get_angle();
-    
+	//speed = (float)atof(rx_buff);
+
+	
     switch(user_mode) 
     {
         //Accelerate button was let go
@@ -55,10 +60,12 @@ ISR(TIMER1_OVF_vect) {
                 torque_left = 0;
             }
 
-            float_to_bytes(&torque_right, torque_r_bytes);
+            float_to_bytes(&torque_right,torque_r_bytes);
+			float_to_bytes(&speed, speed_bytes);
             //float_to_bytes(&torque_left, torque_l_bytes);
             //float_to_bytes(&speed, speed_bytes);
             uart1_uint8_transmit(torque_r_bytes,4);
+			//uart1_uint8_transmit(speed_bytes, 4);
             //uart0_uchar(torque_l_bytes);
             //uart0_uchar(speed_bytes);
 
@@ -73,7 +80,7 @@ ISR(TIMER1_OVF_vect) {
 
             //Calculate new values for the motor controllers
             //cruise_speed = 20;
-	    //cruise_speed = rx_buff; //calc_speed(timestamp_history, speed);
+	    	//cruise_speed = rx_buff; //calc_speed(timestamp_history, speed);
             //cruise_speed = speed;
             set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
                 
@@ -87,27 +94,29 @@ ISR(TIMER1_OVF_vect) {
 
             break;
 	 case CRUISE:
-            
+           
             if(base_torque > MAX_TORQUE_CUR) { base_torque = MAX_TORQUE_CUR; }
-
+			
             //Calculate new values for the motor controllers
-            speed = (float)rx_buff; //calc_speed(timestamp_history, speed);
+            //speed = (float)rx_buff; //calc_speed(timestamp_history, speed);
             cruise_speed = 20;
             //cruise(&torque_right, &torque_left, steering_angle, &base_torque, cruise_speed, speed, &integral);
-	    if(speed < cruise_speed){
-		base_torque = base_torque + 2;
-	    }
-	    else 
-		base_torque = 0;
+	    	if(speed < cruise_speed){
+			base_torque = base_torque + 2;
+	   	 }
+	    	if(speed > cruise_speed) 
+			base_torque = 0;
             
-	    set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
+	    	set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
 	    
 
             //Convert floats to bytes and send on uart
             float_to_bytes(&torque_right, torque_r_bytes);
+            float_to_bytes(&speed, speed_bytes);
             //float_to_bytes(&torque_left, torque_l_bytes);
             //float_to_bytes(&speed, speed_bytes);
-            uart1_uint8_transmit(torque_r_bytes,4);
+	    	uart1_uint8_transmit(torque_r_bytes, 4);
+            //uart1_uint8_transmit(speed_bytes, 4);
             //uart0_uchar(torque_l_bytes);
             //uart0_uchar(speed_bytes);
 
@@ -124,7 +133,7 @@ ISR(TIMER1_OVF_vect) {
         default:
             break;
 
-    }//switch
+    }//switch*/
 }//timer1_ISR
 
 
@@ -147,7 +156,7 @@ ISR(INT0_vect){
  *
  * Description: Same as speed_sensor_1 description. 
  *********************************************************************/
-ISR(TIMER3_CAPT_vect) {
+/*ISR(TIMER3_CAPT_vect) {
 
     uint16_t timestamp = ICR3;
     static uint16_t timestamp_hist = 0;
@@ -158,13 +167,28 @@ ISR(TIMER3_CAPT_vect) {
            
     timestamp_hist = timestamp;
 
+}*/
+
+ISR(USART0_RX_vect){
+	static uint8_t i = 0;
+	//cli();
+	DDRB |= (1<<PB6);
+	PORTB |= (1<<PB6);
+	
+    char data = UDR0;
+    if(data == 'G') {
+        i = 0;
+	//speed = (float)atof(rx_buff);
+	//float_to_bytes(&speed, speed_bytes);
+    uart1_uint8_transmit(1, 1);
+    }
+	else {
+        rx_buff[i] = data;
+        i++;
+    }
+
+	//sei();
 }
 
-ISR(USART1_RX_vect){
 
-    uint8_t data = UDR1;
-    rx_buff = data;
-
-
-}
 

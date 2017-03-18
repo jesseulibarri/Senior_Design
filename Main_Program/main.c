@@ -15,7 +15,9 @@ int main()
 
 system_init();
 
-while(1) {}
+while(1) {
+
+}
 
 return 0;
 }//main

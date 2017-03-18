@@ -13,11 +13,11 @@
  *************************************************************************************/
 void uart0_init(unsigned char ubrr){
     //rx and tx enable, receive interrupt enabled, 8 bit characters
-    //UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
-    UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
+    UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
+    //UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
-    UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00) | (1<<USBS0);
+    UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00); // | (1<<USBS0);
     UBRR0H = (unsigned char)(ubrr >>8 ); //load upper byte of the baud rate into UBRR 
     UBRR0L =  (unsigned char)ubrr;       //load lower byte of the baud rate into UBRR 
 }//uart0_init
@@ -30,8 +30,8 @@ void uart0_init(unsigned char ubrr){
  *************************************************************************************/
 void uart1_init(unsigned char ubrr){
     //rx and tx enable, receive interrupt enabled, 8 bit characters
-    UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
-   // UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
+    //UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
+      UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
     UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10) | (1<<USBS1);

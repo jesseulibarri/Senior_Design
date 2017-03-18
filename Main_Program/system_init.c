@@ -3,6 +3,8 @@
 #include <avr/interrupt.h>
 #include "math.h"
 #include "system_init.h"
+#include "uart.h"
+#include "steering.h"
 #include "pirate.h"
 
 
@@ -21,10 +23,6 @@ uint8_t spi_steering = ON;
  *  Timers, interrupts, UART, datalogging, ADC, IO
  * ******************************************************/
 void system_init() {
-
-    /****** System Timing *******/
-    DDRC |= (1 << PC0);                     //for timing requirement 
-    PORTC |= (1 << PC0);                    //begin timing
 
     /******** ICP3 *********/
     //Makes use of the input capture function on PORTE.7.
@@ -49,12 +47,8 @@ void system_init() {
     sei();
 
     /******** IO *********/
-    DDRD |= (1<<ACCELERATE_B) | (1<<CRUISE_B);  //Accelerate and cruise (input) buttons on PORTD.0-1
-    DDRB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Output for relay circuits
-    DDRD |= (1<<PIRATE_SWITCH);             //Pirate mode enable on PORTD.0 (INT0)
-    PORTD |= (1<<ACCELERATE_B) | (1<<CRUISE_B); //Set pullup resistors
-    PORTB |= (1<<SPEED1_RELAY)|(1<<SPEED2_RELAY)|(1<<PC_RELAY); //Turn on relay circuits
-    PORTD |= (1<<PIRATE_SWITCH);            //Set high
+    DDRD |= (0<<ACCELERATE_B) | (0<<CRUISE_B) | (0<<PIRATE_SWITCH) | (1<<PC_ON_OFF);  //Accelerate, and pirate switch (input) buttons on PORTD 6, 7, 0. Set PC_ON_OFF (output) PORTD 5.
+    PORTD |= (1<<ACCELERATE_B) | (1<<CRUISE_B) | (1<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Set pullup resistors for input pins and turn on PC_ON_OFF pin
 
     ///*** Calculate the system needed constants ***/
     tire_circ = TIRE_DIAM * M_PI;
@@ -74,19 +68,9 @@ void system_init() {
     /****** spi_steering sensor *******/
    if(spi_steering) { 
 
-        //Set data direction for SPI and set pullup for MISO
-        DDRB = (1<<PB0)|(1<<PB1)|(1<<PB2)|(0<<PB3);
-        PORTB |= (1<<PB3);
-        DDRD = (1<<PD0);   //ss for encoder
+       spi_encoder_init();
+     }//if spi_steering
 
-        //SPCR |= 1 << SPIE;    //Enable interrupts
-        //SPCR |= 0 << SPIE;    //Disable interrupts
-    
-        //Enable SPI, shift LSB first, master mode, clk low on idle, 
-        //  data sampled on rising edge, clk / 16 = 1MHz datarate
-        SPCR = (1<<SPE)|(0<<DORD)|(1<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR0);
-
-    }//if spi_steering
 
     /******** ADC *********/
 /*    //Initalize ADC and the ports
@@ -98,32 +82,11 @@ void system_init() {
     //ADC enabled, One shot mode, ADC complete interrupt enabled, clk prescalar 128 (125khz)
     ADCSRA = (1<<ADEN)|(1<<ADIE)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
 */
-    /****** UART0 *******/
-    //TODO: One of these configurations will need Rx interrupt enabled
-    //  so that we can receive information from Matlab
-    //
-    //rx and tx enable, receive interrupt enabled, 8 bit characters
-    UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
-//  UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
+    /****** Initialize UART0 *******/
+   uart0_init(BAUDVALUE);
 
-    //async operation, no parity,  one stop bit, 8-bit characters
-    UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00);
-    UBRR0H = (BAUDVALUE >>8 ); //load upper byte of the baud rate into UBRR 
-    UBRR0L =  BAUDVALUE;       //load lower byte of the baud rate into UBRR 
+    /****** Initialize UART1 *******/
+   uart1_init(BAUDVALUE);
 
-    /****** UART1 *******/
-    //rx and tx enable, receive interrupt enabled, 8 bit characters
-    //UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
-    UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
-
-    //async operation, no parity,  one stop bit, 8-bit characters
-    UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10);
-    UBRR1H = (BAUDVALUE >>8 ); //load upper byte of the baud rate into UBRR 
-    UBRR1L =  BAUDVALUE;       //load lower byte of the baud rate into UBRR 
-
-
-    //TODO: Add any timers/interrupts found to be necessary!!!!
-    
-       PORTC &= ~(1 << PC0);   //end timing test
 
 }//system_init

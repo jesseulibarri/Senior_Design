@@ -208,24 +208,25 @@ try
                 %   aerodynamic drag slows it down. For simplicity, the drag is assumed to act through the CG.
                 %
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%               
-                N = (Fzr + Fzf);            %Normal force of vehicle                          
+                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                N = abs(Fzr + Fzf)            %Normal force of vehicle
+                Fu = -(N*urub)              %Force of kenetic friction on vehicle in motion                              
                 Fxr = m*((2*B*Im*L*r)/(((Jl/R)*G)+((Jm/R)*(1/G))))%Force exerted from the motor on the rear wheel
-                Fx = (Fxf + Fxr); %Net Force propelling the vehicle forward, sum of the forces applied by each wheel 
-                %Ff = ((1/(Vxi+Statf))*N*Kincf)              %Force of kenetic friction on vehicle in motion                   
-                Ff = N*Kincf;
-                Fd = -0.5*Cd*p*A*(Vxi^2); %Aerodynamic drag force (N) acting in oposition to the direction of motion
-                Fnet = Fx + Ff + Fd - (m*g*sin(beta))
 
-                Ax = (Fnet)/m; %Current acceleration of vehicle, Net force acting on the vehicle divided by the mass of the vehicle
+                Fd = -0.5*(Cd*p*A*(Vxi^2)) %Aerodynamic drag force (N) acting in oposition to the direction of motion                  
+                Fx_m = (Fxf + Fxr) %Net Force propelling the vehicle forward, sum of the forces applied by each wheel
+                Fnet = ((Fx_m + Fd) - (m*g*sin(beta)));
+                Ax = Fnet/m; %Current acceleration of vehicle, Net force acting on the vehicle divided by the mass of the vehicle
 
-                Vxd = dt*Ax  ;  %Acceleration times change in time equals the change in velocity
-                Vxf = Vxi + Vxd; %Initial velocity plus the change in velocity equals final velocity
-                if(Vxf - Vxi < 0 & Vxf < 0)
-                    Vxf = 0;
+                Vxd = dt*Ax    %Acceleration times change in time equals the change in velocity
+                if(Vxi + Vxd > 0)
+                    Vxf = Vxi + Vxd %Initial velocity plus the change in velocity equals final velocity
+                else
+                    Vxf = 0
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
-                Vxfmph = 2.23694*(Vxf);
+                Vxfmph = 2.23694*(Vxf)
                 %Send = uint8(Vxfmph)
                 Send = num2str(Vxfmph,'%.1f')
                 %Send = num2str(Vxfmph)

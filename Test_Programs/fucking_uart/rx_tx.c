@@ -13,10 +13,10 @@
 #define BAUDVALUE_1  ((F_CPU/(USART1_BAUDRATE * 16UL)) - 1 )
 
 
-uint8_t i = 0;
+uint8_t i = 3;
 char rx_buf[4];
 unsigned char num_bytes[4];
-float number;
+double number;
 
 //******************************************************************
 //                            uart_init
@@ -92,9 +92,9 @@ void uart1_uchar_transmit(unsigned char packet[]) {
 }
 
 
-void float_to_bytes(float* src, unsigned char* dest) {
+void double_to_bytes(double* src, unsigned char* dest) {
     union {
-        float a;
+        double a;
         unsigned char bytes[4];
     } u;
     u.a = *src;
@@ -110,24 +110,29 @@ void bytes_to_float(char* src, float* dest) {
     *dest = u.a;
 }
 
-ISR(TIMER0_OVF_vect) {
-    float_to_bytes(&number, num_bytes);
-    uart1_uchar_transmit(num_bytes);
+ISR(TIMER1_OVF_vect) {
+    PORTB |= (1<<PB0);
+    //double_to_bytes(&number, num_bytes);
+    //uart1_uchar_transmit(num_bytes);
+    PORTB &= ~(1<<PB0);
 }
 
-ISR(USART0_RX_vect) {
+ISR(USART1_RX_vect) {
+    PORTB |= (1<<PB7);
     static uint8_t i;
-    char data  = UDR0;
-    if(data == 'G') {
-        i = 0;
+    char data  = UDR1;
+    if(data == '\n') {
+        i = 3;
         number = atof(rx_buf);
-        //bytes_to_float(rx_buf, &number);
+        double_to_bytes(&number, num_bytes);
+        uart1_uchar_transmit(num_bytes);
+
 
     } else {
         rx_buf[i] = data;
-        i++;
+        i--;
     }
-
+    PORTB &= ~(1<<PB7);
 }//ISR
 
 
@@ -145,8 +150,14 @@ int main() {
     //Interrupt on timer overflow (at TOP value)
     TIMSK |= (1<<TOIE1);
 
+DDRB |= (1<<PB0) | (1<<PB7);
+number = 0.1;
 uart1_init();
 sei();
+
+double_to_bytes(&number, num_bytes);
+uart1_uchar_transmit(num_bytes);
+
 
     while(1) { }//while
 return 0;

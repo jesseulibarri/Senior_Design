@@ -117,9 +117,9 @@ try
     set(s,'Parity','none');
     set(s,'StopBits', 1);
     set(s,'FlowControl','none');
-    set(s,'InputBufferSize', 10);
-    set(s,'OutputBufferSize', 10);
-    set(s,'BytesAvailableFcnCount', 10);
+    set(s,'InputBufferSize', 11);
+    set(s,'OutputBufferSize', 5);
+    set(s,'BytesAvailableFcnCount', 11);
     set(s,'BytesAvailableFcnMode','byte');
     set(s,'Timeout', 0.01);
 

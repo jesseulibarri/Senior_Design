@@ -65,8 +65,7 @@ try
     %Open the Serial Com Port and allow to open (pause)
     fopen(s);
     pause(1);
-    
-    
+        
     String = 1;
     GCASE = 0;
 

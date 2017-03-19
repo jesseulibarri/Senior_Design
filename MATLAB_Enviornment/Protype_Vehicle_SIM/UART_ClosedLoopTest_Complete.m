@@ -57,8 +57,6 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %Note that Fzf + Fzr = mg·cos?
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-try
     %Select the total number of floats, (num_of_in_float), 
     %being sent via serial every cycle; and which speed 
     %you would like to sample for input.
@@ -134,36 +132,41 @@ try
 %    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Send As String(1) or Uchar(0)
-    String = 0;
+    String = 1;
     %Recieve As Float32(1) or Uchar Array(0)
-    Float = 0;
+    Float = 1;
     %Send all G to make Shane shut the fuck up.
     GCASE = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
 
         %Loop when Plot is Active 
 while ishandle(plotGraph)
-        CheckPacket = fread(s, 1, 'char')
-        if(CheckPacket == 'S')
-            CheckPacket = 0;
-            %Check for the set torque command from controller.
-            if(Float == 1)
-                %Read data off the serial bus as 32-bit floats. 
-                Rx_data_packet = fread(s, num_of_in_float, 'float32')
-            else
-                %Read data off the serial bus as 32-bit floats. 
-                Rx_data_packet = fread(s, 4, 'uchar')     
-            end
+%         CheckPacket = fread(s, 1, 'char')
+%         if(CheckPacket == 'S')
+%             CheckPacket = 0;
+%             %Check for the set torque command from controller.
+%             if(Float == 1)
+%                 %Read data off the serial bus as 32-bit floats. 
+%                 Rx_data_packet = fread(s, num_of_in_float, 'float32')
+%             else
+%                 %Read data off the serial bus as 32-bit floats. 
+%                 Rx_data_packet = fread(s, 4, 'uchar')     
+%             end
+      
+        %Plot some given data
+        count = count + 1;    
+        time(count) = toc;                                   
+        %Extract Elapsed Time
+        if(count > 2)
+            dt = (time(count)-time(count-1));
+        end            
+            
+            CheckPacket = fread(s, 1, 'char');
+            if(CheckPacket == 'S')
+                CheckPacket = 0;
+                Rx_data_packet = fread(s, num_of_in_float, 'float32');
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
             %Make sure read data is a Float and not an empty array      
-
-                %Plot some given data
-                count = count + 1;    
-                time(count) = toc;                                   
-                %Extract Elapsed Time
-                if(count > 2)
-                    dt = (time(count)-time(count-1));
-                end
 
                 %Calculate back EMF at the current linear speed, current 
                 %voltage available, then lastly, the maximum current the 
@@ -171,7 +174,7 @@ while ishandle(plotGraph)
                 Vemf = (Vxi*Cemf);
                 %Recieve the Torque (currrent) command from controller
                 %RecievedCurrent = Rx_data_packet(1);
-                Imset = Rx_data_packet(1);
+                Imset = Rx_data_packet(1)
                 if(Imset > Imax)
                    fprintf('Target Current Too High') 
                    Im = Imax;
@@ -209,7 +212,7 @@ while ishandle(plotGraph)
                 %   aerodynamic drag slows it down. For simplicity, the drag is assumed to act through the CG.
                 %
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%               
-                N = (Fzr + Fzf)           %Normal force of vehicle                          
+                N = (Fzr + Fzf);           %Normal force of vehicle                          
                 Fxr = m*((2*B*Im*L*r)/(((Jl/R)*G)+((Jm/R)*(1/G))));%Force exerted from the motor on the rear wheel
                 Fx = (Fxf + Fxr); %Net Force propelling the vehicle forward, sum of the forces applied by each wheel 
                 %Ff = ((1/(Vxi+Statf))*N*Kincf)              %Force of kenetic friction on vehicle in motion                   
@@ -219,61 +222,48 @@ while ishandle(plotGraph)
 
                 Ax = (Fnet)/m; %Current acceleration of vehicle, Net force acting on the vehicle divided by the mass of the vehicle
 
-                Vxd = dt*Ax    %Acceleration times change in time equals the change in velocity
-                Vxf = Vxi + Vxd %Initial velocity plus the change in velocity equals final velocity
+                Vxd = dt*Ax;    %Acceleration times change in time equals the change in velocity
+                Vxf = Vxi + Vxd; %Initial velocity plus the change in velocity equals final velocity
                 if(Vxf - Vxi < 0 && Vxf < 0)
                     Vxf = 0;
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-                %Vxfmph = 2.23694*(Vxf);
-                Vxfmph = 45.552;
-
+                Vxfmph = 2.23694*(Vxf);
+                fprintf('0.8');
                 if(String == 1)
-                    SendString = num2str(Vxfmph,'%.1f')
+                    SendString = num2str(Vxfmph,'%.1f');
                     SendString;
                     fprintf(s,'%s',SendString);
+                    fwrite(s, 'G', 'uchar');
                 end
                 if(String == 0)
-                    fprintf('1')
-                    SendUChar = num2str(Vxfmph,'%.1f')
-                    fprintf('1')
+                    SendUChar = num2str(Vxfmph,'%.1f');
                     SendUChar;
-                    fprintf('1')
-                    fwrite(s,SendUChar,'uchar')
-                    fprintf('1')
-                    %pause(delay)
+                    fwrite(s,SendUChar,'uchar');
+                    fwrite(s, 'G', 'uchar');
                 end
-                fprintf('1')
-                if(GCASE == 1)
-                    fprintf(s, 'G')
-                    fprintf(s, 'G')
-                    fprintf(s, 'G')
-                    fprintf(s, 'G')
-                end
-                fprintf('1')
-                fwrite(s, 'G', 'uchar')
+                pause(delay)
+%               Extract user selected data to graph
+                data(count) = Vxfmph;
+                Vxi = Vxf;
+%               Plot some given data               
+%               Adjust the graph's X-axis according to Scroll Width'.
+%               It is adjusted using the current 'time' and 'count'.
 
-                %Extract user selected data to graph
-                %data(count) = Vxfmph;
-                %Vxi = Vxf;
-                %Plot some given data               
-                %Adjust the graph's X-axis according to 'Scroll Width'.
-                %It is adjusted using the current 'time' and 'count'.
-%                 fprintf('1')
-%                 if(scrollWidth > 0)
-%                     set(plotGraph,'XData',time(time > time(count)-scrollWidth),'YData',data(time > time(count)-scrollWidth));
-%                     axis([time(count)-scrollWidth time(count) min max]);                
-%                 %Plot the given float without adjusting for 'Scroll Width'
-%                 else
-%                 fprintf('1')
-%                     set(plotGraph,'XData',time,'YData',data);
-%                     axis([0 time(count) min max]);
-%                 end
+                if(scrollWidth > 0)
+                    set(plotGraph,'XData',time(time > time(count)-scrollWidth),'YData',data(time > time(count)-scrollWidth));
+                    axis([time(count)-scrollWidth time(count) min max]);                
+                %Plot the given float without adjusting for 'Scroll Width'
+                else
+                fprintf('2');
+                    set(plotGraph,'XData',time,'YData',data);
+                    axis([0 time(count) min max]);
+                end
             end
 
             if(Logging == 1)
-            fprintf('3')
+            fprintf('3');
                 %Save all input floats to the log file,
                 %first with the current time, followed
                 %by all of the read floats, ending with
@@ -286,21 +276,19 @@ while ishandle(plotGraph)
                 fprintf(fileID,'%f,',Vxfmph);                        
                 fprintf(fileID,'\r\n');
             end
-            delay(pause);
+            pause(delay);
             %Allow MATLAB time to Update Plot
+            fprintf('4');
         end
-        fprintf('4')
+        fprintf('5');
 
  
     
 
 end
+fprintf('6');
 
 
-catch ME
-   fprintf(1, 'An error occured, please ensure all user defined variables are set correctly\r\n'); 
-   fprintf(1, 'ERROR MESSAGE:\n%s\n\n', ME.message); 
-end    
 
 %Close Serial COM Port and Delete useless Variables
 fclose(s);

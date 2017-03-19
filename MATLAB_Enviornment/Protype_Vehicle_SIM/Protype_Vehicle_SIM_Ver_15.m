@@ -132,7 +132,7 @@ try
 
     %Loop when Plot is Active 
     while ishandle(plotGraph)
-
+        Eq_Chars = fread(s, 4, 'uchar')
         Rx_data_packet = fread(s, num_of_in_float, 'float32');        
         %Read data off the serial bus as 32-bit floats.      
 

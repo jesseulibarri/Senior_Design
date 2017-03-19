@@ -46,7 +46,7 @@ return new_avg;
 
 
 /**************************************************************************************************
- * Name: accelerate
+ * Name: set_differential_torque
  *
  * Description: This funcion is has 3 input arguments all which are passed by pointer
  *	reference beccause these arguments are modified in the function. This function
@@ -74,7 +74,7 @@ void set_differential_torque(float* torque_right, float* torque_left, uint16_t a
         *torque_left = b_torque*torque_ratio;		//Update left motor torque
         *torque_right = b_torque;				//Update right motor torque
     }
-}//accelerate
+}//set_differential_torque
 
 
 /**************************************************************************************************
@@ -82,29 +82,30 @@ void set_differential_torque(float* torque_right, float* torque_left, uint16_t a
  *
  * Description: 
  ***************************************************************************************************/
-/*void cruise(float* torque_right, float* torque_left, uint16_t angle, float* b_torque, float target_speed, float current_speed, float* integral){
+
+void cruise(float* torque_right, float* torque_left, uint16_t angle, float* b_torque, float target_speed, float current_speed, float* integral){
     float torque_ratio;    
     float error = 0; 
     float iteration_time = 0.100;
-    float Kp = 1;
+    float Kp = 0.75;
     float Ki = 0.5;
-    //float Kd;
-    //float bias;
+    float bias = 0.2;
     float output;
 
 
-    //error = target_speed - current_speed;
-   // *integral = *integral + (error*iteration_time);
-    //derivative = (error - error_prior)/iteration_time
-   // output = Kp*error + Ki*(*integral);    //+Kd*derivative + bias
-    //error_prior = error
-    
-    if(current_speed < target_speed){
-       *b_torque = *b_torque + 1;
-    }
-    else{
+    error = target_speed - current_speed;
+    *integral = *integral + (error*iteration_time);
+   // derivative = (error - error_prior)/iteration_time;
+    output = Kp*error + Ki*(*integral) + bias;    
+   // error_prior = error;
+  
+    if(output < 0){
         *b_torque = 0;
     }
+    else{
+        *b_torque =  output;
+    }
+
     
     //We are turning right
     if(angle >= 0 && angle <= 2048){
@@ -119,44 +120,6 @@ void set_differential_torque(float* torque_right, float* torque_left, uint16_t a
         *torque_right = *b_torque;				//Update right motor torque
     }
    // set_differential_torque(torque_right, torque_left, angle, b_torque);
-}//cruise*/
-
-/**************************************************************************************************
- * Name: OTHER cruise
- *
- * Description: 
- ***************************************************************************************************/
-/*void cruise(float* torque_right, float* torque_left, uint16_t angle, float b_torque, float target_speed, float current_speed, float* integral){
-   // float torque_ratio;    
-    float error = 0; 
-    float iteration_time = 0.100;
-    float Kp = 1;
-    float Ki = 0.5;
-    //float Kd;
-    //float bias;
-    float output;
-
-
-    error = target_speed - current_speed;
-    *integral = *integral + (error*iteration_time);
-    //derivative = (error - error_prior)/iteration_time
-    output = Kp*error + Ki*(*integral);    //+Kd*derivative + bias
-    //error_prior = error
-    
-    if(output < 0){
-        b_torque = b_torque - output;
-    }
-    else{
-        b_torque = b_torque + output;
-    }
-    
-    if(b_torque <= 0){
-        b_torque = 0.0;
-    }
-    if(b_torque > 25){
-        b_torque = 25;
-    }
-
-    set_differential_torque(torque_right, torque_left, angle, b_torque);
 }//cruise
-*/
+
+

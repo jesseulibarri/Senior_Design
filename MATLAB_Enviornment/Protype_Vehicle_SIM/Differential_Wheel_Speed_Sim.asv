@@ -20,7 +20,7 @@ try
     %you would like to sample for input.
     serialPort = 'COM4';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
-    num_of_in_float = 4;                %Define # of Float/packet
+    num_of_in_float = 3;                %Define # of Float/packet
     delay = 0.01;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
@@ -141,9 +141,9 @@ Target_Torque_Right = Set_Torque_Right
 %Right turn (0 to +180 Degrees) = (0 to 2048)
 %Right Turn vs Torque Multiplier
 Steering_Angle_Deg = Steering_Angle_Bin*11.3778
-RTR = -8E-08*(Steering_Angle)^2 - 0.0002*(Steering_Angle) + 0.9863;             
+RTR = -8E-08(Steering_Angle)^2 - 0.0002*(Steering_Angle) + 0.9863;             
 Target_Torque_Left = Set_Torque_Left
-Target_Torque_Right = Set_Torque_Right*RTR         
+Target_Torque_Right = Set_Torque_Right         
             
             %Save all input floats to the log file,
             %first with the current time, followed
@@ -158,7 +158,7 @@ Target_Torque_Right = Set_Torque_Right*RTR
             %Allow MATLAB time to Update Plot
             pause(delay);
         end
-    Rx_data_packet = 0;
+    
     end
 
 catch ME

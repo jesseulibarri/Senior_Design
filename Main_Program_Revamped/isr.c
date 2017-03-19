@@ -30,8 +30,8 @@ float torque_left = 0.0;
 unsigned char torque_l_bytes[4];
 unsigned char speed_bytes[4];
 float cruise_speed = 0.0;
-uint16_t steering_angle;
-float steering_angle_float = 0.0;
+unsigned char steering_angle_bytes[4];
+float steering_angle = 0.0;
 float base_torque = 0.0;
 uint16_t timestamp_history;
 float integral = 0.0;
@@ -51,21 +51,24 @@ uint8_t status;
 ISR(TIMER1_OVF_vect) {
 	
 	uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
-    steering_angle = 0;// get_angle();
+    //steering_angle = 0;// get_angle();
 	
 	bytes_to_float(speed_array, &speed);
-	float_to_bytes(&speed, output_array);
-	//while(!(UCSR1A & (1<<UDRE1))) { }
-	//UDR1 = 'S';
-	//while(!(UCSR1A & (1<<UDRE1))) { }
-   // uart1_uchar_transmit(output_array);
-
+	float_to_bytes(speed, output_array);
+	
 	if(status){
 		UCSR0B |= (1<<RXCIE0);
 		status = FALSE;
 	}
+	torque_right = 10.222;
+	torque_left = 15.222;
+	steering_angle = 2.222;
+	uart1_package_transmit(torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle);
 	
-    switch(user_mode){ 
+	//torque_left = 12.0;
+	//uart1_uchar_transmit(torque_l_bytes, torque_left);
+
+    /*switch(user_mode){ 
     
     //All button were released
 	case NO_INPUT:
@@ -77,12 +80,8 @@ ISR(TIMER1_OVF_vect) {
             torque_right = 0;
             torque_left = 0;
         }
-		//float_to_bytes(&torque_right,torque_r_bytes);
-		float_to_bytes(&torque_left, torque_l_bytes);
-		while(!(UCSR1A & (1<<UDRE1))) { }
-		UDR1 = 'S';
-		while(!(UCSR1A & (1<<UDRE1))) { }
-        uart1_uchar_transmit(torque_l_bytes);
+	
+        uart1_uchar_transmit(torque_l_bytes, torque_left);
 
         break;
        
@@ -96,15 +95,10 @@ ISR(TIMER1_OVF_vect) {
 		//Calculate new values for the motor controllers
 		//cruise_speed = speed;
 	    //cruise_speed = rx_buff; //calc_speed(timestamp_history, speed);
-        set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
-                
+        set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);     
         //Convert floats to bytes and send on uart
-        //float_to_bytes(&torque_right, torque_r_bytes);
-        float_to_bytes(&torque_left, torque_l_bytes);
-		while(!(UCSR1A & (1<<UDRE1))) { }
-		UDR1 = 'S';
-		while(!(UCSR1A & (1<<UDRE1))) { }
-        uart1_uchar_transmit(torque_l_bytes);
+        uart1_uchar_transmit(torque_l_bytes, torque_left);
+
         break;
 	
 	//Cruise button is pushed
@@ -114,44 +108,24 @@ ISR(TIMER1_OVF_vect) {
         //Calculate new values for the motor controllers
         //speed = //calc_speed(timestamp_history, speed);
        //cruise(&torque_right, &torque_left, steering_angle, &base_torque, cruise_speed, speed, &integral);
-	   
 		 	
 		if(speed > cruise_speed){
 			base_torque = 0;
 	   		set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
-			float_to_bytes(&torque_left, torque_l_bytes);
-			while(!(UCSR1A & (1<<UDRE1))) { }
-			UDR1 = 'S';
-			while(!(UCSR1A & (1<<UDRE1))) { }
-        	uart1_uchar_transmit(torque_l_bytes);
+			uart1_uchar_transmit(torque_l_bytes, torque_left);
 		}
 		if(speed <= 20){
-			base_torque = 9; float_to_bytes(&torque_left, torque_l_bytes);
+			base_torque = 9; float_to_bytes(torque_left, torque_l_bytes);
 	   		set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
-			while(!(UCSR1A & (1<<UDRE1))) { }
-			UDR1 = 'S';
-			while(!(UCSR1A & (1<<UDRE1))) { }
-        	uart1_uchar_transmit(torque_l_bytes);
+			uart1_uchar_transmit(torque_l_bytes, torque_left);
 			
 			while(speed < 20){
 				base_torque = base_torque + 0.1;
 				set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
-	   			float_to_bytes(&torque_left, torque_l_bytes);
-				while(!(UCSR1A & (1<<UDRE1))) { }
-				UDR1 = 'S';
-				while(!(UCSR1A & (1<<UDRE1))) { }
-        		uart1_uchar_transmit(torque_l_bytes);
+	   			uart1_uchar_transmit(torque_l_bytes, torque_left);
 			}
 		}	
-		
-	   //set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
 	    
-        //Convert floats to bytes and send on uart
-        //float_to_bytes(&torque_left, torque_l_bytes);
-		//while(!(UCSR1A & (1<<UDRE1))) { }
-		//UDR1 = 'S';
-		//while(!(UCSR1A & (1<<UDRE1))) { }
-        //uart1_uchar_transmit(torque_l_bytes);
         break;
 
 	case PIRATE:
@@ -162,7 +136,7 @@ ISR(TIMER1_OVF_vect) {
 	default:
 		break;
 
-    }
+    }*/
 }//timer1_ISR
 
 
@@ -190,7 +164,11 @@ ISR(TIMER3_CAPT_vect) {
     //wrap around at the end of the timer
     if(timestamp < timestamp_hist) { timestamp_history = 65535 - timestamp_hist + timestamp; }
     else { timestamp_history = timestamp - timestamp_hist; }
-           
+           (1<<UDRE1))) { }
+        	uart1_uchar_transmit(torque_l_bytes);
+		}
+		if(speed <= 20){
+			base_torque = 9; f
     timestamp_hist = timestamp;
 
 }//ISR

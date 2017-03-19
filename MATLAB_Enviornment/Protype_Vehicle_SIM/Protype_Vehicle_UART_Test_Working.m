@@ -152,9 +152,9 @@ try
         
 
         %Send As String(1) or Uchar(0)
-        String = 1;
+        String = 0;
         %Recieve As Float32(1) or Uchar Array(0)
-        Float = 0;
+        Float = 1;
         %Send all G to make Shane shut the fuck up.
         GCASE = 0;
         

@@ -50,6 +50,7 @@ Kincf = 0.015;               %Kinetic coefficient of rolling bike tires
 Statf = 1;
 
 Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
+LiveGraph = 0;
 
 %Zero vertical acceleration and zero pitch torque require
 %Fzf = (+h(Fd-mgsin(beta)-m*Vx)+b*mgcos(beta))/(a+b);
@@ -58,7 +59,7 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-try
+%try
     %Select the total number of floats, (num_of_in_float), 
     %being sent via serial every cycle; and which speed 
     %you would like to sample for input.
@@ -110,16 +111,16 @@ try
 
     %Create and Configure Serial COM Port with user settings
     s = serial(serialPort);
-    s.InputBufferSize = num_of_bytes;
+    s.InputBufferSize = 5;
     set(s,'Terminator','G');
     set(s,'BaudRate', baudrate);
     set(s,'DataBits', 8);
     set(s,'Parity','none');
     set(s,'StopBits', 1);
     set(s,'FlowControl','none');
-    set(s,'InputBufferSize', num_of_bytes);
+    set(s,'InputBufferSize', 5);
     set(s,'OutputBufferSize', 4);
-    set(s,'BytesAvailableFcnCount', num_of_bytes);
+    set(s,'BytesAvailableFcnCount', 5);
     set(s,'BytesAvailableFcnMode','byte');
 
     %Open the Serial Com Port and allow to open (pause)
@@ -152,60 +153,59 @@ try
         
 
         %Send As String(1) or Uchar(0)
-        String = 1;
+        String = 0;
         %Recieve As Float32(1) or Uchar Array(0)
         Float = 0;
         %Send all G to make Shane shut the fuck up.
         GCASE = 0;
         
         %Loop when Plot is Active 
-while ishandle(plotGraph) 
+while ishandle(plotGraph)
     try 
-        if(Float == 1)
-            Rx_data_packet = fread(s, num_of_in_float, 'float32')
-        else
-            Rx_data_packet = fread(s, 4, 'uchar')
-            %Read data off the serial bus as 32-bit floats.      
+        %Plot some given data
+        count = count + 1;    
+        time(count) = toc;                                   
+        %Extract Elapsed Time
+        if(count > 2)
+             dt = (time(count)-time(count-1));
         end
-            
-        catch ME
-        fprintf(1, 'No message recieved - Timeout.\r\n');
-        end   
-            if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
-            %Make sure read data is a Float and not an empty array      
-           
-                %Plot some given data
-                count = count + 1;    
-                time(count) = toc;                                   
-                %Extract Elapsed Time
-                if(count > 2)
-                    dt = (time(count)-time(count-1));
-                end
-                
-%                 %Calculate back EMF at the current linear speed, current 
-%                 %voltage available, then lastly, the maximum current the 
-%                 %motor can accept at the given speed.
-%                 emf = (Vxi*Vemf)
-%                 if(emf > Vm_i)
-%                     Vm_f = 0.001;
-%                 else
-%                     Vm_f = Vm_i - emf;
-%                 end
-%                 %Recieve the Torque (currrent) command from controller
-%                 Im = Rx_data_packet(1)
-%                 
-%                 %Check if current power is less than the available motor
-%                 %power, if not set current to maximum available. 
-%                 Pcurr = Imax_i*Vm_f;
-%                 Pdiff = Pmax - Pcurr;
-%                 Imax_f = Imax_i*(Pdiff)
-%                 if(Pdiff < 0)
-%                     Imax_f = 0;
-%                 end
-%                 if(Pcurr > Pmax)
-%                     fprintf('Motor Max Power Reached')
-%                     Im = Imax_f
-%                 end
+        
+        CheckBit = fread(s, 1, 'uchar')
+        
+        if(CheckBit == 'S')
+            if(Float == 1)
+                Rx_data_packet = fread(s, num_of_in_float, 'float32')
+            else
+                Rx_data_packet = fread(s, 4, 'uchar')
+                %Read data off the serial bus as 32-bit floats.      
+            end
+            if(~isempty(Rx_data_packet))  
+                %Make sure read data is a Float and not an empty array      
+
+    %           %Calculate back EMF at the current linear speed, current 
+    %           %voltage available, then lastly, the maximum current the 
+    %           %motor can accept at the given speed.
+    %           emf = (Vxi*Vemf)
+    %           if(emf > Vm_i)
+    %               Vm_f = 0.001;
+    %           else
+    %               Vm_f = Vm_i - emf;
+    %           end
+    %           %Recieve the Torque (currrent) command from controller
+    %           Im = Rx_data_packet(1)
+    % 
+    %           %Check if current power is less than the available motor
+    %           %power, if not set current to maximum available. 
+    %           Pcurr = Imax_i*Vm_f;
+    %           Pdiff = Pmax - Pcurr;
+    %           Imax_f = Imax_i*(Pdiff)
+    %           if(Pdiff < 0)
+    %               Imax_f = 0;
+    %           end
+    %           if(Pcurr > Pmax)
+    %               fprintf('Motor Max Power Reached')
+    %               Im = Imax_f
+    %           end
 %                 
                 %Calculate back EMF at the current linear speed, current 
                 %voltage available, then lastly, the maximum current the 
@@ -221,20 +221,20 @@ while ishandle(plotGraph)
                     if(Vemf < Vbatt)
                         Vcurr = Vbatt - Vemf;                
                         Pcurr = Vcurr*Im;
-                       
                         if(Pmax-Pcurr > 0)
                             Imax = (Pmax-Pcurr)/Vbatt;
-                            if(Imset < Imax && Imset <= 0)
+                            if(Imset < Imax && Imset >= 0)
                                 Im = Imset;
                             else
                                 fprintf('Invalid Target Current')
                             end
                         else
-                            fprintf('Motor Maximum Power Reached')
-                            Im = Imax;
+                        fprintf('Motor Maximum Power Reached')
+                        Im = Imax;
                         end
-                        %Check if current power is less than the available motor
-                        %power, if not set current to maximum available. 
+                    
+                    %Check if current power is less than the available motor
+                    %power, if not set current to maximum available. 
                     else
                         Im = 0;
                         fprintf('Motor Maximum Speed Reached')
@@ -254,7 +254,7 @@ while ishandle(plotGraph)
                 Fxr = m*((2*B*Im*L*r)/(((Jl/R)*G)+((Jm/R)*(1/G))));%Force exerted from the motor on the rear wheel
                 Fx = (Fxf + Fxr); %Net Force propelling the vehicle forward, sum of the forces applied by each wheel 
                 %Ff = ((1/(Vxi+Statf))*N*Kincf)              %Force of kenetic friction on vehicle in motion                   
-                Ff = N*Kincf;
+                Ff = -N*Kincf;
                 Fd = -0.5*Cd*p*A*(Vxi^2); %Aerodynamic drag force (N) acting in oposition to the direction of motion
                 Fnet = Fx + Ff + Fd - (m*g*sin(beta));
 
@@ -266,31 +266,20 @@ while ishandle(plotGraph)
                     Vxf = 0;
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                
+              
                 Vxfmph = 2.23694*(Vxf);
-                
+
                 %Send = uint8(Vxfmph)
                 %Send = num2str(Vxfmph,'%.1f');
                 %fprintf(s,'%s',Send)
                 Vxfmph = 45.552;
-%                 if(String == 1)
-%                     SendString = Vxfmph
-%                     %fprintf(s,'%.1s',SendString);
                 if(String == 1)
-                    SendString = num2str(Vxfmph,'%.1f');
-                    SendString
+                    SendString = num2str(Vxfmph,'%.1f')
                     fprintf(s,'%s',SendString);
-                    %pause(delay)
-%                 if(String == 1)
-%                     SendString = num2str(Vxfmph,'%.1f');
-%                     SendString
-%                     fprintf(s,'%s',SendString);
                 end
                 if(String == 0)
                     SendUChar = num2str(Vxfmph,'%.1f')
-                    SendUChar
                     fwrite(s,SendUChar,'uchar');
-                    %pause(delay)
                 end
                 if(GCASE == 1)
                     fprintf(s, 'G')
@@ -302,26 +291,24 @@ while ishandle(plotGraph)
                 fwrite(s,'G','uchar');
                 pause(delay)
                 
-                %Send = num2str(Vxfmph)
-                %fwrite(s, uint8(Vxfmph))
-                %SendingSpeed = uint8(Vxfmph)
-                
-                %Extract user selected data to graph
-                data(count) = Vxfmph;
+                if(LiveGraph == 1)
+                    %Extract user selected data to graph
+                    data(count) = Vxfmph;
+                    %Plot some given data               
+                    %Adjust the graph's X-axis according to 'Scroll Width'.
+                    %It is adjusted using the current 'time' and 'count'. 
+                    if(scrollWidth > 0)
+                        set(plotGraph,'XData',time(time > time(count)-scrollWidth),'YData',data(time > time(count)-scrollWidth));
+                        axis([time(count)-scrollWidth time(count) min max]);                
+                    %Plot the given float without adjusting for 'Scroll Width'
+                    else
+                        set(plotGraph,'XData',time,'YData',data);
+                        axis([0 time(count) min max]);
+                    end
+                end 
                 Vxi = Vxf;
-                %Plot some given data               
-                %Adjust the graph's X-axis according to 'Scroll Width'.
-                %It is adjusted using the current 'time' and 'count'. 
-                if(scrollWidth > 0)
-                    set(plotGraph,'XData',time(time > time(count)-scrollWidth),'YData',data(time > time(count)-scrollWidth));
-                    axis([time(count)-scrollWidth time(count) min max]);                
-                %Plot the given float without adjusting for 'Scroll Width'
-                else
-                    set(plotGraph,'XData',time,'YData',data);
-                    axis([0 time(count) min max]);
-                end
             end
-            
+
             if(Logging == 1)
                 %Save all input floats to the log file,
                 %first with the current time, followed
@@ -335,15 +322,15 @@ while ishandle(plotGraph)
                 fprintf(fileID,'%f,',Vxfmph);                        
                 fprintf(fileID,'\r\n');
             end
-            
-            %Allow MATLAB time to Update Plot
 
-
-    end
+        else
+            fprintf('Checkbit not found')
+        end
     
-catch ME
-   fprintf(1, 'An error occured, please ensure all user defined variables are set correctly\r\n'); 
-   fprintf(1, 'ERROR MESSAGE:\n%s\n\n', ME.message); 
+    catch ME
+        fprintf(1, 'An error occured, please ensure all user defined variables are set correctly\r\n'); 
+        fprintf(1, 'ERROR MESSAGE:\n%s\n\n', ME.message); 
+    end
 end    
 
 %Close Serial COM Port and Delete useless Variables

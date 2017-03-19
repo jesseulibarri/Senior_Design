@@ -18,7 +18,7 @@ void uart0_init(unsigned char ubrr){
     //UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
-    UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00); // | (1<<USBS0);
+    UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00) | (1<<USBS0);
     UBRR0H = (unsigned char)(ubrr >>8 ); //load upper byte of the baud rate into UBRR 
     UBRR0L =  (unsigned char)ubrr;       //load lower byte of the baud rate into UBRR 
 }//uart0_init
@@ -143,7 +143,7 @@ while ( !(UCSRA & (1<<RXC)) )
 return data;
 }**/
 
-void USART0_RX(uint8_t* rx_buf, uint8_t n) {
+/**void USART0_RX(uint8_t* rx_buf, uint8_t n) {
     int i = 0;
 	while ( !(UCSR0A & (1<<RXC0)) ) {}
 	for(i=0;i<n;i++){
@@ -153,4 +153,5 @@ void USART0_RX(uint8_t* rx_buf, uint8_t n) {
 		
 	}
 }//Usart variable size RX funxtion int8 with delay
+**/
 

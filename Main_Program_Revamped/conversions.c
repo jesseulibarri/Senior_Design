@@ -9,10 +9,10 @@
  *
  * Description: 
  *************************************************************************************/
-void bytes_to_float(unsigned char* src, float* dest) {
+void bytes_to_float(char* src, float* dest) {
     union {
         float a;
-        unsigned char bytes[4];
+        char bytes[4];
     } u;
     memcpy(u.bytes, src, 4);
     *dest = u.a;

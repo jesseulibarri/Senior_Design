@@ -21,8 +21,10 @@
 #define PI 3.14159
 #define PACKET_SIZE 4
 
-float speed = 1.25;
-unsigned char speed_bytes[4];
+volatile uint8_t status;
+float speed = 1.0;
+char speed_bytes[4] = "    ";
+char* temp = "          ";
 uint8_t tire_diam = 22;
 uint8_t sprocket_teeth = 42;
 uint16_t sixteen_bit_timer_val;
@@ -105,12 +107,15 @@ void bytes_to_float(unsigned char* src, float* dest) {
 
 ISR(USART0_RX_vect) {
     PORTB |= (1 << PB6);
-    unsigned char data = UDR0;
+    char data = UDR0;
     static uint8_t i = 0;
-    if(data == 'G') {
+    if(data == 'G' && i == 4) {
+        UCSR0B &= ~(1<<RXCIE0); //INTERRUPTS DISABLED
+        status = 1;
         i = 0;
-        bytes_to_float(speed_bytes, &speed);
-        if(speed < 0.5) { speed = 0.5; }
+        //speed = speed + 1.01;
+        //bytes_to_float(speed_bytes, &speed);
+        temp = speed_bytes;
 
         if(intp_math) {
             dtostrf(speed, 6, 3, lcd_string);
@@ -120,7 +125,9 @@ ISR(USART0_RX_vect) {
             period = distance_per_pulse / (speed * 17.6);
             OCR1A = (period * 16000000) / 64;
         }//if
-
+    }
+    if(i > 4) {
+        i = 0;
     } else {
         speed_bytes[i] = data;
         i++;
@@ -172,6 +179,7 @@ if(extern_acc) {
 
 //PORTB.0 set to output
 DDRB =0xFF;
+DDRF |= 0x08;   //lcd strobe bit
 DDRC |= (1 << PC0);
 timer1_init();
 uart_init();
@@ -179,7 +187,7 @@ SPI_init();
 lcd_init();
 clear_display();
 sei();
-
+//temp = speed_bytes;
     while(1){
 /*
         speed = 40*sin(theta);
@@ -189,16 +197,26 @@ sei();
         if(theta > PI) { theta = 0.01; }
 */
     if(main_math) {
-        period = distance_per_pulse / (speed * 17.6);
-        OCR1A = (period * 16000000) / 64;
+
+        //bytes_to_float(temp, &speed);
+        if(status) {
+            status = 0;
+            speed = atof(temp);
+            UCSR0B |= (1<<RXCIE0); //INTERRUPTS ENABLED
+            //if(speed < 0.5) { speed = 1.234; }
+            //speed = speed + 1.01;
+        }
+        //period = distance_per_pulse / (speed * 17.6);
+        //OCR1A = (period * 16000000) / 64;
 
         //float_to_bytes(&speed, speed_bytes);
         //send_packet(speed_bytes);
-        dtostrf(speed, 6, 3, lcd_string);
-        clear_display();
-        cursor_home();
-        string2lcd(lcd_string);
-        _delay_ms(40);
+            dtostrf(speed, 6, 3, lcd_string);
+            clear_display();
+            cursor_home();
+            string2lcd(lcd_string);
+            _delay_ms(40);
+        
     }//if
         
     }//while

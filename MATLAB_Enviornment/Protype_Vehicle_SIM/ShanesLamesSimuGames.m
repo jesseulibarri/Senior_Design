@@ -168,14 +168,24 @@ while ishandle(plotGraph)
                 if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
                 %Make sure read data is a Float and not an empty array
                     Imset = Rx_data_packet(1)
+                    
+                    %Calculate back EMF at the current linear speed, current 
+                    %voltage available, then lastly, the maximum current the 
+                    %motor can accept at the given speed.                    
                     Vemf = (Vxi*Cemf);
                     if(Vemf < Vbatt)
                         Vcurr = Vbatt - Vemf;                
                         Pcurr = Vcurr*Im;
+                    else
+                        Imax = 1/Vbatt;
+                        fprintf('Motor Max Speed Reached')
                     end
-                    if(Pmax-Pcurr > 0)
+                    %Check if current power is less than the available motor
+                    %power, if not set current to maximum available.                     
+                    if(Pmax-Pcurr > 0 && Vemf < Vbatt)
                         Imax = (Pmax-Pcurr)/Vbatt;
                     end
+                    
                     if(Imset > Imax)
                        fprintf('Target Current Too High') 
                        Im = Imax;
@@ -186,9 +196,7 @@ while ishandle(plotGraph)
                 
                 
                 
-%                 %Calculate back EMF at the current linear speed, current 
-%                 %voltage available, then lastly, the maximum current the 
-%                 %motor can accept at the given speed.
+
 %                 Vemf = (Vxi*Cemf);
 %                 %Recieve the Torque (currrent) command from controller
 %                 %RecievedCurrent = Rx_data_packet(1);

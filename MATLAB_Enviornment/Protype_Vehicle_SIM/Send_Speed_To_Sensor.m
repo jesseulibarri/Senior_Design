@@ -67,8 +67,6 @@ try
     pause(1);
         
     String = 1;
-    GCASE = 0;
-
     tic
     
 while ishandle(plotGraph) 
@@ -85,12 +83,6 @@ while ishandle(plotGraph)
             SendUChar;
             fwrite(s,SendUChar,'char')
             %pause(delay)
-        end
-        if(GCASE == 1)
-            fprintf(s, 'G')
-            fprintf(s, 'G')
-            fprintf(s, 'G')
-            fprintf(s, 'G')
         end
         fwrite(s, 'G', 'char')
         pause(delay);

@@ -57,7 +57,7 @@ try
     set(s,'Parity','none');
     set(s,'StopBits', 1);
     set(s,'FlowControl','none');
-    set(s,'InputBufferSize', num_of_bytes);
+    set(s,'InputBufferSize', num_of_bytes+1);
     set(s,'OutputBufferSize', 5);
     set(s,'BytesAvailableFcnCount', num_of_bytes);
     set(s,'BytesAvailableFcnMode','byte');
@@ -87,6 +87,14 @@ while ishandle(plotGraph)
         fwrite(s, 'G', 'char')
         pause(delay);
       
+        CheckPacket = fread(s, 1, 'char');
+        %Make sure incoming data contains the correct "set current command 'S'."
+        if(CheckPacket == 'S')
+            CheckPacket = 0;
+            Incoming_Float = fread(s, 1, 'float32');
+            Incoming_Float
+        end
+        
         %Plot some given data
         count = count + 1;    
         time(count) = toc;                                   

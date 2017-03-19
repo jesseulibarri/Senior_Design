@@ -35,7 +35,7 @@ p = 1.2;              %Mass density of air (kg/m3)
 %   Active Forces on System
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Ax = 0;               %Longitudinal vehicle acceleration (m/s^2)
-Vxi = 0;              %Initial Longitudinal vehicle velocity (m/s)
+Vxi = 30;              %Initial Longitudinal vehicle velocity (m/s)
 Vxf = 0;              %Final Longitudinal vehicle velocity (m/s)
 Vxd = 0;              %Change in velocity (m/s)
 Vxfmph = 0;           %Velocity in mph
@@ -186,9 +186,7 @@ try
                     Im = Imset;
                 end
 
-            Max_Current = Imax
-            Set_Current = Imset
-            Motor_Current = Im
+
 
             end
         end
@@ -224,6 +222,9 @@ try
         %Convert the current speed to MPH
         Vxfmph = 2.23694*(Vxf);
         Current_Speed = Vxfmph
+        Max_Current = Imax
+        Set_Current = Imset
+        Motor_Current = Im        
 
         %Send current speed out to speed sensor
         if(String == 1)
@@ -273,10 +274,11 @@ try
             axis([0 time(count) min max]);
         end   
         pause(delay)
-
+clc
     end
 
 catch ME
+   fclose(s);
    fprintf(1, 'An error occured, please ensure all user defined variables are set correctly\r\n'); 
    fprintf(1, 'ERROR MESSAGE:\n%s\n\n', ME.message); 
 end  

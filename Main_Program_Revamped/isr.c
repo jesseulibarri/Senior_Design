@@ -53,13 +53,13 @@ uint8_t status;
  *********************************************************************/
 ISR(TIMER1_OVF_vect) {
 
-    steering_angle = (float)encoder_angle;
+     steering_angle = (float)encoder_angle;
     //steering_angle_int = get_angle();
 	speed = calc_speed(timestamp_dif, speed);
 
 	
-	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
-	uint8_t user_mode = PINA | 0x7F; //Mask everything out except PORTD 0, 6, and 7
+	//uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
+	uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
     switch(user_mode){ 
     
     //All button were released
@@ -72,7 +72,7 @@ ISR(TIMER1_OVF_vect) {
         
         //uart1_uchar_transmit(torque_r_bytes, torque_right);
 	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
-       // uart1_uchar_transmit(torque_l_bytes, torque_left);
+        //uart1_uchar_transmit(torque_l_bytes, torque_left);
         break;
        
     //Accelerate button is pushed
@@ -87,12 +87,12 @@ ISR(TIMER1_OVF_vect) {
 		//Calculate new values for the motor controllers
         set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);     
         //Transmit torque value over uart
-       // uart1_uchar_transmit(torque_l_bytes, torque_left);
+        //uart1_uchar_transmit(torque_l_bytes, torque_left);
 	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
         break;
 	
 	//Cruise button is pushed
-/*	case CRUISE:
+	case CRUISE:
         //Calculate new values for the motor controllers
        // speed = calc_speed(timestamp_dif, speed);
       // cruise(&torque_right, &torque_left, steering_angle, &base_torque, cruise_speed, speed, &integral);
@@ -112,14 +112,10 @@ ISR(TIMER1_OVF_vect) {
 		}
         break;
 
-	//case PIRATE:
-	//	pirate_mode();
-	//	break;
-    }*/
-}
-	if(!(PIND & (1<<PD0))){
+	case PIRATE:
 		pirate_mode();
-	}	
+		break;
+    }//switch
 }//timer1_ISR
 
 

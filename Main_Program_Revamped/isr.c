@@ -59,7 +59,7 @@ ISR(TIMER1_OVF_vect) {
 
 	
 	//uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
-	uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
+	uint8_t user_mode = PINA | 0x3E; //Mask everything out except PORTD 0, 6, and 7
     switch(user_mode){ 
     
     //All button were released

@@ -67,7 +67,7 @@ try
     fopen(s);
     pause(1);
         
-    String = 0;
+    String = 1;
     tic
     
     %Set this to '1' to recieve an incoming float.

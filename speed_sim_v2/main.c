@@ -37,7 +37,7 @@ int i = 0;
 float speed = 0.1;
 uint8_t status;
 char* speed_array = "     ";
-unsigned char output_array[4];
+//unsigned char output_array[4];
 
 
 void timer1_init() {
@@ -79,8 +79,8 @@ void SPI_init() {
  *************************************************************************************/
 void uart0_init(){
     //rx and tx enable, receive interrupt enabled, 8 bit characters
-    UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
-    //UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
+    //UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
+    UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
     UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00) | (1<<USBS0);
@@ -106,76 +106,6 @@ void uart1_init(){
 }//uart1_init
 //******************************************************************
 
-/**************************************************************************************
- * Name: uart0_uchar_transmit
- *
- * Description: 
- *************************************************************************************/
- void uart0_uchar_transmit(unsigned char packet[]) {
-    //make sure that nothing else is sending
-    while(!(UCSR0A & (1<<UDRE0))) { }
-    int8_t i;
-    for(i = 0; i < PACKET_SIZE; i++) {
-        UDR0 = packet[i];
-        while(!(UCSR0A & (1<<UDRE0))) { }
-        _delay_us(20);
-    }
-/*    //send terminator
-    UDR0 = '\n';
-    while(!(UCSR0A & (1<<UDRE0))) { } 
-*/
-}//uart0_uchar
-
-
-/**************************************************************************************
- * Name: uart1_uchari_transmit
- *
- * Description: 
- *************************************************************************************/
- void uart1_uchar_transmit(unsigned char packet[]) {
-    //make sure that nothing else is sending
-    while(!(UCSR1A & (1<<UDRE1))) { }
-    int8_t i;
-    for(i = 0; i < PACKET_SIZE; i++) {
-        UDR1 = packet[i];
-        while(!(UCSR1A & (1<<UDRE1))) { }
-        _delay_us(20);
-    }
-/*    //send terminator
-    UDR1 = '\n';
-    while(!(UCSR1A & (1<<UDRE1))) { } 
-*/
-}
-
-/**************************************************************************************
- * Name: bytes_to_float
- *
- * Description: 
- *************************************************************************************/
-void bytes_to_float(char* src, float* dest) {
-    union {
-        float a;
-        char bytes[4];
-    } u;
-    memcpy(u.bytes, src, 4);
-    *dest = u.a;
-}
-
-
-/**************************************************************************************
- * Name: float_to_bytes
- *
- * Description: 
- *************************************************************************************/
-void float_to_bytes(float* src, unsigned char* dest) {
-    union {
-        float a;
-        unsigned char bytes[4];
-    } u;
-    u.a = *src;
-    memcpy(dest, u.bytes, 4);
-}//float_to_bytes
-
 /*********************************************************************
  * ISR: timer1
  *
@@ -183,47 +113,39 @@ void float_to_bytes(float* src, unsigned char* dest) {
  *  Set to 10Hz
  *********************************************************************/
 ISR(TIMER3_OVF_vect) {
-	PORTB |= (1<<PB5);
-/*
-	dtostrf(speed, 6, 3, lcd_string);
-	clear_display();
-	cursor_home();
-	string2lcd(lcd_string);
-*/
+
 	if(status){
 		speed = atof(speed_array);
-		if(speed >= 0.01 && speed < 100) {
+		if(speed >= 1.0 && speed < 35) {
+		PORTE |= (1<<PE6);
 		//update the timer pulse frequency
 		period = distance_per_pulse / (speed * 17.6);
         OCR1A = (period * 16000000) / 64;
+        PORTE &= ~(1<<PE6);
     	}//if
-/*
-        dtostrf(speed, 4, 1, lcd_string);
-		clear_display();
-		cursor_home();
-		string2lcd(lcd_string);
-*/
-		//UCSR1B |= (1<<RXCIE1);
+
+		UCSR1B |= (1<<RXCIE1);
 		status = FALSE;
 	}//if
-	PORTB &= ~(1<<PB5);
+	
 }//Timer_ISR
 
 ISR(USART1_RX_vect){
+	//PORTE |= (1<<PE5);
 	static uint8_t i = 0;
 
     char data = UDR1;
     if(data == 'G') {
         i = 0;
 		status = TRUE;
-		speed_array = rx_buff;	
-		//UCSR1B &= ~(1<<RXCIE1);
+		speed_array = rx_buff;
+		UCSR1B &= ~(1<<RXCIE1);
 	}
 	else {
         rx_buff[i] = data;
         i++;
     }
-
+    //PORTE &= ~(1<<PE5);
 }//UART_ISR
 
 // ISR(INT0_vect) {
@@ -257,8 +179,8 @@ int main()  {
 	period = distance_per_pulse / (speed * 17.6);
 	sixteen_bit_timer_val = (period * 16000000) / 64;
 
-	DDRB |= (1<<PB0) | (1<<PB1) | (1<<PB2) | (1<<PB5) | (1<<PB7);
-	DDRE |= (1<<PE7);
+	DDRB |= (1<<PB0) | (1<<PB1) | (1<<PB2) | (1<<PB5) | (1<<PB6) | (1<<PB7);
+	DDRE |= (1<<PE5) | (1<<PE6) | (1<<PE7);
 	DDRF |= 0x08;   //lcd strobe bit
 	timer1_init();
 	timer3_init();
@@ -266,6 +188,7 @@ int main()  {
 	lcd_init();
 	clear_display();
 	cursor_home();
+	//uart0_init();
 	uart1_init();
 	sei();
 

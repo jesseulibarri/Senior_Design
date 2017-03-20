@@ -10,6 +10,10 @@
 %                                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Wheelbase = 1.6;
+Tread = 0.455;
+Steering_Angle_Deg = 0;
+
 %Clear workplace and variable before run
 clear;
 clc;
@@ -24,7 +28,7 @@ try
     delay = 0.01;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
-    Log_Title = 'DataLog.txt';
+    Log_Title = 'Diff_Wheel_Speed_DataLog.txt';
     fileID = fopen(Log_Title,'w');
     fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Target Torque','Torque Output Left','Torque Output Right','Steering Angle (Binary)');
 
@@ -39,7 +43,7 @@ try
     %indicate the maximum and minimum value that it can be.
     float_to_graph = 1;                 %Define which float to graph     
     min = 0;                            %Define y-min
-    max = 20;                           %Define y-max
+    max = 360;                           %Define y-max
 
     %Define Function Variables
     time = 0;
@@ -65,15 +69,14 @@ try
 
     %Create and Configure Serial COM Port with user settings
     s = serial(serialPort);
-    s.InputBufferSize = num_of_bytes;
     set(s,'Terminator','LF');
     set(s,'BaudRate', baudrate);
     set(s,'DataBits', 8);
     set(s,'Parity','none');
     set(s,'StopBits', 1);
     set(s,'FlowControl','none');
-    set(s,'InputBufferSize', num_of_bytes);
-    set(s,'BytesAvailableFcnCount', num_of_bytes);
+    set(s,'InputBufferSize', num_of_bytes+1);
+    set(s,'BytesAvailableFcnCount', num_of_bytes+1);
     set(s,'BytesAvailableFcnMode','byte');
 
     %Open the Serial Com Port and allow to open (pause)
@@ -89,6 +92,10 @@ try
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+    Wheelbase = 1.6;
+    Tread = 0.455;
+    Steering_Angle_Deg = 0;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -99,16 +106,60 @@ try
         if(CheckPacket == 'S')
             CheckPacket = 0;       
 
-            Rx_data_packet = fread(s, num_of_in_float, 'float32')        
+            Rx_data_packet = fread(s, 4, 'float32')        
             %Read data off the serial bus as 32-bit floats.      
-            Base_Torque = Rx_data_packet(1)            
-            Set_Torque_Right = Rx_data_packet(2)            
-            Set_Torque_Left =  Rx_data_packet(3)
-            Steering_Angle_Bin = Rx_data_packet(4)
+            Base_Torque = Rx_data_packet(1);            
+            Set_Torque_Right = Rx_data_packet(2);            
+            Set_Torque_Left =  Rx_data_packet(3);
+            Steering_Angle_Bin = Rx_data_packet(4);
             
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
             %Make sure read data is a Float and not an empty array      
 
+            if(Base_Torque > 0.1)
+                %Left turn (0 to -180 Degrees) = (4085 - 2048)            
+                if(Steering_Angle_Bin > 2048 && Steering_Angle_Bin < 4090)
+                    %LTR = 1.033849*log(Steering_Angle_Bin) - 7.588172;
+                    Steering_Angle_Deg = (Steering_Angle_Bin/11.3778)-360;
+
+                end
+                %Right turn (0 to +180 Degrees) = (0 to 2048)
+                if(Steering_Angle_Bin >= 0 && Steering_Angle_Bin < 2048)
+                    %RTR = -8E-08*(Steering_Angle_Bin)^2 - 0.0002*(Steering_Angle_Bin) + 0.9863;                
+                    Steering_Angle_Deg = (Steering_Angle_Bin/11.3778);
+                end      
+
+                Steering_Angle_Rad = abs(Steering_Angle_Deg)*(pi/180);
+                Center_Wheel_Angle_Deg = ((0.1464*abs(Steering_Angle_Deg))-0.132448)*(2);
+                Center_Wheel_Angle_Rad = Center_Wheel_Angle_Deg*(pi/180);
+                Radius_To_Cen_Axle = (Wheelbase-(tan(Center_Wheel_Angle_Rad)*Tread))/(tan(Center_Wheel_Angle_Rad));
+                Radius_To_In_Wheel = Radius_To_Cen_Axle - Tread;
+                Radius_To_Out_Wheel = Radius_To_Cen_Axle + Tread;
+                In_Wheel_Deg = atand(Wheelbase/Radius_To_In_Wheel)*(pi/180);
+                Out_Wheel_Deg = atand(Wheelbase/Radius_To_Out_Wheel)*(pi/180);          
+
+                Speed_Ratio = Radius_To_In_Wheel/Radius_To_Out_Wheel;
+
+                if(Steering_Angle_Deg > 0 && Steering_Angle_Deg < 180)
+                    fprintf('Turning Right');
+                    Target_Torque_Left = Base_Torque
+                    Target_Torque_Right = Base_Torque*Speed_Ratio
+                end
+
+                if(Steering_Angle_Deg > -180 && Steering_Angle_Deg < 0)
+                    fprintf('Turning Left');                
+                    Target_Torque_Left = Base_Torque*Speed_Ratio
+                    Target_Torque_Right = Base_Torque
+                end
+
+                if(Steering_Angle_Deg ~= 0)
+                    Error_Left = Target_Torque_Left - Set_Torque_Left
+                    Error_Right = Target_Torque_Right - Set_Torque_Right
+
+                    Percent_Error_Left = (((Set_Torque_Left - Target_Torque_Left)/Set_Torque_Left)*100)
+                    Percent_Error_Right = (((Set_Torque_Right - Target_Torque_Right)/Target_Torque_Right)*100)            
+                end
+            end
                 %Plot some given data
                 count = count + 1;    
                 time(count) = toc;                                   
@@ -128,29 +179,13 @@ try
                     axis([0 time(count) min max]);
                 end
             end
-
-           
-            
-%Left turn (0 to -180 Degrees) = (4085 - 2048)            
-%Left Turn vs Torque Multiplier
-Steering_Angle_Deg = (Steering_Angle_Bin*11.3778)-360
-LTR = 1.033849*log(Steering_Angle_Bin) - 7.588172;
-Target_Torque_Left = Set_Torque_Left*LTR
-Target_Torque_Right = Set_Torque_Right 
-
-%Right turn (0 to +180 Degrees) = (0 to 2048)
-%Right Turn vs Torque Multiplier
-Steering_Angle_Deg = Steering_Angle_Bin*11.3778
-RTR = -8E-08*(Steering_Angle_Bin)^2 - 0.0002*(Steering_Angle_Bin) + 0.9863;             
-Target_Torque_Left = Set_Torque_Left
-Target_Torque_Right = Set_Torque_Right*RTR         
             
             %Save all input floats to the log file,
             %first with the current time, followed
             %by all of the read floats, ending with
             %a new-line. Log is CSV compatable.
             fprintf(fileID,'%f,',toc);
-            for i = 1:num_of_in_float
+            for i = 1:4
                 fprintf(fileID,'%f,',Rx_data_packet(i));  
             end
             fprintf(fileID,'\r\n');
@@ -158,7 +193,7 @@ Target_Torque_Right = Set_Torque_Right*RTR
             %Allow MATLAB time to Update Plot
             pause(delay);
         end
-    Rx_data_packet = 0;
+
     end
 
 catch ME

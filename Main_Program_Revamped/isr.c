@@ -35,9 +35,9 @@ float steering_angle = 0.0;
 float base_torque = 0.0;
 uint16_t timestamp_history;
 float integral = 0.0;
-unsigned char rx_buff[4];
+char rx_buff[4];
 float speed = 0.0;
-unsigned char* speed_array;
+volatile char* speed_array = "     ";
 unsigned char output_array[4];
 uint8_t status;
 
@@ -51,24 +51,34 @@ uint8_t status;
 ISR(TIMER1_OVF_vect) {
 	
 	uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
-    //steering_angle = 0;// get_angle();
-	
-	bytes_to_float(speed_array, &speed);
-	float_to_bytes(speed, output_array);
-	
+    steering_angle = 0;// get_angle()
+
+		
+	speed = atof(speed_array);
+	float_to_bytes(&speed, output_array);
+	while(!(UCSR1A & (1<<UDRE1))){}
+	UDR1 = 'S';
+	while(!(UCSR1A & (1<<UDRE1))){}
+	uart0_uchar_transmit(output_array);
 	if(status){
+		//speed = atof(speed_array);
+		//bytes_to_float(speed_array, &speed);
 		UCSR0B |= (1<<RXCIE0);
 		status = FALSE;
 	}
-	torque_right = 10.222;
-	torque_left = 15.222;
-	steering_angle = 2.222;
-	uart1_package_transmit(torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle);
+
+    //float_to_bytes(&speed, output_array);
+	//uart0_uchar_transmit(output_array);
+	//uart1_uchar_transmit(output_array, speed);
+	//torque_right = 10.222;
+	//torque_left = 15.222;
+	//steering_angle = 2.222;
+	//uart1_package_transmit(torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle);
 	
 	//torque_left = 12.0;
-	//uart1_uchar_transmit(torque_l_bytes, torque_left);
-
-    /*switch(user_mode){ 
+//	uart1_uchar_transmit(torque_l_bytes, torque_left);
+/*
+    switch(user_mode){ 
     
     //All button were released
 	case NO_INPUT:
@@ -81,13 +91,15 @@ ISR(TIMER1_OVF_vect) {
             torque_left = 0;
         }
 	
-        uart1_uchar_transmit(torque_l_bytes, torque_left);
+        //uart1_uchar_transmit(torque_l_bytes, torque_left);
+        uart1_uchar_transmit(output_array, speed);
 
         break;
        
     //Accelerate button is pushed
 	case ACCELERATE:
 		integral = 0;
+		cruise_speed = 20;
 		base_torque = base_torque + 0.5;
         if(base_torque > MAX_TORQUE_CUR)
 			base_torque = MAX_TORQUE_CUR; 
@@ -104,7 +116,7 @@ ISR(TIMER1_OVF_vect) {
 	//Cruise button is pushed
 	case CRUISE:
 		
-		cruise_speed = 20; 
+		//cruise_speed = 20; 
         //Calculate new values for the motor controllers
         //speed = //calc_speed(timestamp_history, speed);
        //cruise(&torque_right, &torque_left, steering_angle, &base_torque, cruise_speed, speed, &integral);
@@ -114,16 +126,10 @@ ISR(TIMER1_OVF_vect) {
 	   		set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
 			uart1_uchar_transmit(torque_l_bytes, torque_left);
 		}
-		if(speed <= 20){
-			base_torque = 9; float_to_bytes(torque_left, torque_l_bytes);
+		else{
+			base_torque = 9;
 	   		set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
 			uart1_uchar_transmit(torque_l_bytes, torque_left);
-			
-			while(speed < 20){
-				base_torque = base_torque + 0.1;
-				set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
-	   			uart1_uchar_transmit(torque_l_bytes, torque_left);
-			}
 		}	
 	    
         break;
@@ -136,7 +142,7 @@ ISR(TIMER1_OVF_vect) {
 	default:
 		break;
 
-    }*/
+    }**/
 }//timer1_ISR
 
 
@@ -184,7 +190,7 @@ ISR(USART0_RX_vect){
 	DDRB |= (1<<PB6);
 	PORTB ^= (1<<PB6);
 	
-    unsigned char data = UDR0;
+    char data = UDR0;
     if(data == 'G') {
         i = 0;
 		status = TRUE;

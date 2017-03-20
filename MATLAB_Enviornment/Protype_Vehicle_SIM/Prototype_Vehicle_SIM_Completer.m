@@ -65,7 +65,7 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %you would like to sample for input.
 serialPort = 'COM4';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
-num_of_in_float = 1;                %Define # of Float/packet
+num_of_in_float = 4;                %Define # of Float/packet
 delay = 0.01;                       %Make sure sample faster than resolution
 
 %Log file name and column titles 
@@ -119,9 +119,9 @@ try
     set(s,'Parity','none');
     set(s,'StopBits', 1);
     set(s,'FlowControl','none');
-    set(s,'InputBufferSize', 11);
+    set(s,'InputBufferSize', num_of_bytes+1);
     set(s,'OutputBufferSize', 5);
-    set(s,'BytesAvailableFcnCount', 11);
+    set(s,'BytesAvailableFcnCount', num_of_bytes+1);
     set(s,'BytesAvailableFcnMode','byte');
     set(s,'Timeout', 0.01);
 
@@ -158,7 +158,12 @@ try
         %Make sure incoming data contains the correct "set current command 'S'."
         if(CheckPacket == 'S')
             CheckPacket = 0;
-            Rx_data_packet = fread(s, num_of_in_float, 'float32');
+            Rx_data_packet = fread(s, num_of_in_float, 'float32');       
+            %Read data off the serial bus as 32-bit floats.      
+            Base_Torque = Rx_data_packet(1)           
+            Set_Torque_Right = Rx_data_packet(2)            
+            Set_Torque_Left =  Rx_data_packet(3)
+            Steering_Angle_Bin = Rx_data_packet(4)
 
             %Make sure read data is a Float and not an empty array
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
@@ -188,6 +193,9 @@ try
                     Im = Imset;
                 end
             end
+        else    
+        Im = 0;
+        fprintf('Controller Timeout, setting current to zero');
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

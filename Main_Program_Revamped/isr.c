@@ -20,10 +20,11 @@
 #define ACCELERATE      0x7F
 #define CRUISE          0x3F
 #define PIRATE          0xFE
-#define MAX_TORQUE_CUR  13
+#define MAX_TORQUE_CUR  20
 #define TRUE	1
 #define FALSE   0
 
+uint16_t encoder_angle;
 float torque_right = 0.0;
 unsigned char torque_r_bytes[4];
 float torque_left = 0.0;
@@ -31,13 +32,15 @@ unsigned char torque_l_bytes[4];
 unsigned char speed_bytes[4];
 float cruise_speed = 0.0;
 unsigned char steering_angle_bytes[4];
+uint16_t steering_angle_int;
 float steering_angle = 0.0;
-float base_torque = 0.0;
-uint16_t timestamp_history;
+float base_torque;
+unsigned char base_torque_bytes[4];
+uint16_t timestamp_dif = 20000;
 float integral = 0.0;
 char rx_buff[4];
 float speed = 0.0;
-volatile char* speed_array = "     ";
+char* speed_array = "     ";
 unsigned char output_array[4];
 uint8_t status;
 
@@ -49,100 +52,74 @@ uint8_t status;
  *  Set to 10Hz
  *********************************************************************/
 ISR(TIMER1_OVF_vect) {
-	
-	uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
-    steering_angle = 0;// get_angle()
 
-		
-	speed = atof(speed_array);
-	float_to_bytes(&speed, output_array);
-	while(!(UCSR1A & (1<<UDRE1))){}
-	UDR1 = 'S';
-	while(!(UCSR1A & (1<<UDRE1))){}
-	uart0_uchar_transmit(output_array);
-	if(status){
-		//speed = atof(speed_array);
-		//bytes_to_float(speed_array, &speed);
-		UCSR0B |= (1<<RXCIE0);
-		status = FALSE;
-	}
+    steering_angle = (float)encoder_angle;
+    //steering_angle_int = get_angle();
+	speed = calc_speed(timestamp_dif, speed);
 
-    //float_to_bytes(&speed, output_array);
-	//uart0_uchar_transmit(output_array);
-	//uart1_uchar_transmit(output_array, speed);
-	//torque_right = 10.222;
-	//torque_left = 15.222;
-	//steering_angle = 2.222;
-	//uart1_package_transmit(torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle);
 	
-	//torque_left = 12.0;
-//	uart1_uchar_transmit(torque_l_bytes, torque_left);
-/*
+	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
+	uint8_t user_mode = PINA | 0x7F; //Mask everything out except PORTD 0, 6, and 7
     switch(user_mode){ 
     
     //All button were released
 	case NO_INPUT:
-		integral = 0;
-		//speed =// calc_speed(timestamp_history, speed);
-
-		if(torque_right != 0) {
-        	base_torque = 0;
+	//	integral = 0;
+		//speed = calc_speed(timestamp_dif, speed);
+        	base_torque = 0.001;
             torque_right = 0;
             torque_left = 0;
-        }
-	
-        //uart1_uchar_transmit(torque_l_bytes, torque_left);
-        uart1_uchar_transmit(output_array, speed);
-
+        
+        //uart1_uchar_transmit(torque_r_bytes, torque_right);
+	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
+       // uart1_uchar_transmit(torque_l_bytes, torque_left);
         break;
        
     //Accelerate button is pushed
 	case ACCELERATE:
-		integral = 0;
-		cruise_speed = 20;
-		base_torque = base_torque + 0.5;
-        if(base_torque > MAX_TORQUE_CUR)
+		//integral = 0;
+		//speed = calc_speed(timestamp_dif, speed);
+		cruise_speed = speed;
+		base_torque = base_torque + 0.6;
+		if(base_torque > MAX_TORQUE_CUR)
 			base_torque = MAX_TORQUE_CUR; 
             
 		//Calculate new values for the motor controllers
-		//cruise_speed = speed;
-	    //cruise_speed = rx_buff; //calc_speed(timestamp_history, speed);
         set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);     
-        //Convert floats to bytes and send on uart
-        uart1_uchar_transmit(torque_l_bytes, torque_left);
-
+        //Transmit torque value over uart
+       // uart1_uchar_transmit(torque_l_bytes, torque_left);
+	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
         break;
 	
 	//Cruise button is pushed
-	case CRUISE:
-		
-		//cruise_speed = 20; 
+/*	case CRUISE:
         //Calculate new values for the motor controllers
-        //speed = //calc_speed(timestamp_history, speed);
-       //cruise(&torque_right, &torque_left, steering_angle, &base_torque, cruise_speed, speed, &integral);
+       // speed = calc_speed(timestamp_dif, speed);
+      // cruise(&torque_right, &torque_left, steering_angle, &base_torque, cruise_speed, speed, &integral);
+      // uart1_uchar_transmit(torque_l_bytes, torque_left);
 		 	
 		if(speed > cruise_speed){
 			base_torque = 0;
 	   		set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
-			uart1_uchar_transmit(torque_l_bytes, torque_left);
+		//	uart1_uchar_transmit(torque_l_bytes, torque_left);
+	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
 		}
 		else{
 			base_torque = 9;
 	   		set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
-			uart1_uchar_transmit(torque_l_bytes, torque_left);
-		}	
-	    
+	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
+		//	uart1_uchar_transmit(torque_l_bytes, torque_left);
+		}
         break;
 
-	case PIRATE:
-
+	//case PIRATE:
+	//	pirate_mode();
+	//	break;
+    }*/
+}
+	if(!(PIND & (1<<PD0))){
 		pirate_mode();
-		break;
-            
-	default:
-		break;
-
-    }**/
+	}	
 }//timer1_ISR
 
 
@@ -161,29 +138,26 @@ ISR(INT0_vect){
  *
  * Description: Same as speed_sensor_1 description. 
  *********************************************************************/
-/**
+
 ISR(TIMER3_CAPT_vect) {
 
     uint16_t timestamp = ICR3;
     static uint16_t timestamp_hist = 0;
 
     //wrap around at the end of the timer
-    if(timestamp < timestamp_hist) { timestamp_history = 65535 - timestamp_hist + timestamp; }
-    else { timestamp_history = timestamp - timestamp_hist; }
-           (1<<UDRE1))) { }
-        	uart1_uchar_transmit(torque_l_bytes);
-		}
-		if(speed <= 20){
-			base_torque = 9; f
+    if(timestamp < timestamp_hist) { timestamp_dif = 65535 - timestamp_hist + timestamp; }
+    else { timestamp_dif = timestamp - timestamp_hist; }
+  
     timestamp_hist = timestamp;
 
 }//ISR
-**/
+
 /*********************************************************************
  * ISR: USART Receieve Interrupt ISR
  *
  * Description: 
  *********************************************************************/
+/*
 ISR(USART0_RX_vect){
 	static uint8_t i = 0;
 	
@@ -195,10 +169,10 @@ ISR(USART0_RX_vect){
         i = 0;
 		status = TRUE;
 		speed_array = rx_buff;
-		UCSR0B &= ~(1<<RXCIE0);
+		//UCSR0B &= ~(1<<RXCIE0);
 	}
 	else {
         rx_buff[i] = data;
         i++;
     }
-}//ISR
+}//ISR*/

@@ -32,8 +32,8 @@ void uart0_init(unsigned char ubrr){
  *************************************************************************************/
 void uart1_init(unsigned char ubrr){
     //rx and tx enable, receive interrupt enabled, 8 bit characters
-    UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
-     // UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
+    //UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
+      UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
     UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10) | (1<<USBS1);
@@ -73,7 +73,7 @@ void uart1_init(unsigned char ubrr){
  *************************************************************************************/
  void uart1_uchar_transmit(unsigned char* packet, float f_num) {
     //make sure that nothing else is sending
-   // float_to_bytes(f_num, packet);
+    float_to_bytes(f_num, packet);
     while(!(UCSR1A & (1<<UDRE1))) { }
     UDR1 = 'S';
 
@@ -94,18 +94,19 @@ void uart1_init(unsigned char ubrr){
 *
 * Description:
 ****************************************************************************************/
-void uart1_package_transmit(unsigned char* torque_l, unsigned char* torque_r, unsigned char* angle, float torque_right, float torque_left, float steer_angle){
+void uart1_package_transmit(unsigned char* base_torque_b, unsigned char* torque_l, unsigned char* torque_r, unsigned char* angle, float torque_right, float torque_left, float steer_angle, float base_torque){
     //make sure buffer is clear
-    //float_to_bytes(torque_left, torque_l);
-    //float_to_bytes(torque_right, torque_r);
-    //float_to_bytes(steer_angle, angle);
+    float_to_bytes(torque_left, torque_l);
+    float_to_bytes(torque_right, torque_r);
+    float_to_bytes(steer_angle, angle);
+    float_to_bytes(base_torque, base_torque_b);
 
     while(!(UCSR1A & (1<<UDRE1))) { }
     UDR1 = 'S';
     while(!(UCSR1A & (1<<UDRE1))) { }
     int8_t i;
     for(i = 0; i < PACKET_SIZE; i++) {
-        UDR1 = torque_l[i];
+        UDR1 = base_torque_b[i];
         while(!(UCSR1A & (1<<UDRE1))) { }
     }
     for(i = 0; i < PACKET_SIZE; i++) {
@@ -114,9 +115,15 @@ void uart1_package_transmit(unsigned char* torque_l, unsigned char* torque_r, un
     }
     while(!(UCSR1A & (1<<UDRE1))) { }
     for(i = 0; i < PACKET_SIZE; i++) {
+        UDR1 = torque_l[i];
+        while(!(UCSR1A & (1<<UDRE1))) { }
+    }
+	while(!(UCSR1A & (1<<UDRE1))) { }
+    for(i = 0; i < PACKET_SIZE; i++) {
         UDR1 = angle[i];
         while(!(UCSR1A & (1<<UDRE1))) { }
     }
+
 }
 
 /***************************************************************************************

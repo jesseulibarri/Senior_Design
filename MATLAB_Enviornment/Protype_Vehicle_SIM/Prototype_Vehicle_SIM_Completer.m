@@ -193,6 +193,9 @@ try
                     Im = Imset;
                 end
             end
+        else    
+        Im = 0;
+        fprintf('Controller Timeout, setting current to zero');
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

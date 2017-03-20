@@ -9,15 +9,16 @@
 
 #include "system_init.h"
 #include "uart.h"
+#include "steering.h"
 
-
+uint16_t encoder_angle;
 int main()
 {
 
 system_init();
 
 while(1) {
-	
+	encoder_angle = get_angle();
 }
 
 return 0;

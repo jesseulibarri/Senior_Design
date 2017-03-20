@@ -39,7 +39,6 @@ void spi_encoder_init(){
     //Set data direction for SPI (SS, SCK, MOSI, MISO) and set pullup for MISO
     DDRB |= (1<<PB0)|(1<<PB1)|(1<<PB2)|(0<<PB3);
 	PORTB |= (1<<PB3);
-	//DDRD |= (1<<PD4); //SS
 
     //Enable SPI, shift LSB first, master mode, clk low on idle,
     //data sampled on rising edge, clk/16 = 1MHz datarate
@@ -84,97 +83,46 @@ uint16_t get_angle(){
 	uint8_t high_byte;
 	uint8_t low_byte;
 	uint16_t angle;
+	
+    PORTB &= ~(1<<PB0);     //set select line low
+    SPDR = rd_pos;          //send get position command
+    while(bit_is_clear(SPSR, SPIF)) {}
+    PORTB |= (1<<PB0);      //set select line high
+    _delay_us(20);
 
-    /*uint8_t high_byte;
-    uint8_t low_byte;
-    uint16_t angle;
-
-    //spi_encoder_init();	//Initialize the SPI protocol for the steering encoder
-    //_delay_us(20);
-    PORTD &= ~(1<<PD4); //Set Select Line Low
-    SPDR = rd_pos;      //Send get position command
-    while(bit_is_clear(SPSR, SPIF)){} //Wait for SPI transmission
-    PORTD |= (1<<PD4);  //Set Select Line High
-    _delay_us(20);	//Wait
-
-    //Wait for Encoder Ready Response
-    while(SPDR != rd_pos){    
-        PORTD &= ~(1<<PD4);     //Set Select Line Low
-        SPDR = nop_a5;          //Send no-op
-        while(bit_is_clear(SPSR, SPIF)){}
-        PORTD |= (1<<PD4);      //Set Select Line High
-        _delay_us(20);          //Wait
+    uint8_t i = 0;
+    //wait for encoder ready response
+    while(SPDR != rd_pos) {
+     
+        PORTB &= ~(1<<PB0);     //ss goes low
+        SPDR = nop_a5;          //send noop
+        while(bit_is_clear(SPSR, SPIF)) {}
+        PORTB |= (1<<PB0);      //ss goes high
+        _delay_us(20);          //wait
+        if(i == 20) {
+            return 0;
+        }//if
+    i++;
     }//while
 
-    //Encoder is ready, read the upper byte (top 4 bits of the 12 total)
-    PORTD &= ~(1<<PD4);     //Set Select Line Low
-    SPDR = nop_a5;          //Send no-op
-    while(bit_is_clear(SPSR, SPIF)){}   //Wait for Position to be Received
-    PORTD |= (1<<PD4);      //Set Select Line High
-    high_byte = SPDR;       //Store Position
-    _delay_us(20);          //Wait
-    PORTD &= ~(1<<PD4);     //Set Select Line Low
-    SPDR = nop_a5;           //Send no-op
-    while(bit_is_clear(SPSR, SPIF)){}   //Wait for Position to Be received
-    PORTD |= (1<<PD4);      //Set Select Line High
+    //encoder is ready, read the upper byte (top 4 bits of the 12 total)
+    PORTB &= ~(1<<PB0);     //set select line low
+    SPDR = nop_a5;          //send nop command
+    while(bit_is_clear(SPSR, SPIF)) {}  //wait for position to be received
+    PORTB |= (1<<PB0);
+    high_byte = SPDR;       //store posistion
+    _delay_us(20);
+
+    PORTB &= ~(1<<PB0);
+    SPDR = nop_a5;
+    while(bit_is_clear(SPSR, SPIF)) {}  //wait for position to be received
+    PORTB |= (1<<PB0);
     low_byte = SPDR;
 
-    //spi_init(); //re-enable lcd screen spi config
-
-    //Cancatonate the high and low byte of the steering 
-    //angle to a 16 bit integer and return the angle
-    angle = (high_byte<<8)|(low_byte);	
-    return angle;*/
-	
-
-PORTB &= ~(1<<PB0);     //set select line low
-SPDR = rd_pos;          //send get position command
-while(bit_is_clear(SPSR, SPIF)) {}
-PORTB |= (1<<PB0);      //set select line high
-_delay_us(20);
-
-//wait for encoder ready response
-while(SPDR != rd_pos) {
-
-    static uint8_t i = 0;
-    PORTB &= ~(1<<PD0);     //ss goes low
-    SPDR = nop_a5;          //send noop
-    while(bit_is_clear(SPSR, SPIF)) {}
-    PORTB |= (1<<PD0);      //ss goes high
-    _delay_us(20);          //wait
-    if(i == 20) {
-        PORTB &= ~(1<<PD0);     //set select line low
-        SPDR = rd_pos;          //send get position command
-        while(bit_is_clear(SPSR, SPIF)) {}
-        PORTB |= (1<<PD0);      //set select line high
-        PORTA &= ~(1<<PA1);
-        _delay_us(20);
-    }//if
-i++;
-
-}
-
-//encoder is ready, read the upper byte (top 4 bits of the 12 total)
-PORTB &= ~(1<<PB0);     //set select line low
-SPDR = nop_a5;          //send nop command
-while(bit_is_clear(SPSR, SPIF)) {}  //wait for position to be received
-PORTB |= (1<<PB0);
-high_byte = SPDR;       //store posistion
-
-_delay_us(20);
-
-PORTB &= ~(1<<PD0);
-SPDR = nop_a5;
-while(bit_is_clear(SPSR, SPIF)) {}  //wait for position to be received
-PORTB |= (1<<PD0);
-low_byte = SPDR;
-
-//combine low and high bytes into a single variable
-angle = (high_byte << 8) | (low_byte);
-//this part is to run on our microcontroller for block checkoff
-float temp = (float)angle;
-return angle;
-
-	
+    //combine low and high bytes into a single variable
+    angle = (high_byte << 8) | (low_byte);
+    //this part is to run on our microcontroller for block checkoff
+    float temp = (float)angle;
+    return angle;
 }//get_angle
 

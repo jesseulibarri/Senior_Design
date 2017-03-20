@@ -35,6 +35,7 @@ char lcd_string[16];
 char rx_buff[4];
 int i = 0;
 float speed = 0.1;
+float old_speed = 0.1;
 uint8_t status;
 char* speed_array = "     ";
 //unsigned char output_array[4];
@@ -126,7 +127,8 @@ ISR(TIMER3_OVF_vect) {
 
 		UCSR1B |= (1<<RXCIE1);
 		status = FALSE;
-	}//if
+		old_speed = speed;
+	} else { speed = old_speed; }
 	
 }//Timer_ISR
 

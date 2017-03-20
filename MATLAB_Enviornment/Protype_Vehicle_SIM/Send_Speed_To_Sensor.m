@@ -5,7 +5,7 @@ try
     serialPort = 'COM4';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
     num_of_in_float = 1;                %Define # of Float/packet
-    delay = 0.01;                      %Make sure sample faster than resolution
+    delay = 0.1;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
     Logging = 0; %Set this to turn the data log on/off
@@ -61,6 +61,7 @@ try
     set(s,'OutputBufferSize', 5);
     set(s,'BytesAvailableFcnCount', num_of_bytes);
     set(s,'BytesAvailableFcnMode','byte');
+    set(s,'Timeout',0.01);
 
     %Open the Serial Com Port and allow to open (pause)
     fopen(s);
@@ -98,9 +99,11 @@ while ishandle(plotGraph)
                 CheckPacket = 0;
                 Incoming_Float = fread(s, 1, 'float32');
                 Incoming_Float
+                %fprintf(s,'%s',Incoming_Float);
             end
         end
-        
+               % Incoming_Float = fread(s, 4, 'uchar');
+                %Incoming_Float       
         %Plot some given data
         count = count + 1;    
         time(count) = toc;                                   

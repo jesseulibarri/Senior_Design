@@ -5,7 +5,7 @@ try
     serialPort = 'COM4';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
     num_of_in_float = 1;                %Define # of Float/packet
-    delay = 0.8;                      %Make sure sample faster than resolution
+    delay = 0.1;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
     Logging = 0; %Set this to turn the data log on/off
@@ -57,10 +57,11 @@ try
     set(s,'Parity','none');
     set(s,'StopBits', 1);
     set(s,'FlowControl','none');
-    set(s,'InputBufferSize', num_of_bytes);
+    set(s,'InputBufferSize', num_of_bytes+1);
     set(s,'OutputBufferSize', 5);
     set(s,'BytesAvailableFcnCount', num_of_bytes);
     set(s,'BytesAvailableFcnMode','byte');
+    set(s,'Timeout',0.01);
 
     %Open the Serial Com Port and allow to open (pause)
     fopen(s);
@@ -68,6 +69,9 @@ try
         
     String = 1;
     tic
+    
+    %Set this to '1' to recieve an incoming float.
+    Recieve = 1;
     
 while ishandle(plotGraph) 
                     
@@ -87,6 +91,19 @@ while ishandle(plotGraph)
         fwrite(s, 'G', 'char')
         pause(delay);
       
+        %Display an incoming float if configured to
+        if(Recieve == 1)
+            CheckPacket = fread(s, 1, 'char');
+            %Make sure incoming data contains the correct "set current command 'S'."
+            if(CheckPacket == 'S')
+                CheckPacket = 0;
+                Incoming_Float = fread(s, 1, 'float32');
+                Incoming_Float
+                %fprintf(s,'%s',Incoming_Float);
+            end
+        end
+               % Incoming_Float = fread(s, 4, 'uchar');
+                %Incoming_Float       
         %Plot some given data
         count = count + 1;    
         time(count) = toc;                                   
@@ -102,9 +119,7 @@ while ishandle(plotGraph)
         else
             set(plotGraph,'XData',time,'YData',data);
             axis([0 time(count) min max]);
-        end
-       
-        
+        end   
         
         
 end

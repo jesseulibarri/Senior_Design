@@ -125,6 +125,21 @@ try
                 end
             end
 
+Set_Torque_Left =
+Set_Torque_Right =            
+            
+%Left turn (0 to -180 Degrees) = (4085 - 2048)            
+%Left Turn vs Torque Multiplier            
+LTR = 1.033849ln(x) - 7.588172;
+
+%Right turn (0 to +180 Degrees) = (0 to 2048)
+%Right Turn vs Torque Multiplier
+RTR = -8E-08x2 - 0.0002x + 0.9863;             
+            
+Target_Torque_Left =
+Target_Torque_Right =            
+            
+            
             %Save all input floats to the log file,
             %first with the current time, followed
             %by all of the read floats, ending with

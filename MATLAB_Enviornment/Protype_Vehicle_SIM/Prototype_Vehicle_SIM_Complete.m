@@ -4,6 +4,7 @@
 B = 0.5;              %Magnetic Flux Density (T)
 Cemf = 3;             %Back EMF constant
 Vemf = 0;             %Back EMF Voltage from motor (V)
+Vcurr = 0;
 Im = 0;               %Current supplied to the motor (A)
 Vbatt = 48;           %Voltage supplied to the motor (V)   
 G = 5;                %Gear ratio from motor to wheel (Nw/Nm)
@@ -35,7 +36,7 @@ p = 1.2;              %Mass density of air (kg/m3)
 %   Active Forces on System
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Ax = 0;               %Longitudinal vehicle acceleration (m/s^2)
-Vxi = 30;              %Initial Longitudinal vehicle velocity (m/s)
+Vxi = 0;              %Initial Longitudinal vehicle velocity (m/s)
 Vxf = 0;              %Final Longitudinal vehicle velocity (m/s)
 Vxd = 0;              %Change in velocity (m/s)
 Vxfmph = 0;           %Velocity in mph
@@ -43,7 +44,7 @@ Fxf = 0;              %Longitudinal forces on the vehicle at the front and rear 
 Fxr = 0;              %Longitudinal forces on the vehicle at the front and rear wheel ground contact points, respectively (N)
 beta = 0;             %Incline angle (rad)
 dt = 0.1;             %Change in time between calculations (s)
-
+Pcurr = Vcurr*Im;
 Fzf = 0.5*m*g*cos(beta);       %Vertical load forces on the vehicle at the front and rear ground contact points, respectively (N)
 Fzr = 0.5*m*g*cos(beta);       %Vertical load forces on the vehicle at the front and rear ground contact points, respectively (N)
 Kincf = 0.015;                 %Kinetic coefficient of rolling bike tires
@@ -67,7 +68,7 @@ num_of_in_float = 1;                %Define # of Float/packet
 delay = 0.01;                       %Make sure sample faster than resolution
 
 %Log file name and column titles 
-Logging = 0; %Set this to turn the data log on/off
+Logging = 1; %Set this to turn the data log on/off
 Log_Title = 'Prototype_Vehicle_SIM_Complete_Log.txt';
 fileID = fopen(Log_Title,'w');
 fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Set Current', 'Actual Current','Velocity of Vehicle (mph)','');
@@ -117,9 +118,9 @@ try
     set(s,'Parity','none');
     set(s,'StopBits', 1);
     set(s,'FlowControl','none');
-    set(s,'InputBufferSize', 10);
-    set(s,'OutputBufferSize', 10);
-    set(s,'BytesAvailableFcnCount', 10);
+    set(s,'InputBufferSize', 11);
+    set(s,'OutputBufferSize', 5);
+    set(s,'BytesAvailableFcnCount', 11);
     set(s,'BytesAvailableFcnMode','byte');
     set(s,'Timeout', 0.01);
 
@@ -248,9 +249,7 @@ try
             %by all of the read floats, ending with
             %a new-line. Log is CSV compatable.
             fprintf(fileID,'%f,',toc);
-            for i = 1:num_of_in_float
-                fprintf(fileID,'%f,',Rx_data_packet(i));  
-            end
+            fprintf(fileID,'%f,',Imset);  
             fprintf(fileID,'%f,',Im);
             fprintf(fileID,'%f,',Vxfmph);                        
             fprintf(fileID,'\r\n');

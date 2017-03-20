@@ -63,7 +63,9 @@ ISR(TIMER1_OVF_vect) {
 	
 	speed = atof(speed_array);
 	float_to_bytes(&speed, output_array);
-	
+	while(!(UCSR1A & (1<<UDRE1))){}
+	UDR1 = 'S';
+	while(!(UCSR1A & (1<<UDRE1))){}	
     uart1_uchar_transmit(output_array);
 	if(status){
 		//speed = atof(speed_array);

@@ -24,12 +24,12 @@ void bytes_to_float(unsigned char* src, float* dest) {
  *
  * Description: 
  *************************************************************************************/
-void float_to_bytes(float src, unsigned char* dest) {
+void float_to_bytes(float* src, unsigned char* dest) {
     union {
         float a;
         unsigned char bytes[4];
     } u;
-    u.a = src;
+    u.a = *src;
     memcpy(dest, u.bytes, 4);
 }//float_to_bytes
 

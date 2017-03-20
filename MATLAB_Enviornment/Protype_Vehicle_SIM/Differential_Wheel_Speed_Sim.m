@@ -101,10 +101,10 @@ try
 
             Rx_data_packet = fread(s, num_of_in_float, 'float32')        
             %Read data off the serial bus as 32-bit floats.      
-            Base_Torque = Rx_data_packet(0)            
-            Set_Torque_Right = Rx_data_packet(1)            
-            Set_Torque_Left =  Rx_data_packet(2)
-            Steering_Angle_Bin = Rx_data_packet(3)
+            Base_Torque = Rx_data_packet(1)            
+            Set_Torque_Right = Rx_data_packet(2)            
+            Set_Torque_Left =  Rx_data_packet(3)
+            Steering_Angle_Bin = Rx_data_packet(4)
             
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
             %Make sure read data is a Float and not an empty array      
@@ -134,14 +134,14 @@ try
 %Left turn (0 to -180 Degrees) = (4085 - 2048)            
 %Left Turn vs Torque Multiplier
 Steering_Angle_Deg = (Steering_Angle_Bin*11.3778)-360
-LTR = 1.033849*ln(Steering_Angle_Bin) - 7.588172;
+LTR = 1.033849*log(Steering_Angle_Bin) - 7.588172;
 Target_Torque_Left = Set_Torque_Left*LTR
 Target_Torque_Right = Set_Torque_Right 
 
 %Right turn (0 to +180 Degrees) = (0 to 2048)
 %Right Turn vs Torque Multiplier
 Steering_Angle_Deg = Steering_Angle_Bin*11.3778
-RTR = -8E-08*(Steering_Angle)^2 - 0.0002*(Steering_Angle) + 0.9863;             
+RTR = -8E-08*(Steering_Angle_Bin)^2 - 0.0002*(Steering_Angle_Bin) + 0.9863;             
 Target_Torque_Left = Set_Torque_Left
 Target_Torque_Right = Set_Torque_Right*RTR         
             

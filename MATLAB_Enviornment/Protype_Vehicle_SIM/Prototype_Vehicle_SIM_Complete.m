@@ -67,7 +67,7 @@ num_of_in_float = 1;                %Define # of Float/packet
 delay = 0.01;                       %Make sure sample faster than resolution
 
 %Log file name and column titles 
-Logging = 0; %Set this to turn the data log on/off
+Logging = 1; %Set this to turn the data log on/off
 Log_Title = 'Prototype_Vehicle_SIM_Complete_Log.txt';
 fileID = fopen(Log_Title,'w');
 fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Set Current', 'Actual Current','Velocity of Vehicle (mph)','');
@@ -230,13 +230,13 @@ try
             SendString = num2str(Vxfmph,'%.1f');
             SendString;
             fprintf(s,'%s',SendString);
-            fwrite(s, 'G', 'uchar');
+            fwrite(s, 'G', 'char');
         end
         if(String == 0)
             SendUChar = num2str(Vxfmph,'%.1f');
             SendUChar;
-            fwrite(s,SendUChar,'uchar');
-            fwrite(s, 'G', 'uchar');
+            fwrite(s,SendUChar,'char');
+            fwrite(s, 'G', 'char');
         end
         pause(delay)               
 
@@ -247,9 +247,7 @@ try
             %by all of the read floats, ending with
             %a new-line. Log is CSV compatable.
             fprintf(fileID,'%f,',toc);
-            for i = 1:num_of_in_float
-                fprintf(fileID,'%f,',Rx_data_packet(i));  
-            end
+            fprintf(fileID,'%f,',Iset);  
             fprintf(fileID,'%f,',Im);
             fprintf(fileID,'%f,',Vxfmph);                        
             fprintf(fileID,'\r\n');

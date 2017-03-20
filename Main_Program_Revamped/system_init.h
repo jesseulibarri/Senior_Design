@@ -14,8 +14,8 @@
 #define OFF 0
 #define TIRE_DIAM       22
 #define SPROCKET_TEETH  42
-#define ACCELERATE_B    6
-#define CRUISE_B        7
+#define ACCELERATE_B    7
+#define CRUISE_B        6
 #define PIRATE_SWITCH   0
 #define PC_ON_OFF       5
 #define PACKET_SIZE     4

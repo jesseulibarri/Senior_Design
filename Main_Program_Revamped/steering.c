@@ -79,7 +79,7 @@ void calibrate_spi_steering() {
  * 	together in a 16 bit integer and then this function returns that
  * 	16 bit int. 
  ****************************************************************/
-uint16_t get_angle(){
+uint16_t get_angle(uint16_t encoder_angle){
 	uint8_t high_byte;
 	uint8_t low_byte;
 	uint16_t angle;
@@ -100,7 +100,7 @@ uint16_t get_angle(){
         PORTB |= (1<<PB0);      //ss goes high
         _delay_us(20);          //wait
         if(i == 20) {
-            return 0;
+            return encoder_angle;
         }//if
     i++;
     }//while

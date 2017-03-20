@@ -50,10 +50,12 @@ void system_init() {
     sei();
 
     /******** IO *********/
-    DDRD |= (0<<ACCELERATE_B) | (0<<CRUISE_B) | (0<<PIRATE_SWITCH) | (1<<PC_ON_OFF);  //Accelerate, and pirate switch (input) buttons on PORTD 6, 7, 0. Set PC_ON_OFF (output) PORTD 5.
-    DDRB |= (1<<PB7); //input for led indicating 12 power converter on off pin is on
-    PORTB |= (1<<PB7); // turn on led
-    PORTD |= (1<<ACCELERATE_B) | (1<<CRUISE_B) | (1<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Set pullup resistors for input pins and turn on PC_ON_OFF pin
+    DDRA |= (0<<ACCELERATE_B);// | (0<<CRUISE_B) | (1<<PC_ON_OFF);  //Accelerate, and pirate switch (input) buttons on PORTD 6, 7, 0. Set PC_ON_OFF (output) PORTD 5.
+    //DDRB |= (1<<PB7); //input for led indicaiting 12 power converter on off pin is on
+    //PORTB |= (1<<PB7); // turn on led
+	//DDRD |= (0<<PIRATE_SWITCH);
+    PORTA = 0xFF;// | (1<<CRUISE_B) | (1<<PC_ON_OFF); //Set pullup resistors for input pins and turn on PC_ON_OFF pin
+//	PORTD |= (1<<PIRATE_SWITCH);
 
     ///*** Calculate the system needed constants ***/
     tire_circ = TIRE_DIAM * M_PI;

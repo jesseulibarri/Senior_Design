@@ -20,11 +20,11 @@
 #define ACCELERATE      0x7F
 #define CRUISE          0x3F
 #define PIRATE          0xFE
-#define MAX_TORQUE_CUR  13
+#define MAX_TORQUE_CUR  20
 #define TRUE	1
 #define FALSE   0
 
-extern uint16_t encoder_angle;
+uint16_t encoder_angle;
 float torque_right = 0.0;
 unsigned char torque_r_bytes[4];
 float torque_left = 0.0;
@@ -34,7 +34,7 @@ float cruise_speed = 0.0;
 unsigned char steering_angle_bytes[4];
 uint16_t steering_angle_int;
 float steering_angle = 0.0;
-float base_torque = 0.0;
+float base_torque;
 unsigned char base_torque_bytes[4];
 uint16_t timestamp_dif = 20000;
 float integral = 0.0;
@@ -53,45 +53,46 @@ uint8_t status;
  *********************************************************************/
 ISR(TIMER1_OVF_vect) {
 
-    steering_angle = encoder_angle;
+    steering_angle = (float)encoder_angle;
     //steering_angle_int = get_angle();
 	speed = calc_speed(timestamp_dif, speed);
-	uart1_uchar_transmit(output_array, speed);
+
 	
-	//uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
-	uint8_t user_mode = PIND | 0x3E; //Mask everything out except PORTD 0, 6, and 7
+	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
+	uint8_t user_mode = PINA | 0x7F; //Mask everything out except PORTD 0, 6, and 7
     switch(user_mode){ 
     
     //All button were released
 	case NO_INPUT:
-		integral = 0;
+	//	integral = 0;
 		//speed = calc_speed(timestamp_dif, speed);
-		if(torque_right != 0) {
-        	base_torque = 0;
+        	base_torque = 0.001;
             torque_right = 0;
             torque_left = 0;
-        }
+        
         //uart1_uchar_transmit(torque_r_bytes, torque_right);
-        uart1_uchar_transmit(torque_l_bytes, torque_left);
+	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
+       // uart1_uchar_transmit(torque_l_bytes, torque_left);
         break;
        
     //Accelerate button is pushed
 	case ACCELERATE:
-		integral = 0;
+		//integral = 0;
 		//speed = calc_speed(timestamp_dif, speed);
 		cruise_speed = speed;
-		base_torque = base_torque + 0.5;
+		base_torque = base_torque + 0.6;
 		if(base_torque > MAX_TORQUE_CUR)
 			base_torque = MAX_TORQUE_CUR; 
             
 		//Calculate new values for the motor controllers
         set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);     
         //Transmit torque value over uart
-        uart1_uchar_transmit(torque_l_bytes, torque_left);
+       // uart1_uchar_transmit(torque_l_bytes, torque_left);
+	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
         break;
 	
 	//Cruise button is pushed
-	case CRUISE:
+/*	case CRUISE:
         //Calculate new values for the motor controllers
        // speed = calc_speed(timestamp_dif, speed);
       // cruise(&torque_right, &torque_left, steering_angle, &base_torque, cruise_speed, speed, &integral);
@@ -100,19 +101,25 @@ ISR(TIMER1_OVF_vect) {
 		if(speed > cruise_speed){
 			base_torque = 0;
 	   		set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
-			uart1_uchar_transmit(torque_l_bytes, torque_left);
+		//	uart1_uchar_transmit(torque_l_bytes, torque_left);
+	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
 		}
 		else{
 			base_torque = 9;
 	   		set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
-			uart1_uchar_transmit(torque_l_bytes, torque_left);
+	uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
+		//	uart1_uchar_transmit(torque_l_bytes, torque_left);
 		}
         break;
 
-	case PIRATE:
+	//case PIRATE:
+	//	pirate_mode();
+	//	break;
+    }*/
+}
+	if(!(PIND & (1<<PD0))){
 		pirate_mode();
-		break;
-    }
+	}	
 }//timer1_ISR
 
 

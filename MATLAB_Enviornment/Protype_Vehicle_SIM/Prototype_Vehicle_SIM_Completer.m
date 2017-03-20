@@ -66,7 +66,7 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 serialPort = 'COM4';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 4;                %Define # of Float/packet
-delay = 0.01;                       %Make sure sample faster than resolution
+delay = 0.04;                       %Make sure sample faster than resolution
 
 %Log file name and column titles 
 Logging = 0; %Set this to turn the data log on/off
@@ -260,7 +260,6 @@ try
             fprintf(fileID,'%f,',Vxfmph);                        
             fprintf(fileID,'\r\n');
         end
-        pause(delay);
         %Allow MATLAB time to Update Plot
 
         %Extract user selected data to graph

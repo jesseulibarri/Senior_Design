@@ -34,7 +34,7 @@ char lcd_string[16];
 
 char rx_buff[4];
 int i = 0;
-float speed = 0.1;
+volatile float speed = 0.1;
 float old_speed = 0.1;
 uint8_t status;
 char* speed_array = "     ";
@@ -118,17 +118,18 @@ ISR(TIMER3_OVF_vect) {
 	if(status){
 		speed = atof(speed_array);
 		if(speed >= 1.0 && speed < 35) {
-		PORTE |= (1<<PE6);
-		//update the timer pulse frequency
-		period = distance_per_pulse / (speed * 17.6);
-        OCR1A = (period * 16000000) / 64;
-        PORTE &= ~(1<<PE6);
-    	}//if
+			PORTE |= (1<<PE6);
+			//update the timer pulse frequency
+			period = distance_per_pulse / (speed * 17.6);
+        	OCR1A = (period * 16000000) / 64;
+        	old_speed = speed;
+        	PORTE &= ~(1<<PE6);
+    	} else { speed = old_speed; }
 
-		UCSR1B |= (1<<RXCIE1);
+		//UCSR1B |= (1<<RXCIE1);
 		status = FALSE;
-		old_speed = speed;
-	} else { speed = old_speed; }
+		
+	} 
 	
 }//Timer_ISR
 
@@ -141,7 +142,7 @@ ISR(USART1_RX_vect){
         i = 0;
 		status = TRUE;
 		speed_array = rx_buff;
-		UCSR1B &= ~(1<<RXCIE1);
+		//UCSR1B &= ~(1<<RXCIE1);
 	}
 	else {
         rx_buff[i] = data;

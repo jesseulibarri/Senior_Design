@@ -16,7 +16,7 @@ float distance_per_pulse;
 
 /*** Turn ON to enable datalogging ***/
 uint8_t datalogging = OFF;
-uint8_t spi_steering = OFF;
+uint8_t spi_steering = ON;
 
 
 /********************************************************
@@ -27,24 +27,24 @@ uint8_t spi_steering = OFF;
  * ******************************************************/
 void system_init() {
 
-    /******** ICP3 *********/
-    //Makes use of the input capture function on PORTE.7.
-    TCCR3A = 0x00;                          //Normal mode, no compare
-    TCCR3B |= (1 << ICES3) | (1 << CS32);   //Input capture on rising edge,
+    /******** ICP1 *********/
+    //Makes use of the input capture function on PORTD.7.
+    TCCR1A = 0x00;                          //Normal mode, no compare
+    TCCR1B |= (1 << ICES1) | (1 << CS12);   //Input capture on rising edge,
                                             //256 clk prescale
-    ETIMSK |= (1 << TICIE3);                //Enable input capture interrupt
+    TIMSK |= (1 << TICIE1);                //Enable input capture interrupt
 
     /******** System Timer *********/
     //Initialize 16 bit Timer/Counter 1 for Fast PWM, TOP=24,999
     //  16MHz, pre-scale=64, TOP=24,999, freq=10Hz, period=100mS
-    TCCR1A |= (1<<WGM11)|(1<<WGM10);
-    TCCR1B |= (1<<WGM13)|(1<<WGM12);
+    TCCR3A |= (1<<WGM31)|(1<<WGM30);
+    TCCR3B |= (1<<WGM33)|(1<<WGM32);
     //Set Prescalar to 64
-    TCCR1B |= (1<<CS11)|(1<<CS10);
+    TCCR3B |= (1<<CS31)|(1<<CS30);
     //Set Output Comare Match A Value (TOP value)
-    OCR1A = 24999; 
+    OCR3A = 24999; 
     //Interrupt on timer overflow (at TOP value)
-    TIMSK |= (1<<TOIE1);
+    ETIMSK |= (1<<TOIE3);
 
     /******** Enable Global Interrupts *********/
     sei();

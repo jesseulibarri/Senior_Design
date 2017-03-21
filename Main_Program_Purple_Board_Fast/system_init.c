@@ -47,7 +47,7 @@ void system_init() {
     //Set Output Comare Match A Value (TOP value, 10Hz, 100mS)
     //OCR3A = 24999;
     //Set Output Comare Match A Value (TOP value, 40Hz, 25mS)
-    OCR3A = 10000; 
+    OCR3A = 4500; 
     //Interrupt on timer overflow (at TOP value)
     ETIMSK |= (1<<TOIE3);
 
@@ -61,9 +61,7 @@ void system_init() {
     PORTD |= (1<<PIRATE_SWITCH);
     DDRB |= (1<<PB7); //input for led indicaiting 12 power converter on off pin is on
     PORTB &= ~(1<<PB7); // turn on led
-
-    DDRA |= (1<<PA1);       //Set timing bit for system checkoff 
-    PORTA &= ~(1<<PA1);   
+    
 
     ///*** Calculate the system needed constants ***/
     tire_circ = TIRE_DIAM * M_PI;

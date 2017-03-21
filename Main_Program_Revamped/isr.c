@@ -24,7 +24,7 @@
 #define TRUE	1
 #define FALSE   0
 
-uint16_t encoder_angle;
+extern uint16_t encoder_angle;
 float torque_right = 0.0;
 unsigned char torque_r_bytes[4];
 float torque_left = 0.0;
@@ -51,10 +51,10 @@ uint8_t status;
  * Description: This interrupt handles all of the main program timing.
  *  Set to 10Hz
  *********************************************************************/
-ISR(TIMER1_OVF_vect) {
+ISR(TIMER3_OVF_vect) {
 
-     steering_angle = (float)encoder_angle;
-    //steering_angle_int = get_angle();
+	//steering_angle_int = get_angle(steering_angle_int);
+    steering_angle = (float)encoder_angle;
 	speed = calc_speed(timestamp_dif, speed);
 
 	
@@ -135,9 +135,9 @@ ISR(INT0_vect){
  * Description: Same as speed_sensor_1 description. 
  *********************************************************************/
 
-ISR(TIMER3_CAPT_vect) {
+ISR(TIMER1_CAPT_vect) {
 
-    uint16_t timestamp = ICR3;
+    uint16_t timestamp = ICR1;
     static uint16_t timestamp_hist = 0;
 
     //wrap around at the end of the timer

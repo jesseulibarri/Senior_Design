@@ -61,7 +61,7 @@ ISR(TIMER3_OVF_vect) {
 	//TODO: This is entirely for system checkoff. Remove afterward
 	if(wake_up_timing == 1) {
 		wake_up_timing = 0;		//We only want to do this once when waking from sleep mode
-		//PORTA |= (1<<PA1);		//Clear timing bit
+		PORTA &= ~(1<<PA0);		//Clear timing bit
 		uart1_uchar_transmit(speed_bytes, speed, 'V');
 	}//if
 

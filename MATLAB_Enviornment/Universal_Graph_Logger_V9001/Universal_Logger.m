@@ -26,7 +26,7 @@ try
     %Log file name and column titles 
     Log_Title = 'DataLog.txt';
     fileID = fopen(Log_Title,'w');
-    fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Torque Output 1','Torque Output 2','Steering Wheel Angle (Binary)');
+    fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Torque Output Right','Torque Output Left','Steering Wheel Angle (Binary)','Steering Wheel Angle(Degrees)','PercentErrorLeft','PercentErrorRight');
 
     %Other User Defined Properties
     plotTitle = 'Steering Wheel Angle vs Time';   %Plot title

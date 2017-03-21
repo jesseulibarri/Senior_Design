@@ -4,7 +4,7 @@
 %   Variable length data logging            %
 %   float inputs only                       %
 %	Serial Port: COM1-7 (User defined)      %
-%                                           %
+%   By: Eli Yazzolino                       %
 %	Serial Setting, Graph Settings,         %
 %   Log Settings, etc. are all user defined.%
 %                                           %
@@ -21,7 +21,7 @@ try
     serialPort = 'COM4';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
     num_of_in_float = 1;                %Define # of Float/packet
-    delay = 0.005;                      %Make sure sample faster than resolution
+    delay = 0.01;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
     Log_Title = 'DataLog.txt';

@@ -50,7 +50,7 @@ Fzf = 0.5*m*g*cos(beta);       %Vertical load forces on the vehicle at the front
 Fzr = 0.5*m*g*cos(beta);       %Vertical load forces on the vehicle at the front and rear ground contact points, respectively (N)
 Kincf = 0.015;                 %Kinetic coefficient of rolling bike tires
 Statf = 1;
-
+Speed = 0;
 Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,13 +66,13 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 serialPort = 'COM4';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 4;                %Define # of Float/packet
-delay = 0.04;                       %Make sure sample faster than resolution
+delay = 0.005;                       %Make sure sample faster than resolution
 
 %Log file name and column titles 
-Logging = 0; %Set this to turn the data log on/off
-Log_Title = 'Prototype_Vehicle_SIM_Complete_Log.txt';
+Logging = 1; %Set this to turn the data log on/off
+Log_Title = 'ButtonToSleep.txt';
 fileID = fopen(Log_Title,'w');
-fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Set Current', 'Actual Current','Velocity of Vehicle (mph)','');
+fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Set Current', 'Actual Current','Velocity of Vehicle (mph)','Speed');
 
 %Other User Defined Properties
 plotTitle = 'Vehicle Speed vs Time';        %Plot title
@@ -147,7 +147,8 @@ try
     while ishandle(plotGraph)
 
         %Icrement the count and time for live graph
-        count = count + 1;    
+        count = count + 1;
+        toc
         time(count) = toc;                                   
         %Extract Elapsed Time
         if(count > 2)
@@ -160,10 +161,10 @@ try
             CheckPacket = 0;
             Rx_data_packet = fread(s, num_of_in_float, 'float32');       
             %Read data off the serial bus as 32-bit floats.      
-            Base_Torque = Rx_data_packet(1)           
-            Set_Torque_Right = Rx_data_packet(2)            
-            Set_Torque_Left =  Rx_data_packet(3)
-            Steering_Angle_Bin = Rx_data_packet(4)
+            Base_Torque = Rx_data_packet(1);           
+            Set_Torque_Right = Rx_data_packet(2);            
+            Set_Torque_Left =  Rx_data_packet(3);
+            Steering_Angle_Bin = Rx_data_packet(4);
 
             %Make sure read data is a Float and not an empty array
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
@@ -178,7 +179,7 @@ try
                     Pcurr = Vcurr*Im;
                 else
                     Imax = 200/Vbatt;
-                    fprintf('Motor Max Speed Reached')
+                    %fprintf('Motor Max Speed Reached')
                 end
                 %Check if current power is less than the available motor
                 %power, if not set current to maximum available.                     
@@ -187,15 +188,22 @@ try
                 end
 
                 if(Imset > Imax)
-                   fprintf('Target Current Too High') 
+                   %fprintf('Target Current Too High') 
                    Im = Imax;
                 else
                     Im = Imset;
                 end
             end
-        else    
+        elseif(CheckPacket == 'V')
+        CheckPacket = 0;
+        Speed = fread(s, 1, 'float32')
+        fprintf('Speed recieved from Sleep')
+        fprintf(fileID,'**Microcontroller Awake! Current Speed: %f MPH **',Speed);                        
+        fprintf(fileID,'\r\n');
         Im = 0;
-        fprintf('Controller Timeout, setting current to zero');
+        else
+        Im = 0;
+        %fprintf('Controller Timeout, setting current to zero');
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -229,9 +237,9 @@ try
         %Convert the current speed to MPH
         Vxfmph = 2.23694*(Vxf);
         Current_Speed = Vxfmph
-        Max_Current = Imax
+        Max_Current = Imax;
         Set_Current = Imset
-        Motor_Current = Im        
+        Motor_Current = Im;        
 
         %Send current speed out to speed sensor
         if(String == 1)
@@ -248,7 +256,6 @@ try
         end
         pause(delay)               
 
-
         if(Logging == 1)
             %Save all input floats to the log file,
             %first with the current time, followed
@@ -257,7 +264,8 @@ try
             fprintf(fileID,'%f,',toc);  
             fprintf(fileID,'%f,',Imset);  
             fprintf(fileID,'%f,',Im);
-            fprintf(fileID,'%f,',Vxfmph);                        
+            fprintf(fileID,'%f,',Vxfmph);
+            fprintf(fileID, '%f', Speed);
             fprintf(fileID,'\r\n');
         end
         %Allow MATLAB time to Update Plot
@@ -278,7 +286,7 @@ try
             axis([0 time(count) min max]);
         end   
         pause(delay)
-
+        
     end
 
 catch ME

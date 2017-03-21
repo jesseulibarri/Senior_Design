@@ -28,10 +28,9 @@ try
     delay = 0.01;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
-    Log_Title = 'Diff_Wheel_Speed_DataLog.txt';
+    Log_Title = 'Diff_Wheel_Speed_Speed1.txt';
     fileID = fopen(Log_Title,'w');
-    fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Target Torque','Torque Output Left','Torque Output Right','Steering Angle (Binary)');
-
+    fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Torque Output Right','Torque Output Left','Steering Wheel Angle (Binary)','Steering Wheel Angle(Degrees)','PercentErrorLeft','PercentErrorRight');
     %Other User Defined Properties
     plotTitle = 'Steering Wheel Angle';   %Plot title
     xLabel = 'Elapsed Time(s)';         %X-axis label
@@ -43,7 +42,7 @@ try
     %indicate the maximum and minimum value that it can be.
     float_to_graph = 1;                 %Define which float to graph     
     min = 0;                            %Define y-min
-    max = 360;                           %Define y-max
+    max = 4096;                           %Define y-max
 
     %Define Function Variables
     time = 0;
@@ -95,7 +94,9 @@ try
     Wheelbase = 1.6;
     Tread = 0.455;
     Steering_Angle_Deg = 0;
-
+    Logging = 1;
+    Percent_Error_Left = 'N/A';
+    Percent_Error_Right = 'N/A';      
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -106,12 +107,12 @@ try
         if(CheckPacket == 'S')
             CheckPacket = 0;       
 
-            Rx_data_packet = fread(s, 4, 'float32')        
+            Rx_data_packet = fread(s, 4, 'float32');        
             %Read data off the serial bus as 32-bit floats.      
-            Base_Torque = Rx_data_packet(1);            
-            Set_Torque_Right = Rx_data_packet(2);            
-            Set_Torque_Left =  Rx_data_packet(3);
-            Steering_Angle_Bin = Rx_data_packet(4);
+            Base_Torque = Rx_data_packet(1)            
+            Set_Torque_Right = Rx_data_packet(2)            
+            Set_Torque_Left =  Rx_data_packet(3)
+            Steering_Angle_Bin = Rx_data_packet(4)
             
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
             %Make sure read data is a Float and not an empty array      
@@ -120,13 +121,13 @@ try
                 %Left turn (0 to -180 Degrees) = (4085 - 2048)            
                 if(Steering_Angle_Bin > 2048 && Steering_Angle_Bin < 4090)
                     %LTR = 1.033849*log(Steering_Angle_Bin) - 7.588172;
-                    Steering_Angle_Deg = (Steering_Angle_Bin/11.3778)-360;
+                    Steering_Angle_Deg = (Steering_Angle_Bin/11.3778)-360
 
                 end
                 %Right turn (0 to +180 Degrees) = (0 to 2048)
                 if(Steering_Angle_Bin >= 0 && Steering_Angle_Bin < 2048)
                     %RTR = -8E-08*(Steering_Angle_Bin)^2 - 0.0002*(Steering_Angle_Bin) + 0.9863;                
-                    Steering_Angle_Deg = (Steering_Angle_Bin/11.3778);
+                    Steering_Angle_Deg = (Steering_Angle_Bin/11.3778)
                 end      
 
                 Steering_Angle_Rad = abs(Steering_Angle_Deg)*(pi/180);
@@ -136,7 +137,7 @@ try
                 Radius_To_In_Wheel = Radius_To_Cen_Axle - Tread;
                 Radius_To_Out_Wheel = Radius_To_Cen_Axle + Tread;
                 In_Wheel_Deg = atand(Wheelbase/Radius_To_In_Wheel)*(pi/180);
-                Out_Wheel_Deg = atand(Wheelbase/Radius_To_Out_Wheel)*(pi/180);          
+                Out_Wheel_Deg = atand(Wheelbase/Radius_To_Out_Wheel)*(pi/180);        
 
                 Speed_Ratio = Radius_To_In_Wheel/Radius_To_Out_Wheel;
 
@@ -153,11 +154,17 @@ try
                 end
 
                 if(Steering_Angle_Deg ~= 0)
-                    Error_Left = Target_Torque_Left - Set_Torque_Left
-                    Error_Right = Target_Torque_Right - Set_Torque_Right
+                    Error_Left = Target_Torque_Left - Set_Torque_Left;
+                    Error_Right = Target_Torque_Right - Set_Torque_Right;
 
-                    Percent_Error_Left = (((Set_Torque_Left - Target_Torque_Left)/Set_Torque_Left)*100)
-                    Percent_Error_Right = (((Set_Torque_Right - Target_Torque_Right)/Target_Torque_Right)*100)            
+                    Percent_Error_Left = (((Set_Torque_Left - Target_Torque_Left)/Set_Torque_Left)*100);
+                    Percent_Error_Right = (((Set_Torque_Right - Target_Torque_Right)/Target_Torque_Right)*100);            
+                    
+                    Percent_Error_Left = abs(Percent_Error_Left)
+                    Percent_Error_Right = abs(Percent_Error_Right)
+                else
+                    Percent_Error_Left = 'N/A';
+                    Percent_Error_Right = 'N/A';                    
                 end
             end
                 %Plot some given data
@@ -166,7 +173,7 @@ try
                 %Extract Elapsed Time
 
                 %Extract user selected data to graph
-                data(count) = Rx_data_packet(float_to_graph);
+                data(count) = Rx_data_packet(4);
 
                 %Adjust the graph's X-axis according to 'Scroll Width'.
                 %It is adjusted using the current 'time' and 'count'. 
@@ -183,13 +190,25 @@ try
             %Save all input floats to the log file,
             %first with the current time, followed
             %by all of the read floats, ending with
-            %a new-line. Log is CSV compatable.
-            fprintf(fileID,'%f,',toc);
-            for i = 1:4
-                fprintf(fileID,'%f,',Rx_data_packet(i));  
+            if(Logging == 1)
+                %Save all input floats to the log file,
+                %first with the current time, followed
+                %by all of the read floats, ending with
+                %a new-line. Log is CSV compatable.
+                fprintf(fileID,'%f,',toc);  
+                fprintf(fileID,'%f,',Base_Torque);  
+                fprintf(fileID,'%f,',Set_Torque_Right);
+                fprintf(fileID,'%f,',Set_Torque_Left);  
+                fprintf(fileID,'%f,',Steering_Angle_Bin);  
+                fprintf(fileID,'%f,',Steering_Angle_Deg);
+                fprintf(fileID,'%f,',Percent_Error_Left);  
+                fprintf(fileID,'%f,',Percent_Error_Right);                
+                fprintf(fileID,'\r\n');
             end
-            fprintf(fileID,'\r\n');
-
+            Base_Torque = Rx_data_packet(1);            
+            Set_Torque_Right = Rx_data_packet(2);            
+            Set_Torque_Left =  Rx_data_packet(3);
+            Steering_Angle_Bin = Rx_data_packet(4);
             %Allow MATLAB time to Update Plot
             pause(delay);
         end

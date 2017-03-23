@@ -63,10 +63,10 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %Select the total number of floats, (num_of_in_float), 
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
-serialPort = 'COM4';                %Define COM port #
+serialPort = 'COM7';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 4;                %Define # of Float/packet
-delay = 0.005;                       %Make sure sample faster than resolution
+delay = 0.01;                       %Make sure sample faster than resolution
 
 %Log file name and column titles 
 Logging = 1; %Set this to turn the data log on/off

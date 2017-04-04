@@ -23,14 +23,6 @@ void bldc_interface_uart_init(void(*func)(unsigned char *data, unsigned int len)
 }
 
 /**
- * Call this function at around 1 khz to reset the state of the packet
- * interface after a timeout in case data is lost.
- */
-void bldc_interface_uart_run_timer(void) {
-	packet_timerfunc();
-}
-
-/**
  * Callback that bldc_interface uses to send packets.
  *
  * @param data

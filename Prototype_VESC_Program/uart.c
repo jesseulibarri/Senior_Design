@@ -179,7 +179,7 @@ void uart1_uint8_transmit(uint8_t data_array[], int n){
  * and the length of the said array, as an input argument. UART Implementation of 
  * VESC Send packet function to be used with Prototype vehicle controll system.
  ************************************************************************************************/
-static void send_packet(unsigned char *data, unsigned int len){
+void send_packet(unsigned char *data, unsigned int len){
 	
     int i = 0;
 	

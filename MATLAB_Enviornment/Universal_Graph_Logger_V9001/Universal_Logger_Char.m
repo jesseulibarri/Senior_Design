@@ -18,15 +18,15 @@ try
     %Select the total number of floats, (num_of_in_float), 
     %being sent via serial every cycle; and which speed 
     %you would like to sample for input.
-    serialPort = 'COM7';                %Define COM port #
+    serialPort = 'COM4';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
-    num_of_char = 1;
+    num_of_char = 10;
     num_of_in_float = 0;                %Define # of Float/packet
     delay = 0.001;                      %Make sure sample faster than resolution
 
     %Log file name and column titles 
     Log_Title = 'VESC_Log_Packet.txt';
-    Log_Torque = 'VESC_Log_Values.txt';
+    Log_Torque = 'VESC_Log_Packet_MainProgramTest.txt';
     fileID = fopen(Log_Title,'w');
     fileID2 = fopen(Log_Torque, 'w');
     fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','StartByte(2)','PayloadSize(#ofBytes)','Command','Payload2','Payload3','Payload4','Payload5','CRCByte1','CRCByte2','EndByte(3)');

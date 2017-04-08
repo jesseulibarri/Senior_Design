@@ -475,6 +475,7 @@ void bldc_interface_set_current(float current) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_CURRENT;
 	buffer_append_float32(send_buffer, current, 1000.0, &send_index);
+	bldc_interface_send_packet(send_buffer, send_index);
 }
 
 void bldc_interface_set_current_brake(float current) {
@@ -562,12 +563,5 @@ const char* bldc_interface_fault_to_string(mc_fault_code fault) {
 	case FAULT_CODE_OVER_TEMP_FET: return "FAULT_CODE_OVER_TEMP_FET";
 	case FAULT_CODE_OVER_TEMP_MOTOR: return "FAULT_CODE_OVER_TEMP_MOTOR";
 	default: return "Unknown fault";
-	}
-}
-
-// Private functions
-void send_packet_no_fwd(unsigned char *data, unsigned int len) {
-	if (!forward_func) {
-		bldc_interface_send_packet(data, len);
 	}
 }

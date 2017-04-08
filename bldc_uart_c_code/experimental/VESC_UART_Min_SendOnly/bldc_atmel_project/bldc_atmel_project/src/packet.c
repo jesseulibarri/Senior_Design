@@ -48,17 +48,3 @@ void packet_send_packet(unsigned char *data, unsigned int len, int handler_num) 
 		handler_states[handler_num].send_func(handler_states[handler_num].tx_buffer, b_ind);
 	}
 }
-
-/**
- * Call this function every millisecond.
- */
-void packet_timerfunc(void) {
-	int i = 0;
-	for (i = 0;i < PACKET_HANDLERS;i++) {
-		if (handler_states[i].rx_timeout) {
-			handler_states[i].rx_timeout--;
-		} else {
-			handler_states[i].rx_state = 0;
-		}
-	}
-}

@@ -89,10 +89,10 @@ void system_init() {
 
 
     /****** Initialize UART0 *******/
-   uart0_init(BAUDVALUE);
+   uart0_init(BAUDVALUE_1);
 
     /****** Initialize UART1 *******/
-   uart1_init(BAUDVALUE);
+   uart1_init(BAUDVALUE_1);
    
 	/****** VESC Interface UART Initialization ******/
 	bldc_interface_uart_init(send_packet);   

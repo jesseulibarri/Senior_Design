@@ -13,7 +13,7 @@
 #include "uart.h"
 #include "steering.h"
 
-uint16_t encoder_angle = 20;
+uint16_t encoder_angle = 0;
 int main()
 {
 

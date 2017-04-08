@@ -102,7 +102,7 @@ ISR(TIMER3_OVF_vect) {
         set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);     
         //Transmit torque value over uart
         //uart1_uchar_transmit(torque_l_bytes, torque_left);
-	    bldc_interface_set_current(torque_right*100);			
+	    bldc_interface_set_current(3.0);			
 		//uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
         
 		break;
@@ -127,7 +127,7 @@ ISR(TIMER3_OVF_vect) {
 		//	uart1_uchar_transmit(torque_l_bytes, torque_left);
 		}
         break;
-	    bldc_interface_set_current(torque_right*100);
+	    bldc_interface_set_current(3.0);
 	// case PIRATE:
 	// 	pirate_mode();
 	// 	break;

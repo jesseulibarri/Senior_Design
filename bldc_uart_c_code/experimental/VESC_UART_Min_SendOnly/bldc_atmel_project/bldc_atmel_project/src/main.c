@@ -262,19 +262,11 @@ void uart_init(unsigned char ubrr){
 }//uart_init
 
 /************************************************************************************************
- * Name: uart_transmit
+ * Name: send_packet
  *
- * Description: This function has a 8 bit data array as an input argument. This array
- * 	will be formatted as a 10 byte frame that contains two torque values and a
- *	steering angle that will be sent over uart 10 times a second. Each torque
- *	value will be 4 bytes, 2 bytes for the integer part and 2 bytes for the fraction
- *	part. The steering angle will be 2 bytes which leaves a total of 10 bytes to be
- *	transmitted. Uart can only transmit 8 bits at a time thats why we use an array
- * 	to frame the data into 8 bit segments. 
- *
- *	TODO: We need to add flag bits after every byte is sent so we can keep data together.
- *		We also might need to add a hand shake feature or error checking so the data
- *		being sent is reliable and not garbage.
+ * Description: This function has a pointer to the start of an 8 bit data array,
+ * and the length of the said array, as an input argument. UART Implementation of 
+ * VESC Send packet function to be used with Prototype vehicle controll system.
  ************************************************************************************************/
 static void send_packet(unsigned char *data, unsigned int len){
 	
@@ -288,7 +280,7 @@ static void send_packet(unsigned char *data, unsigned int len){
     while(!(UCSR1A & (1<<UDRE1))) { }
     _delay_us(100);
     }
-}//uart_transmit
+}//send_packet
 
 /************************************************************************************************
  * Name: program_init

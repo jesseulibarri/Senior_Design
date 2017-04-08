@@ -1,0 +1,202 @@
+
+#include <avr/io.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <util/delay.h>
+#include "uart.h"
+#include "system_init.h"
+#include "conversions.h"
+
+/**************************************************************************************
+ * Name: uart0_init
+ *
+ * Description: RXD0 is PORT E bit 0
+ *              TXD0 is PORT E bit 1
+ *************************************************************************************/
+void uart0_init(unsigned char ubrr){
+    //rx and tx enable, receive interrupt enabled, 8 bit characters
+    UCSR0B |= (1<<RXEN0) | (1<<TXEN0) | (1<<RXCIE0); //INTERRUPTS ENABLED
+     //UCSR0B |= (1<<RXEN0) | (1<<TXEN0);               //INTERRUPS DISABLED
+
+    //async operation, no parity,  one stop bit, 8-bit characters
+    UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00) | (1<<USBS0);
+    UBRR0H = (unsigned char)(ubrr >>8 ); //load upper byte of the baud rate into UBRR 
+    UBRR0L =  (unsigned char)ubrr;       //load lower byte of the baud rate into UBRR 
+}//uart0_init
+
+/**************************************************************************************
+ * Name: uart1_init
+ *
+ * Description: RXD1 is PORT D bit 2
+ *              TXD1 is PORT D bit 3
+ *************************************************************************************/
+void uart1_init(unsigned char ubrr){
+    //rx and tx enable, receive interrupt enabled, 8 bit characters
+    //UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1); //INTERRUPTS ENABLED
+      UCSR1B |= (1<<RXEN1) | (1<<TXEN1);               //INTERRUPS DISABLED
+
+    //async operation, no parity,  one stop bit, 8-bit characters
+    UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10) | (1<<USBS1);
+    UBRR1H = (unsigned char)(ubrr >>8 ); //load upper byte of the baud rate into UBRR 
+    UBRR1L =  (unsigned char)ubrr;       //load lower byte of the baud rate into UBRR 
+}//uart1_init
+//******************************************************************
+
+/**************************************************************************************
+ * Name: uart0_uchar_transmit
+ *
+ * Description: 
+ *************************************************************************************/
+ void uart0_uchar_transmit(unsigned char packet[]) {
+    //make sure that nothing else is sending
+    
+    //while(!(UCSR1A & (1<<UDRE1))) { }
+   // UDR1 = 'S';
+    while(!(UCSR1A & (1<<UDRE1))) { }
+    int8_t i;
+    for(i = 0; i < PACKET_SIZE; i++) {
+        UDR1 = packet[i];
+        while(!(UCSR1A & (1<<UDRE1))) { }
+        _delay_us(20);
+    }
+/*    //send terminator
+    UDR0 = '\n';
+    while(!(UCSR0A & (1<<UDRE0))) { } 
+*/
+}//uart0_uchar
+
+
+/**************************************************************************************
+ * Name: uart1_uchari_transmit
+ *
+ * Description: 
+ *************************************************************************************/
+ void uart1_uchar_transmit(unsigned char* packet, float f_num, char identifier) {
+    //make sure that nothing else is sending
+    float_to_bytes(f_num, packet);
+    while(!(UCSR1A & (1<<UDRE1))) { }
+    UDR1 = identifier;
+
+    while(!(UCSR1A & (1<<UDRE1))) { }
+    int8_t i;
+    for(i = 0; i < PACKET_SIZE; i++) {
+        UDR1 = packet[i];
+        while(!(UCSR1A & (1<<UDRE1))) { }
+        _delay_us(20);
+    }
+/*    //send terminator
+    UDR1 = '\n';
+    while(!(UCSR1A & (1<<UDRE1))) { } 
+*/
+}
+/***************************************************************************************
+* Name: uart1_uint8_transmit
+*
+* Description:
+****************************************************************************************/
+void uart1_package_transmit(unsigned char* base_torque_b, unsigned char* torque_l, unsigned char* torque_r, unsigned char* angle, float torque_right, float torque_left, float steer_angle, float base_torque){
+    //make sure buffer is clear
+    float_to_bytes(torque_left, torque_l);
+    float_to_bytes(torque_right, torque_r);
+    float_to_bytes(steer_angle, angle);
+    float_to_bytes(base_torque, base_torque_b);
+
+    while(!(UCSR1A & (1<<UDRE1))) { }
+    UDR1 = 'S';
+    while(!(UCSR1A & (1<<UDRE1))) { }
+    int8_t i;
+    for(i = 0; i < PACKET_SIZE; i++) {
+        UDR1 = base_torque_b[i];
+        while(!(UCSR1A & (1<<UDRE1))) { }
+    }
+    for(i = 0; i < PACKET_SIZE; i++) {
+        UDR1 = torque_r[i];
+        while(!(UCSR1A & (1<<UDRE1))) { }
+    }
+    while(!(UCSR1A & (1<<UDRE1))) { }
+    for(i = 0; i < PACKET_SIZE; i++) {
+        UDR1 = torque_l[i];
+        while(!(UCSR1A & (1<<UDRE1))) { }
+    }
+	while(!(UCSR1A & (1<<UDRE1))) { }
+    for(i = 0; i < PACKET_SIZE; i++) {
+        UDR1 = angle[i];
+        while(!(UCSR1A & (1<<UDRE1))) { }
+    }
+
+}
+
+/***************************************************************************************
+* Name: uart0_uint8_transmit
+*
+* Description:
+*
+****************************************************************************************/
+void uart0_uint8_transmit(uint8_t data_array[], int n){
+
+	int i = 0;
+	
+	//Wait for empty transmit buffer
+	while(!(UCSR0A & (1<<UDRE0))) {}
+
+	for(i=0; i<n; i++){
+		UDR0 = data_array[i];
+		while(!(UCSR0A & (1<<UDRE0))) {}
+		_delay_us(10);
+	}
+}//uart1_transmit
+
+/***************************************************************************************
+* Name: uart1_uint8_transmit
+*
+* Description:
+****************************************************************************************/
+void uart1_uint8_transmit(uint8_t data_array[], int n){
+
+	int i = 0;
+	
+	//Wait for empty transmit buffer
+	while(!(UCSR1A & (1<<UDRE1))) {}
+
+	for(i=0; i<n; i++){
+		UDR1 = data_array[i];
+		while(!(UCSR1A & (1<<UDRE1))) {}
+		_delay_us(10);
+	}
+}//uart1_transmit
+
+
+/*****************************************************************************************
+ *  Name: uart1_uint8_receive
+ *
+ *  Description: Recieve an unsigned 8 bit int from matlab that will simulate a feedback
+ *      speed.
+ ****************************************************************************************/
+
+/**unsigned char USART_Receive( )
+{
+	int i = 0;
+	usigned char data[4];
+// Wait for data to be received 
+while ( !(UCSRA & (1<<RXC)) )
+;
+//Get and return received data from buffer 
+	for(i=0; i<4; i++){
+	data[i] = UDR0;
+	while ( !(UCSRA & (1<<RXC)) )
+	}
+return data;
+}**/
+
+/**void USART0_RX(uint8_t* rx_buf, uint8_t n) {
+    int i = 0;
+	while ( !(UCSR0A & (1<<RXC0)) ) {}
+	for(i=0;i<n;i++){
+		uint8_t data = UDR0;
+        rx_buf[i] = data;
+		while ( !(UCSR0A & (1<<RXC0)) ) {}
+		
+	}
+}//Usart variable size RX funxtion int8 with delay
+**/
+

@@ -94,9 +94,6 @@ void system_init() {
     /****** Initialize UART1 *******/
    uart1_init(BAUDVALUE_1);
    
-	/****** VESC Interface UART Initialization ******/
-	bldc_interface_uart_init(send_packet);   
-
     /**** Enable Global Interrupts ********/
     sei();
 

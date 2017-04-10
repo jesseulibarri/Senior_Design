@@ -65,6 +65,9 @@ uint8_t status;
  *********************************************************************/
 ISR(TIMER3_OVF_vect) {
 
+	/****** VESC Interface UART Initialization ******/
+	bldc_interface_uart_init(send_packet);   
+
 	//steering_angle_int = get_angle(steering_angle_int);
     steering_angle = (float)encoder_angle;
 	speed = calc_speed(timestamp_dif, speed);
@@ -102,7 +105,7 @@ ISR(TIMER3_OVF_vect) {
         set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);     
         //Transmit torque value over uart
         //uart1_uchar_transmit(torque_l_bytes, torque_left);
-	    bldc_interface_set_current(3.0);			
+	    bldc_interface_set_current(base_torque);			
 		//uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
         
 		break;
@@ -127,7 +130,7 @@ ISR(TIMER3_OVF_vect) {
 		//	uart1_uchar_transmit(torque_l_bytes, torque_left);
 		}
         break;
-	    bldc_interface_set_current(3.0);
+	    bldc_interface_set_current(base_torque);
 	// case PIRATE:
 	// 	pirate_mode();
 	// 	break;

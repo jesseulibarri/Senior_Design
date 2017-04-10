@@ -189,7 +189,7 @@ void send_packet(unsigned char *data, unsigned int len){
     for(i = 0; i < len;i++) {
         UDR1 = data[i];
     while(!(UCSR1A & (1<<UDRE1))) { }
-    _delay_us(10);
+    _delay_us(100);
     }
 }//send_packet
 

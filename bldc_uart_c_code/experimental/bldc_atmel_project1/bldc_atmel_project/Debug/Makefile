@@ -56,9 +56,17 @@ C_SRCS +=  \
 ../src/bldc_interface.c \
 ../src/bldc_interface_uart.c \
 ../src/buffer.c \
+../src/conversions.c \
 ../src/crc.c \
+../src/datalogging.c \
 ../src/hd44780.c \
+../src/isr.c \
 ../src/packet.c \
+../src/pirate.c \
+../src/speed.c \
+../src/steering.c \
+../src/system_init.c \
+../src/uart.c \
 ../src/ASF/mega/boards/stk600/rcx_x/init.c \
 ../src/main.c
 
@@ -73,9 +81,17 @@ OBJS +=  \
 src/bldc_interface.o \
 src/bldc_interface_uart.o \
 src/buffer.o \
+src/conversions.o \
 src/crc.o \
+src/datalogging.o \
 src/hd44780.o \
+src/isr.o \
 src/packet.o \
+src/pirate.o \
+src/speed.o \
+src/steering.o \
+src/system_init.o \
+src/uart.o \
 src/ASF/mega/boards/stk600/rcx_x/init.o \
 src/main.o
 
@@ -83,9 +99,17 @@ OBJS_AS_ARGS +=  \
 src/bldc_interface.o \
 src/bldc_interface_uart.o \
 src/buffer.o \
+src/conversions.o \
 src/crc.o \
+src/datalogging.o \
 src/hd44780.o \
+src/isr.o \
 src/packet.o \
+src/pirate.o \
+src/speed.o \
+src/steering.o \
+src/system_init.o \
+src/uart.o \
 src/ASF/mega/boards/stk600/rcx_x/init.o \
 src/main.o
 
@@ -93,9 +117,17 @@ C_DEPS +=  \
 src/bldc_interface.d \
 src/bldc_interface_uart.d \
 src/buffer.d \
+src/conversions.d \
 src/crc.d \
+src/datalogging.d \
 src/hd44780.d \
+src/isr.d \
 src/packet.d \
+src/pirate.d \
+src/speed.d \
+src/steering.d \
+src/system_init.d \
+src/uart.d \
 src/ASF/mega/boards/stk600/rcx_x/init.d \
 src/main.d
 
@@ -103,9 +135,17 @@ C_DEPS_AS_ARGS +=  \
 src/bldc_interface.d \
 src/bldc_interface_uart.d \
 src/buffer.d \
+src/conversions.d \
 src/crc.d \
+src/datalogging.d \
 src/hd44780.d \
+src/isr.d \
 src/packet.d \
+src/pirate.d \
+src/speed.d \
+src/steering.d \
+src/system_init.d \
+src/uart.d \
 src/ASF/mega/boards/stk600/rcx_x/init.d \
 src/main.d
 
@@ -123,6 +163,22 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

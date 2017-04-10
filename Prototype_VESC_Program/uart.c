@@ -7,13 +7,6 @@
 #include "system_init.h"
 #include "conversions.h"
 
-//VESC Specific header files (some may not be needed)
-#include "bldc_interface.h"
-#include "bldc_interface_uart.h"
-#include "buffer.h"
-#include "packet.h"
-#include "crc.h"
-
 /**************************************************************************************
  * Name: uart0_init
  *
@@ -171,27 +164,6 @@ void uart1_uint8_transmit(uint8_t data_array[], int n){
 		_delay_us(10);
 	}
 }//uart1_transmit
-
-/************************************************************************************************
- * Name: send_packet
- *
- * Description: This function has a pointer to the start of an 8 bit data array,
- * and the length of the said array, as an input argument. UART Implementation of 
- * VESC Send packet function to be used with Prototype vehicle controll system.
- ************************************************************************************************/
-void send_packet(unsigned char *data, unsigned int len){
-	
-    int i = 0;
-	
-    //Wait for empty transmit buffer
-    while(!(UCSR1A & (1<<UDRE1))) { }
-
-    for(i = 0; i < len;i++) {
-        UDR1 = data[i];
-    while(!(UCSR1A & (1<<UDRE1))) { }
-    _delay_us(100);
-    }
-}//send_packet
 
 /*****************************************************************************************
  *  Name: uart1_uint8_receive

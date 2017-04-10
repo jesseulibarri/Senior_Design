@@ -87,13 +87,35 @@ void system_init() {
         spi_rpi_init(); 
     }//if datalogging
 
-
     /****** Initialize UART0 *******/
    uart0_init(BAUDVALUE_1);
 
     /****** Initialize UART1 *******/
    uart1_init(BAUDVALUE_1);
-   
+
+   /************************************************************************************************
+	 * Name: send_packet
+	 *
+	 * Description: This function has a pointer to the start of an 8 bit data array,
+	 * and the length of the said array, as an input argument. UART Implementation of 
+	 * VESC Send packet function to be used with Prototype vehicle control system.
+	 ************************************************************************************************/
+	static void send_packet(unsigned char *data, unsigned int len){
+		int i = 0;
+		
+		//Wait for empty transmit buffer
+		while(!(UCSR1A & (1<<UDRE1))) { }
+
+		for(i = 0; i < len;i++) {
+			UDR1 = data[i];
+		while(!(UCSR1A & (1<<UDRE1))) { }
+		_delay_us(100);
+		}
+	}//send_packet   
+	
+	/****** VESC Interface UART Initialization ******/
+	bldc_interface_uart_init(send_packet);   	
+	
     /**** Enable Global Interrupts ********/
     sei();
 

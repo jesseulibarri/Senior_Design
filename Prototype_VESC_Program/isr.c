@@ -31,7 +31,7 @@
 #define CRUISE          0x9F
 
 #define PIRATE          0xFE
-#define MAX_TORQUE_CUR  20
+#define MAX_TORQUE_CUR  100
 #define TRUE	1
 #define FALSE   0
 
@@ -64,9 +64,6 @@ uint8_t status;
  *  Set to 10Hz
  *********************************************************************/
 ISR(TIMER3_OVF_vect) {
-
-	/****** VESC Interface UART Initialization ******/
-	bldc_interface_uart_init(send_packet);   
 
 	//steering_angle_int = get_angle(steering_angle_int);
     steering_angle = (float)encoder_angle;

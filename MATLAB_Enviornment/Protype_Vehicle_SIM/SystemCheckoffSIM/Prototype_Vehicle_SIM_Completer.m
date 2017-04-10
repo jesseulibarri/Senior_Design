@@ -66,11 +66,11 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 serialPort = 'COM7';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 4;                %Define # of Float/packet
-delay = 0.01;                       %Make sure sample faster than resolution
+delay = 0.0001;                       %Make sure sample faster than resolution
 
 %Log file name and column titles 
 Logging = 1; %Set this to turn the data log on/off
-Log_Title = 'ButtonToSleep.txt';
+Log_Title = 'CruiseControlTest.txt';
 fileID = fopen(Log_Title,'w');
 fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Set Current', 'Actual Current','Velocity of Vehicle (mph)','Speed');
 
@@ -254,7 +254,7 @@ try
             fwrite(s,SendUChar,'char');
             fwrite(s, 'G', 'char');
         end
-        pause(delay)               
+        %pause(delay)               
 
         if(Logging == 1)
             %Save all input floats to the log file,

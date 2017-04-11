@@ -6,7 +6,5 @@
 
 // Functions
 void bldc_interface_uart_init(void(*func)(unsigned char *data, unsigned int len));
-void bldc_interface_uart_process_byte(unsigned char b);
-void bldc_interface_uart_run_timer(void);
 
 #endif /* BLDC_INTERFACE_UART_H_ */

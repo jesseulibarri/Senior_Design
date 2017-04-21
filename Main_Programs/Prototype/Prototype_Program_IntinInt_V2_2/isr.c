@@ -20,9 +20,11 @@
 //VESC Specific header files (some may not be needed)
 #include "bldc_interface.h"
 #include "bldc_interface_uart.h"
+#include "buffer.h"
+#include "packet.h"
+#include "crc.h"
 
 #define ACCELERATE      0xBF
-#define CRUISE          0x9F
 #define PIRATE          0xFE
 #define NO_INPUT		0xFF
 #define MAX_CUR  		30
@@ -32,8 +34,6 @@
 #define out_min  		0
 #define in_max   		184
 #define in_min   		36
-
-volatile float motor_current = 0.0;
 
 /*********************************************************************
  * ISR: timer1
@@ -77,10 +77,6 @@ ISR(TIMER3_OVF_vect) {
 		bldc_interface_set_current(motor_current);		
         break;	
 
-	default:
-        motor_current = 0; 
-        bldc_interface_set_current(0);
-        break;
     }//End switch
 		
     if(!(PINE & (1 << PE4))){

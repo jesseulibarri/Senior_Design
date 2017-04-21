@@ -46,8 +46,8 @@ void uart0_init(unsigned char ubrr){
  *************************************************************************************/
 void uart1_init(unsigned char ubrr){
     //rx and tx enable, receive interrupt enabled, 8 bit characters
-    UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1);             //INTERRUPTS ENABLED
-    //UCSR1B |= (1<<RXEN1) | (1<<TXEN1);                         //INTERRUPS DISABLED
+    //UCSR1B |= (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1);             //INTERRUPTS ENABLED
+    UCSR1B |= (1<<RXEN1) | (1<<TXEN1);                         //INTERRUPS DISABLED
 
     //async operation, no parity,  one stop bit, 8-bit characters
     UCSR1C |= (1<<UCSZ11) | (1<<UCSZ10) | (1<<USBS1);
@@ -77,7 +77,7 @@ void send_packet(unsigned char *data, unsigned int len){
 		//Wait for byte to be sent before sending next byte
 		while(!(UCSR1A & (1<<UDRE1))) { }
 		//Delay may not be needed anymore
-		//_delay_us(10);
+		_delay_us(10);
     }
 }//send_packet
 

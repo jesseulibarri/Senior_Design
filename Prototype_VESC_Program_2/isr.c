@@ -76,7 +76,7 @@ ISR(TIMER3_OVF_vect) {
     
     //All button were released
 	case NO_INPUT:
-	//	integral = 0;
+	//integral = 0;
 		//speed = calc_speed(timestamp_dif, speed);
         	base_torque = 0.001;
             torque_right = 0;

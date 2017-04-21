@@ -17,7 +17,6 @@ uint16_t dropped_byte = 0;
  * Description: Initialize SPI for raspberry pi datalogging
  *************************************************************************************/
 void spi_rpi_init(){
-
     //Raspberry PI will be master.
     //Set SS, MOSI, SCK as input, MISO as output
     DDRB |= (0<<PB0)|(0<<PB1)|(0<<PB2)|(1<<PB3);
@@ -30,9 +29,9 @@ void spi_rpi_init(){
  * Name: timeout
  *
  * Description: This function is passed a 16 bit integer and breaks it into a high and 
- *  low byte to be sent over SPI.
+ * low byte to be sent over SPI.
  *************************************************************************************/
-uint8_t timeout() {
+uint8_t timeout(){
     //Normal mode, 64 prescale, 16MHz/(256*64) = 977Hz = 1.024mS
     TCCR0 |= (1 << CS00) | (1 << CS02);
     while(1) {
@@ -49,7 +48,6 @@ uint8_t timeout() {
         }
     }//while
 }//timeout
-
 
 /**************************************************************************************
  * Name: spi_8bit_tx

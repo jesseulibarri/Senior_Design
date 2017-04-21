@@ -3,7 +3,6 @@
 #include <string.h>
 #include "conversions.h"
 
-
 /**************************************************************************************
  * Name: bytes_to_float
  *
@@ -17,7 +16,6 @@ void bytes_to_float(unsigned char* src, float* dest) {
     memcpy(u.bytes, src, 4);
     *dest = u.a;
 }
-
 
 /**************************************************************************************
  * Name: float_to_bytes

@@ -1,3 +1,10 @@
+/*******************************************************
+ * File Name: pirate.c
+ * Authors: Jesse Ulibarri, Shane Licari, Eli Yazzolino
+ * Date: 4/20/2017
+ *
+ * Description:
+********************************************************/
 
 //#define F_CPU 16000000
 #include <avr/io.h>
@@ -7,7 +14,6 @@
 #include <stdlib.h>
 #include "pirate.h"
 #include "system_init.h"
-
 
 /*********************************************************************
  * Name: pirate_mode
@@ -20,25 +26,22 @@
  *
  * TODO: Configure Port C data direction for pirate mode function.
  *********************************************************************/
-void pirate_mode() {
+void pirate_mode(){
     //Configure interrupt 0 so a rising edge will wake up the controller out of sleep mode
-    PORTA |= (1<<PA1);
-    EICRA = (1<<ISC00) | (1<<ISC01);   //Generate aysnchronous interrupt request on rising edge
-    EIMSK = (1<<INT0);                 //Enable external interrupt 0
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);    //Enable power down mode, set sleep enable bit 
-                                            //in the MCUCR register
-    PORTD &= ~(1<<PC_ON_OFF);  //Turn 12V power converter
+    EICRA = (1<<ISC00) | (1<<ISC01);     //Generate aysnchronous interrupt request on rising edge
+    EIMSK = (1<<INT4);                   //Enable external interrupt 0
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN); //Enable power down mode, set sleep enable bit 
+                                         //in the MCUCR register
+    PORTD &= ~(1<<PC_ON_OFF);            //Turn 12V power converter
     PORTB |= (1<<PB7);
-    cli();  //clear global interrupt, only needed if storing data before sleep
-    sleep_enable();         //Set sleep enable bit in MCUCR register
-    sei();                  //Set global interrupt bit
-    PORTA |= (1<<PA1);
-    sleep_cpu();            //CPU is sleeping
-    sleep_disable();        //CPU wakes up on rising edge ISR is executed
-    PORTA &= ~(1<<PA1);      //TODO: We can remove this later
+    cli();                               //clear global interrupt, only needed if storing data before sleep
+    sleep_enable();                      //Set sleep enable bit in MCUCR register
+    sei();                               //Set global interrupt bit
+    sleep_cpu();                         //CPU is sleeping
+    sleep_disable();                     //CPU wakes up on rising edge ISR is executed
+
     system_init();
     
 
 }//pirate_mode
-
 

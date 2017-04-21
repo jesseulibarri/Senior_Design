@@ -1,11 +1,11 @@
-/***************************************************
+/*******************************************************
  * File Name: system_init.h
- * Author: Jesse Ulibarri
- * Date: 1/4/17
+ * Authors: Jesse Ulibarri, Shane Licari, Eli Yazzolino
+ * Date: 4/20/2017
  *
  * Description: Header file for the system 
- *  initialization.
-***************************************************/
+ * initialization.
+********************************************************/
 
 #ifndef SYSTEM_INIT
 #define SYSTEM_INIT

@@ -77,16 +77,13 @@ void system_init() {
 
     /****** spi_steering sensor *******/
     if(spi_steering) { 
-
        spi_encoder_init();
      }//if spi_steering
 
     /****** Initialize RPI for Datalogging *******/
     if(datalogging) { 
-        
         spi_rpi_init(); 
     }//if datalogging
-
 
     /****** Initialize UART0 *******/
    uart0_init(BAUDVALUE_1);

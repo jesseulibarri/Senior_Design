@@ -1,7 +1,10 @@
-/********************************************************
+/*******************************************************
  * File Name: isr.c
+ * Authors: Jesse Ulibarri, Shane Licari, Eli Yazzolino
+ * Date: 4/20/2017
  *
- * *****************************************************/
+ * Description:
+********************************************************/
 
 #include <avr/io.h>
 #include <stdio.h>
@@ -15,10 +18,19 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define NO_INPUT        0xFF
-#define ACCELERATE      0x7F
+//VESC Specific header files (some may not be needed)
+#include "bldc_interface.h"
+#include "bldc_interface_uart.h"
+#include "buffer.h"
+#include "packet.h"
+#include "crc.h"
+
+#define ACCELERATE      0xBF
+#define CRUISE          0x9F
 #define PIRATE          0xFE
 #define MAX_TORQUE_CUR  20
+#define TRUE	1
+#define FALSE   0
 
 float motor_torque = 0.0;
 unsigned char motor_torque_bytes[4];
@@ -28,8 +40,6 @@ float base_torque;
 unsigned char base_torque_bytes[4];
 uint16_t timestamp_dif = 20000;
 
-
-
 /*********************************************************************
  * ISR: timer1
  *
@@ -38,31 +48,20 @@ uint16_t timestamp_dif = 20000;
  *********************************************************************/
 ISR(TIMER3_OVF_vect) {
 
-	speed = calc_speed(timestamp_dif, speed);
-	uart1_uchar_transmit(speed_bytes, speed, 'V');
-	
-	//uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
-	uint8_t user_mode = PINA | 0x3F; //Mask everything out except PORTD 0, 6, and 7
+	uint8_t user_mode = PINF | 0x9F; //Mask everything out except PORTF
     switch(user_mode){ 
     
-    //All button were released
+    //All button released
 	case NO_INPUT:
-
-		//speed = calc_speed(timestamp_dif, speed);
-        	base_torque = 0.001;
             motor_torque = 0;
-            uart1_uchar_transmit(motor_torque_bytes, motor_torque, 'V');
+            bldc_interface_set_current(0);
         break;
        
     //Accelerate button is pushed
 	case ACCELERATE:
-		//speed = calc_speed(timestamp_dif, speed);
 		base_torque = base_torque + 0.6;
 		if(base_torque > MAX_TORQUE_CUR)
 			base_torque = MAX_TORQUE_CUR; 
-                 
-        //Transmit torque value over uart
-        //uart1_uchar_transmit(motor_torque_bytes, motor_torque);
         break;	
 
 	default:
@@ -72,19 +71,19 @@ ISR(TIMER3_OVF_vect) {
         break;
 
         }//switch
-
-        if(!(PIND & (1 << PD0))) {
-        	pirate_mode();
-        }
+		
+    if(!(PINE & (1 << PE4))) {
+        pirate_mode();
+    }
+	
 }//timer1_ISR
-
 
 /*********************************************************************
  * ISR: pirate_mode
  *
  *********************************************************************/
 ISR(INT0_vect){
-
+    //NOT SURE WHAT THIS IS FOUCSR0B &= ~(1<<RXCIE0);R
     EIMSK &= ~(1<<INT0);
 
 }//ISR
@@ -105,7 +104,6 @@ ISR(TIMER1_CAPT_vect) {
     else { timestamp_dif = timestamp - timestamp_hist; }
   
     timestamp_hist = timestamp;
-
 }//ISR
 
 /*********************************************************************

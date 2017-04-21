@@ -4,8 +4,8 @@
  * Date:
  *
  * Description: This is the main loop for the SEM Urban
- *  Concept vehicle.
- *  ****************************************************/
+ * Concept vehicle.
+ * ****************************************************/
 
 #include <avr/io.h>
 #include <util/delay.h>
@@ -17,7 +17,6 @@ uint16_t encoder_angle = 0;
 int main()
 {
 
-
 ///*** Calculate the system needed constants ***/
 tire_circ = TIRE_DIAM * M_PI;
 distance_per_pulse = tire_circ / SPROCKET_TEETH;
@@ -26,7 +25,6 @@ system_init();
 
 while(1) {
 	encoder_angle = get_angle(encoder_angle);
-
 }
 
 return 0;

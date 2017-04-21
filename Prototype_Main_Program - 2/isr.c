@@ -24,6 +24,7 @@
 #define ACCELERATE      0xBF
 #define CRUISE          0x9F
 #define PIRATE          0xFE
+#define NO_INPUT		0xFF
 #define MAX_CUR  30
 #define TRUE	1
 #define FALSE   0

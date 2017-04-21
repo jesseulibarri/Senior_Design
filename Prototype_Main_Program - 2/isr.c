@@ -66,8 +66,7 @@ ISR(TIMER3_OVF_vect) {
 				motor_current = 0;
 				bldc_interface_set_current(0);	
 			}
-		}
-        break;
+		break;
        
     //Accelerate button is pushed
 	case ACCELERATE:

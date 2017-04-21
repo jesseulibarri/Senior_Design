@@ -16,9 +16,9 @@ int main(){
 	//Initialize the system
 	system_init();
 	//delay for 1 sec to ensure motor controller is functional
-	_delay_ms(1000)
+	_delay_ms(1000);
 	
-	while(1){
-	}
+	while(1){}
+	
 	return 0;
 }//main

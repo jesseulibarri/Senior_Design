@@ -45,9 +45,6 @@ void system_init() {
     //Interrupt on timer overflow (at TOP value)
     ETIMSK |= (1<<TOIE3);
 
-    /******** Enable Global Interrupts *********/
-    sei();
-
     /******** IO *********/
     DDRF |= (0<<PF6) | (0<<PF5);  //| (0<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Accelerate, and pirate switch (input) buttons on PORTD 6, 7, 0. Set PC_ON_OFF (output) PORTD 5.
     PORTF |= (1<<PF6) | (1<<PF5); //| (1<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Set pullup resistors for input pins and turn on PC_ON_OFF pin

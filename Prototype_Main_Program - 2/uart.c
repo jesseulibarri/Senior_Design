@@ -111,13 +111,13 @@ void USART1_RX(uint8_t* rx_buf, uint8_t n){
 	int i = 0;
 	
 	//Wait for data to be received 
-	while (!(UCSRA & (1<<RXC))) {}
+	while (!(UCSR1A & (1<<RXC1))) {}
 
 	//Get and return received data to rx_buf
 	for(i=0; i<n; i++){
 		uint8_t data = UDR1;
 		rx_buf[i] = data;
-		while ( !(UCSRA & (1<<RXC)) ) {}
+		while (!(UCSR1A & (1<<RXC1))) {}
 	}
 }//USART1_RX
 

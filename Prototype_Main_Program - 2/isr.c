@@ -24,9 +24,13 @@
 #define ACCELERATE      0xBF
 #define CRUISE          0x9F
 #define PIRATE          0xFE
-#define MAX_TORQUE_CUR  20
+#define MAX_CUR  30
 #define TRUE	1
 #define FALSE   0
+
+#define out_min  0
+#define in_max   184
+#define in_min   36
 
 volatile float motor_current = 0.0;
 
@@ -37,21 +41,39 @@ volatile float motor_current = 0.0;
  *  Set to 10Hz
  *********************************************************************/
 ISR(TIMER3_OVF_vect) {
+	
+	cli();
+	
+    // Get analog throttle input
+    ADCSRA |= (1<<ADSC);
+    while(!bit_is_set(ADCSRA, ADIF)) { }
+    ADCSRA |= (1<<ADIF);
+    volatile uint16_t thr_in = ADC;
 
+    // Get button input	
 	uint8_t user_mode = PINF | 0x9F; //Mask everything out except PORTF
 	
     switch(user_mode){ 
     //All button released
 	case NO_INPUT:
-        motor_current = 0;
-        bldc_interface_set_current(0);
+		if(thr_in >= 36){
+			//Calculate and send current proportional to the ADC throttle input
+			float motor_current = thr_in*(MAX_CUR)/(in_max-in_min)-(MAX_CUR/(in_max-in_min))*in_min;
+			
+			if(motor_current >= MAX_CUR) { motor_current = MAX_CUR; }
+				bldc_interface_set_current(motor_current);} 
+			else{
+				motor_current = 0;
+				bldc_interface_set_current(0);	
+			}
+		}
         break;
        
     //Accelerate button is pushed
 	case ACCELERATE:
 		motor_current = motor_current + 0.6;
-		if(motor_current > MAX_TORQUE_CUR)
-			motor_current = MAX_TORQUE_CUR;
+		if(motor_current > MAX_CUR)
+			motor_current = MAX_CUR;
 		bldc_interface_set_current(motor_current);		
         break;	
 
@@ -65,7 +87,11 @@ ISR(TIMER3_OVF_vect) {
 		bldc_interface_set_current(0);
 		pirate_mode();
     }
+	
+	sei();
+	
 }//timer1_ISR
+
 
 /*********************************************************************
  * ISR: pirate_mode
@@ -81,6 +107,5 @@ ISR(INT0_vect){
  * Description: 
  *********************************************************************/
 /**ISR(USART0_RX_vect){
-	
 }//ISR
 */

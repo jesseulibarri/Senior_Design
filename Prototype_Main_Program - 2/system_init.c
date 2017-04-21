@@ -52,10 +52,17 @@ void system_init() {
     DDRF |= (0<<PF6) | (0<<PF5);  //| (0<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Accelerate, and pirate switch (input) buttons on PORTD 6, 7, 0. Set PC_ON_OFF (output) PORTD 5.
     PORTF |= (1<<PF6) | (1<<PF5); //| (1<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Set pullup resistors for input pins and turn on PC_ON_OFF pin
     DDRE |= (0<<PE4);             //input for led indicaiting 12 power converter on off pin is on
-    PORTE |= (1<<PE4);            //turn on led
-    DDRA |= (1<<PA1);             //Set timing bit for system checkoff 
-    PORTA &= ~(1<<PA1);   
+    PORTE |= (1<<PE4);            //turn on led  
 
+    /****** Initialize ADC for Throttle input *******/
+    // Select PF2 to be input, no pullup
+    DDRF &= ~(1<<PF2);
+    PORTF &= ~(1<<PF2);
+    // Set external 5V to be ref. Select ADC2 for analog throttle
+    ADMUX |= (1<<REFS0)|(1<<MUX1);
+    // Enable ADC, clock division factor = 128
+    ADCSRA |= (1<<ADEN)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);	
+	
     /****** Initialize RPI for Datalogging *******/
     if(datalogging) { 
         spi_rpi_init(); 

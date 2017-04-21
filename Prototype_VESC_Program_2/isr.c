@@ -31,9 +31,15 @@
 #define CRUISE          0x9F
 
 #define PIRATE          0xFE
-#define MAX_TORQUE_CUR  20
+#define MAX_TORQUE_CUR  10.0
 #define TRUE	1
 #define FALSE   0
+
+#define out_max  20
+#define out_min  0
+#define in_max   184
+#define in_min   36
+
 
 extern uint8_t wake_up_timing;
 extern uint16_t encoder_angle;
@@ -65,44 +71,65 @@ uint8_t status;
  *********************************************************************/
 ISR(TIMER3_OVF_vect) {
 
+    cli();
 	//steering_angle_int = get_angle(steering_angle_int);
     steering_angle = (float)encoder_angle;
 	speed = calc_speed(timestamp_dif, speed);
 
-	//uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
-	//uint8_t user_mode = PINA | 0x3F; //Mask everything out except PORTD 0, 6, and 7
+    // Get analog throttle input
+    ADCSRA |= (1<<ADSC);
+    while(!bit_is_set(ADCSRA, ADIF)) { }
+    ADCSRA |= (1<<ADIF);
+    volatile uint16_t thr_in = ADC;
+
+    // Get button input
 	uint8_t user_mode = PINF | 0x9F;
     switch(user_mode){ 
     
-    //All button were released
+    //All buttons were released
 	case NO_INPUT:
-	//integral = 0;
-		//speed = calc_speed(timestamp_dif, speed);
-        	base_torque = 0.001;
+
+        if(thr_in >= 36) {
+/*            cruise_speed = speed;
+		    base_torque = base_torque + 0.25;
+		    if(base_torque > MAX_TORQUE_CUR)
+			    base_torque = MAX_TORQUE_CUR; 
+            
+		    //Calculate new values for the motor controllers
+            set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);     
+            //Transmit torque value over uart
+*/
+            
+            float curr = thr_in*(out_max)/(in_max-in_min)-(out_max/(in_max-in_min))*in_min;
+            if(curr >= out_max) { curr = out_max; }
+	        bldc_interface_set_current(curr);
+        } else {
+      	    base_torque = 0.001;
             torque_right = 0;
             torque_left = 0;
+	        bldc_interface_set_current(0.0);	
+        }
+
+	//	integral = 0;
+		//speed = calc_speed(timestamp_dif, speed);
  
         //uart1_uchar_transmit(torque_r_bytes, torque_right);
 		//uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
 		//uart1_uchar_transmit(torque_l_bytes, torque_left);
 		
-	    bldc_interface_set_current(0);	
         break;
        
     //Accelerate button is pushed
 	case ACCELERATE:
-		//integral = 0;
-		//speed = calc_speed(timestamp_dif, speed);
 		cruise_speed = speed;
-		base_torque = base_torque + 0.6;
+		base_torque = base_torque + 0.5;
 		if(base_torque > MAX_TORQUE_CUR)
 			base_torque = MAX_TORQUE_CUR; 
             
 		//Calculate new values for the motor controllers
         set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);     
         //Transmit torque value over uart
-        //uart1_uchar_transmit(torque_l_bytes, torque_left);
-	    bldc_interface_set_current(3.0);			
+	    bldc_interface_set_current(base_torque);			
 		//uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
         
 		break;
@@ -145,6 +172,7 @@ ISR(TIMER3_OVF_vect) {
         if(!(PINE & (1 << PE4))) {
         	pirate_mode();
         }
+    sei();
 }//timer1_ISR
 
 

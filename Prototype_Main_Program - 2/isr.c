@@ -20,9 +20,6 @@
 //VESC Specific header files (some may not be needed)
 #include "bldc_interface.h"
 #include "bldc_interface_uart.h"
-#include "buffer.h"
-#include "packet.h"
-#include "crc.h"
 
 #define ACCELERATE      0xBF
 #define CRUISE          0x9F
@@ -31,13 +28,7 @@
 #define TRUE	1
 #define FALSE   0
 
-float motor_torque = 0.0;
-unsigned char motor_torque_bytes[4];
-float speed = 0.0;
-unsigned char speed_bytes[4];
-float base_torque;
-unsigned char base_torque_bytes[4];
-uint16_t timestamp_dif = 20000;
+volatile float motor_current = 0.0;
 
 /*********************************************************************
  * ISR: timer1
@@ -52,26 +43,27 @@ ISR(TIMER3_OVF_vect) {
     switch(user_mode){ 
     //All button released
 	case NO_INPUT:
-        motor_torque = 0;
+        motor_current = 0;
         bldc_interface_set_current(0);
         break;
        
     //Accelerate button is pushed
 	case ACCELERATE:
-		base_torque = base_torque + 0.6;
-		if(base_torque > MAX_TORQUE_CUR)
-			base_torque = MAX_TORQUE_CUR; 
+		motor_current = motor_current + 0.6;
+		if(motor_current > MAX_TORQUE_CUR)
+			motor_current = MAX_TORQUE_CUR;
+		bldc_interface_set_current(motor_current);		
         break;	
 
 	default:
-		base_torque = 0.001;
-        motor_torque = 0; 
-        uart1_uchar_transmit(motor_torque_bytes, motor_torque, 'V');
+        motor_current = 0; 
+        bldc_interface_set_current(0);
         break;
     }//End switch
 		
     if(!(PINE & (1 << PE4))){
-        pirate_mode();
+		bldc_interface_set_current(0);
+		pirate_mode();
     }
 }//timer1_ISR
 

@@ -75,6 +75,15 @@ void system_init() {
     DDRA |= (1<<PA1);       //Set timing bit for system checkoff 
     PORTA |= (1<<PA1);
 
+    /****** ADC *******/
+    // Select PF2 to be input, no pullup
+    DDRF &= ~(1<<PF2);
+    PORTF &= ~(1<<PF2);
+    // Set external 5V to be ref. Select ADC2 for analog throttle
+    ADMUX |= (1<<REFS0)|(1<<MUX1);
+    // Enable ADC, clock division factor = 128
+    ADCSRA |= (1<<ADEN)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
+
     /****** spi_steering sensor *******/
     if(spi_steering) { 
        spi_encoder_init();
@@ -86,10 +95,10 @@ void system_init() {
     }//if datalogging
 
     /****** Initialize UART0 *******/
-   uart0_init(BAUDVALUE_1);
+   uart0_init(8);
 
     /****** Initialize UART1 *******/
-   uart1_init(BAUDVALUE_1);
+   uart1_init(8);
    
 	/****** VESC Interface UART Initialization ******/
 	bldc_interface_uart_init(send_packet);   

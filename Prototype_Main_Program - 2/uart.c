@@ -82,6 +82,26 @@ void send_packet(unsigned char *data, unsigned int len){
 }//send_packet
 
 /*****************************************************************************************
+ *  Name: USART0_RX
+ *
+ *  Description: Recieve an unsigned 8-bit variable size array on USART0
+ ****************************************************************************************/
+void USART0_RX(uint8_t* rx_buf, uint8_t n){
+	
+    int i = 0;
+
+	//Wait for data to be received	
+	while (!(UCSR0A & (1<<RXC0))) {}
+	
+	//Get and return received data to rx_buf 	
+	for(i=0; i<n; i++){
+		uint8_t data = UDR0;
+        rx_buf[i] = data;
+		while (!(UCSR0A & (1<<RXC0))) {}	
+	}
+}//USART0_RX
+
+/*****************************************************************************************
  *  Name: USART1_RX
  *
  *  Description: Recieve an unsigned 8-bit variable size array on USART1
@@ -101,22 +121,3 @@ void USART1_RX(uint8_t* rx_buf, uint8_t n){
 	}
 }//USART1_RX
 
-/*****************************************************************************************
- *  Name: USART0_RX
- *
- *  Description: Recieve an unsigned 8-bit variable size array on USART0
- ****************************************************************************************/
-void USART0_RX(uint8_t* rx_buf, uint8_t n){
-	
-    int i = 0;
-
-	//Wait for data to be received	
-	while (!(UCSR0A & (1<<RXC0))) {}
-	
-	//Get and return received data to rx_buf 	
-	for(i=0; i<n; i++){
-		uint8_t data = UDR0;
-        rx_buf[i] = data;
-		while (!(UCSR0A & (1<<RXC0))) {}	
-	}
-}//USART0_RX

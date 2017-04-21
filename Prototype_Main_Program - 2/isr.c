@@ -25,13 +25,13 @@
 #define CRUISE          0x9F
 #define PIRATE          0xFE
 #define NO_INPUT		0xFF
-#define MAX_CUR  30
-#define TRUE	1
-#define FALSE   0
+#define MAX_CUR  		30
+#define TRUE			1
+#define FALSE   		0
 
-#define out_min  0
-#define in_max   184
-#define in_min   36
+#define out_min  		0
+#define in_max   		184
+#define in_min   		36
 
 volatile float motor_current = 0.0;
 

@@ -34,7 +34,7 @@
 #define in_max   		184
 #define in_min   		36
 
-volatile float motor_current = 0.0;
+float motor_current = 0.0;
 volatile uint8_t Tx_flag;
 
 int main(){
@@ -47,7 +47,7 @@ int main(){
 		
 		if(Tx_flag){
 			
-			//cli();
+			cli();
 			
 			// Get analog throttle input
 			ADCSRA |= (1<<ADSC);
@@ -63,7 +63,7 @@ int main(){
 			case NO_INPUT:
 				if(thr_in >= 36){
 					//Calculate and send current proportional to the ADC throttle input
-					float motor_current = thr_in*(MAX_CUR)/(in_max-in_min)-(MAX_CUR/(in_max-in_min))*in_min;
+					motor_current = thr_in*(MAX_CUR)/(in_max-in_min)-(MAX_CUR/(in_max-in_min))*in_min;
 					
 					if(motor_current >= MAX_CUR) { motor_current = MAX_CUR; }
 						bldc_interface_set_current(motor_current);} 
@@ -80,11 +80,7 @@ int main(){
 					motor_current = MAX_CUR;
 				bldc_interface_set_current(motor_current);		
 				break;	
-
-			default:
-				motor_current = 0; 
-				bldc_interface_set_current(0);
-				break;
+				
 			}//End switch
 				
 			if(!(PINE & (1 << PE4))){
@@ -93,7 +89,7 @@ int main(){
 			}
 			
 			Tx_flag = 0;
-			//sei();
+			sei();
 		}		
 		
 	}

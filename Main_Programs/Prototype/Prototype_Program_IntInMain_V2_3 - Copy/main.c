@@ -37,10 +37,9 @@
 #define IN_MAX   		184
 #define IN_MIN   		36
 
-float motor_current = 0.0;
+volatile float motor_current;
 volatile uint8_t Tx_flag;
-uint8_t eco_accel = 0;
-int WaitCount = 0;
+volatile uint8_t eco_accel;
 int main(){
 	//Initialize the system
 	system_init();
@@ -48,28 +47,20 @@ int main(){
 	_delay_ms(1000);
 	
 	while(1){
-		
+
 		if(Tx_flag){
-
-			//cli();
-
 			if(eco_accel) {
-				
+
 					if(motor_current >= MAX_CUR) {
 						bldc_interface_set_current(MAX_CUR);
-						if(WaitCount < 20){
-							WaitCount++;
-						}
-						else{
-							WaitCount = 0;
-							eco_accel = 0;
-							motor_current = 0;
-						}
 					}
-					else {
-						motor_current = motor_current + 0.6;
-						bldc_interface_set_current(motor_current);
+					else if(motor_current < MAX_CUR){
+						motor_current = motor_current + 0.5;
+						bldc_interface_set_current(motor_current);	
+						if(motor_current >= MAX_CUR) {
+							if(bit_is_clear(TIMSK,OCIE1A)){enable_timer();}
 					}
+				}
 			}// if eco_accel
 			
 			else {
@@ -111,13 +102,10 @@ int main(){
 					
 				}//End switch
 					
-				if(!(PINE & (1 << PE4))){
-					bldc_interface_set_current(0);
-					pirate_mode();
-				}
-				
-				
-				//sei();
+				// if(!(PINE & (1 << PE4))){
+				// 	bldc_interface_set_current(0);
+				// 	pirate_mode();
+				// }
 
 			}//else eco_accel
 			Tx_flag = 0;

@@ -37,7 +37,7 @@
 #define IN_MAX   		184
 #define IN_MIN   		36
 
-float motor_current = 0.0;
+volatile float motor_current;
 volatile uint8_t Tx_flag;
 uint8_t eco_accel;
 int WaitCount = 0;
@@ -100,6 +100,9 @@ int main(){
 
 					if(!bit_is_set(TCCR1B,CS12)) {
 						eco_accel = 1;
+					}
+					else {
+						bldc_interface_set_current(0);
 					}
 
 					// motor_current = motor_current + 0.6;

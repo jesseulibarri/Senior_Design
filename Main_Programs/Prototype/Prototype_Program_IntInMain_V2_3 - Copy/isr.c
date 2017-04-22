@@ -16,6 +16,7 @@
 #include "bldc_interface.h"
 #include "bldc_interface_uart.h"
 
+volatile extern float motor_current = 0.0;
 volatile extern uint8_t Tx_flag = 0;
 volatile extern uint8_t eco_accel = 0;
 uint8_t cool_down = 0;
@@ -36,6 +37,7 @@ ISR(TIMER1_COMPA_vect){
 	if(eco_accel) {
 		cool_down = 1;
 		eco_accel = 0;
+		motor_current = 0.0;
 	}
 
 

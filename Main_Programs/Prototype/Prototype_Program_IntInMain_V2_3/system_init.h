@@ -17,10 +17,10 @@
 #define PC_ON_OFF       5
 
 #define USART_BAUDRATE 76800  
-#define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16UL)) - 1 )
+#define BAUDVALUE  ((F_CPU/(USART_BAUDRATE * 16)) - 1 )
 
 #define USART1_BAUDRATE 115200  
-#define BAUDVALUE_1  ((F_CPU/(USART1_BAUDRATE * 16UL)) - 1 )
+#define BAUDVALUE_1  ((F_CPU/(USART1_BAUDRATE * 16)))
 
 void system_init();
 

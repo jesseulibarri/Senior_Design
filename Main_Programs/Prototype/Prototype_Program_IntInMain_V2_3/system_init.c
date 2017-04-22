@@ -22,6 +22,8 @@
 #include "packet.h"
 #include "crc.h"
 
+#define SEC     2
+
 /*** Turn ON to enable datalogging ***/
 uint8_t datalogging = OFF;
 
@@ -34,7 +36,7 @@ uint8_t datalogging = OFF;
 void system_init() {
 
     /******** System Timer *********/
-    //Initialize 16 bit Timer/Counter 1 for Fast PWM
+    //Initialize 16 bit Timer/Counter 3 for Fast PWM
     //16MHz, pre-scale=64, TOP=24,999, freq=10Hz, period=100mS
     TCCR3A |= (1<<WGM31)|(1<<WGM30);
     TCCR3B |= (1<<WGM33)|(1<<WGM32);
@@ -44,6 +46,18 @@ void system_init() {
     OCR3A = 24999;
     //Interrupt on timer overflow (at TOP value)
     ETIMSK |= (1<<TOIE3);
+
+    /******** In Program Timer *********/
+    //Initialize 16 bit Timer/Counter 1 for Fast PWM
+    //16MHz, pre-scale=1024, TOP=seconds passed, period=SEC
+    TCCR1A |= (1<<WGM11)|(1<<WGM10);
+    TCCR1B |= (1<<WGM13)|(1<<WGM12);
+    //Set Prescalar to 64
+    TCCR1B |= (1<<CS12)|(1<<CS10);      // start with clock off
+    //Set Output Comare Match A Value (TOP value, 10Hz, 100mS)
+    OCR1A = SEC*15641;
+    //Interrupt on timer overflow (at TOP value)
+    TIMSK |= (0<<TOIE1);
 
     /******** IO *********/
     DDRF |= (0<<PF6) | (0<<PF5);  //| (0<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Accelerate, and pirate switch (input) buttons on PORTD 6, 7, 0. Set PC_ON_OFF (output) PORTD 5.

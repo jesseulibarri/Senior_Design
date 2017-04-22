@@ -16,10 +16,26 @@
 #include "bldc_interface.h"
 #include "bldc_interface_uart.h"
 
-volatile extern uint8_t Tx_flag = 0;
+volatile extern uint8_t Tx_flag;
+volatile extern uint8_t eco_accel;
 
 /*********************************************************************
  * ISR: timer1
+ *
+ * Description: This interrupt turns off the constant button
+ * 	acceleration.
+ *********************************************************************/
+ISR(TIMER1_OVF_vect){
+	TCCR1B |= (0<<CS12)|(0<<CS10);	// turn clock off		
+	eco_accel = 0;
+	TIMSK |= (0<<TOIE1);
+	OCR1A = 2*15641;
+	// TCCR1B |= (0<<CS12)|(0<<CS10);	// turn clock off
+	TCNT1 = 0;
+}//timer1_ISR
+
+/*********************************************************************
+ * ISR: timer3
  *
  * Description: This interrupt handles all of the main program timing.
  *  Set to 10Hz

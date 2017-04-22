@@ -49,6 +49,7 @@ ISR(TIMER3_OVF_vect) {
     ADCSRA |= (1<<ADSC);
     while(!bit_is_set(ADCSRA, ADIF)) { }
     ADCSRA |= (1<<ADIF);
+    float motor_current = 0;
     volatile uint16_t thr_in = ADC;
 
     // Get button input	
@@ -59,7 +60,7 @@ ISR(TIMER3_OVF_vect) {
 	case NO_INPUT:
 		if(thr_in >= 36){
 			//Calculate and send current proportional to the ADC throttle input
-			float motor_current = thr_in*(MAX_CUR)/(in_max-in_min)-(MAX_CUR/(in_max-in_min))*in_min;
+			motor_current = thr_in*(MAX_CUR)/(in_max-in_min)-(MAX_CUR/(in_max-in_min))*in_min;
 			
 			if(motor_current >= MAX_CUR) { motor_current = MAX_CUR; }
 				bldc_interface_set_current(motor_current);} 

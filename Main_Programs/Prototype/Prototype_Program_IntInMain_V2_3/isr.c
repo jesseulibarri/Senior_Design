@@ -11,11 +11,6 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "system_init.h"
-#include "pirate.h"
-#include "conversions.h"
-#include "uart.h"
-#include <string.h>
-#include <stdlib.h>
 
 //VESC Specific header files (some may not be needed)
 #include "bldc_interface.h"

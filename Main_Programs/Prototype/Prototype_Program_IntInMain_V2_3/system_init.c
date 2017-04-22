@@ -66,10 +66,10 @@ void system_init() {
     }//if datalogging
 
     /****** Initialize UART0 *******/
-    uart0_init(8);
+    uart0_init(BAUDVALUE_1);
 
     /****** Initialize UART1 *******/
-    uart1_init(8);
+    uart1_init(BAUDVALUE_1);
    
 	/****** VESC Interface UART Initialization ******/
 	bldc_interface_uart_init(send_packet);   

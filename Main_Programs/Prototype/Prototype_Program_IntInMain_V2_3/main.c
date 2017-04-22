@@ -35,7 +35,7 @@
 #define in_min   		36
 
 volatile float motor_current = 0.0;
-volatile bool Tx_flag = 0;
+volatile uint8_t Tx_flag;
 
 int main(){
 	//Initialize the system

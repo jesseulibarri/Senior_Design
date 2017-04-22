@@ -21,7 +21,8 @@
 #include "bldc_interface.h"
 #include "bldc_interface_uart.h"
 
-volatile float motor_current = 0.0;
+extern float motor_current = 0.0;
+extern uint8_t Tx_flag = 0;
 
 /*********************************************************************
  * ISR: timer1

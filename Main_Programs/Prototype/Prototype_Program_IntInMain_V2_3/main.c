@@ -40,6 +40,8 @@
 float motor_current = 0.0;
 volatile uint8_t Tx_flag;
 
+void EcoAccel()
+
 int main(){
 	//Initialize the system
 	system_init();

@@ -17,6 +17,8 @@
 #include "bldc_interface_uart.h"
 
 volatile extern uint8_t Tx_flag = 0;
+volatile extern uint8_t eco_accel = 0;
+uint8_t cool_down = 0;
 
 /*********************************************************************
  * ISR: timer1
@@ -25,6 +27,17 @@ volatile extern uint8_t Tx_flag = 0;
  * 	acceleration.
  *********************************************************************/
 ISR(TIMER1_COMPA_vect){
+
+	if(cool_down) {
+		TCCR1B &= ~((1<<CS12)|(1<<CS10));      // start with clock off
+		cool_down = 0;
+	}
+
+	if(eco_accel) {
+		cool_down = 1;
+		eco_accel = 0;
+	}
+
 
 }//timer1_ISR
 

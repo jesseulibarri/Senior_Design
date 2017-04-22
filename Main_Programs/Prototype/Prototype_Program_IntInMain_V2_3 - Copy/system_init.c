@@ -47,6 +47,18 @@ void system_init() {
     //Interrupt on timer overflow (at TOP value)
     ETIMSK |= (1<<TOIE3);
 
+    /******** In Program Timer *********/
+    //Initialize 16 bit Timer/Counter 1 for Fast PWM
+    //16MHz, pre-scale=1024, TOP=seconds passed, period=SEC
+    TCCR1B |= (1<<WGM12);
+    //Set Prescalar to 64
+    TCCR1B &= ~((1<<CS12)|(1<<CS10));      // start with clock off
+    //Set Output Comare Match A Value (TOP value, 10Hz, 100mS)
+    OCR1A = SEC*15641;
+    //Interrupt on timer overflow (at TOP value)
+    TIMSK |= (1<<OCIE1A);
+    TCNT1 = 0;
+
     /******** IO *********/
     DDRF |= (0<<PF6) | (0<<PF5);  //| (0<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Accelerate, and pirate switch (input) buttons on PORTD 6, 7, 0. Set PC_ON_OFF (output) PORTD 5.
     PORTF |= (1<<PF6) | (1<<PF5); //| (1<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Set pullup resistors for input pins and turn on PC_ON_OFF pin
@@ -107,7 +119,7 @@ void disable_timer() {
     //16MHz, pre-scale=1024, TOP=seconds passed, period=SEC
     TCCR1B |= (0<<WGM12);
     //Set Prescalar to 64
-    TCCR1B |= (0<<CS12)|(0<<CS10);      // start with clock off
+    TCCR1B &= ~((1<<CS12)|(1<<CS10));      // start with clock off
     //Set Output Comare Match A Value (TOP value, 10Hz, 100mS)
     OCR1A = SEC*15641;
     //Interrupt on timer overflow (at TOP value)

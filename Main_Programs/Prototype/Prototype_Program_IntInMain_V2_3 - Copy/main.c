@@ -39,7 +39,7 @@
 
 float motor_current = 0.0;
 volatile uint8_t Tx_flag;
-uint8_t eco_accel = 0;
+uint8_t eco_accel;
 int WaitCount = 0;
 int main(){
 	//Initialize the system
@@ -51,24 +51,21 @@ int main(){
 		
 		if(Tx_flag){
 
-			//cli();
+			// Get button input	
+			uint8_t user_mode = PINF | 0x9F; //Mask everything out except PORTF
 
-			if(eco_accel) {
+			if(eco_accel && user_mode == ACCELERATE) {
 				
 					if(motor_current >= MAX_CUR) {
 						bldc_interface_set_current(MAX_CUR);
-						if(WaitCount < 20){
-							WaitCount++;
-						}
-						else{
-							WaitCount = 0;
-							eco_accel = 0;
-							motor_current = 0;
-						}
+						
 					}
 					else {
 						motor_current = motor_current + 0.6;
 						bldc_interface_set_current(motor_current);
+						if(motor_current >= MAX_CUR) {
+							TCCR1B |= (1<<CS12)|(1<<CS10);      // start with clock off
+						}
 					}
 			}// if eco_accel
 			
@@ -78,13 +75,13 @@ int main(){
 				while(!bit_is_set(ADCSRA, ADIF)) { }
 				ADCSRA |= (1<<ADIF);
 				volatile uint16_t thr_in = ADC;
-
-				// Get button input	
-				uint8_t user_mode = PINF | 0x9F; //Mask everything out except PORTF
 				
 				switch(user_mode){ 
 				//All button released
 				case NO_INPUT:
+
+					eco_accel = 0;
+
 					if(thr_in >= 36){
 						//Calculate and send current proportional to the ADC throttle input
 						motor_current = thr_in*(MAX_CUR)/(IN_MAX-IN_MIN)-(MAX_CUR/(IN_MAX-IN_MIN))*IN_MIN;
@@ -101,7 +98,9 @@ int main(){
 				//Accelerate button is pushed
 				case ACCELERATE:
 
-					eco_accel = 1;
+					if(!bit_is_set(TCCR1B,CS12)) {
+						eco_accel = 1;
+					}
 
 					// motor_current = motor_current + 0.6;
 					// if(motor_current > MAX_CUR)

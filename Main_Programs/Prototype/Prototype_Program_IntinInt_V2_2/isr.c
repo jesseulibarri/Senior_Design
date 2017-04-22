@@ -51,6 +51,7 @@ ISR(TIMER3_OVF_vect) {
     ADCSRA |= (1<<ADSC);
     while(!bit_is_set(ADCSRA, ADIF)) { }
     ADCSRA |= (1<<ADIF);
+    float motor_current = 0;
     volatile uint16_t thr_in = ADC;
 
     // Get button input	

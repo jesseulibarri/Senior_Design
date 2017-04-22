@@ -23,6 +23,8 @@
 #define BAUDVALUE_1  ((F_CPU/(USART1_BAUDRATE * 16)))
 
 void system_init();
+void enable_timer();
+void disable_timer();
 
 //uint8_t datalogging;
 

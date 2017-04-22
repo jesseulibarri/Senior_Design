@@ -21,6 +21,9 @@
 //VESC Specific header files (some may not be needed)
 #include "bldc_interface.h"
 #include "bldc_interface_uart.h"
+#include "buffer.h"
+#include "packet.h"
+#include "crc.h"
 
 #define ACCELERATE      0xBF
 #define CRUISE          0x9F
@@ -30,9 +33,9 @@
 #define TRUE			1
 #define FALSE   		0
 
-#define out_min  		0
-#define in_max   		184
-#define in_min   		36
+#define OUT_MIN  		0
+#define IN_MAX   		184
+#define IN_MIN   		36
 
 float motor_current = 0.0;
 volatile uint8_t Tx_flag;
@@ -63,14 +66,15 @@ int main(){
 			case NO_INPUT:
 				if(thr_in >= 36){
 					//Calculate and send current proportional to the ADC throttle input
-					motor_current = thr_in*(MAX_CUR)/(in_max-in_min)-(MAX_CUR/(in_max-in_min))*in_min;
-					
-					if(motor_current >= MAX_CUR) { motor_current = MAX_CUR; }
-						bldc_interface_set_current(motor_current);} 
-					else{
-						motor_current = 0;
-						bldc_interface_set_current(0);	
-					}
+					motor_current = thr_in*(MAX_CUR)/(IN_MAX-IN_MIN)-(MAX_CUR/(IN_MAX-IN_MIN))*IN_MIN;
+					if(motor_current >= MAX_CUR)
+						motor_current = MAX_CUR;
+					bldc_interface_set_current(motor_current);
+				} 
+				else{
+					motor_current = 0;
+					bldc_interface_set_current(0);	
+				}
 				break;
 			   
 			//Accelerate button is pushed
@@ -91,7 +95,6 @@ int main(){
 			Tx_flag = 0;
 			sei();
 		}		
-		
 	}
 	
 	return 0;

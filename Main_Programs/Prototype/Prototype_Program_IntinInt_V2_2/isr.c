@@ -27,13 +27,15 @@
 #define ACCELERATE      0xBF
 #define PIRATE          0xFE
 #define NO_INPUT		0xFF
-#define MAX_CUR  		30
 #define TRUE			1
 #define FALSE   		0
 
-#define out_min  		0
-#define in_max   		184
-#define in_min   		36
+#define MAX_CUR  		30
+#define OUT_MIN  		0
+#define IN_MAX   		184
+#define IN_MIN   		36
+
+ float motor_current = 0.0;
 
 /*********************************************************************
  * ISR: timer1
@@ -49,7 +51,6 @@ ISR(TIMER3_OVF_vect) {
     ADCSRA |= (1<<ADSC);
     while(!bit_is_set(ADCSRA, ADIF)) { }
     ADCSRA |= (1<<ADIF);
-    float motor_current = 0;
     volatile uint16_t thr_in = ADC;
 
     // Get button input	
@@ -60,7 +61,7 @@ ISR(TIMER3_OVF_vect) {
 	case NO_INPUT:
 		if(thr_in >= 36){
 			//Calculate and send current proportional to the ADC throttle input
-			motor_current = thr_in*(MAX_CUR)/(in_max-in_min)-(MAX_CUR/(in_max-in_min))*in_min;
+			motor_current = thr_in*(MAX_CUR)/(IN_MAX-IN_MIN)-(MAX_CUR/(IN_MAX-IN_MIN))*IN_MIN;
 			
 			if(motor_current >= MAX_CUR) { motor_current = MAX_CUR; }
 				bldc_interface_set_current(motor_current);} 

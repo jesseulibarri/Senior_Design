@@ -17,6 +17,7 @@
 //VESC Specific header files (some may not be needed)
 #include "bldc_interface.h"
 #include "bldc_interface_uart.h"
+#include "datatypes.h"
 #include "buffer.h"
 #include "packet.h"
 #include "crc.h"

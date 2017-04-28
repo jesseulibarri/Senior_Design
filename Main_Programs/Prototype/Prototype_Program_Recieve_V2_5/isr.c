@@ -19,6 +19,7 @@
 volatile extern float motor_current = 0.0;
 volatile extern uint8_t Tx_flag = 0;
 volatile extern uint8_t eco_accel = 0;
+volatile extern uint8_t USART_RX_Flag = 0;
 uint8_t cool_down = 0;
 
 /*********************************************************************
@@ -67,6 +68,9 @@ ISR(INT0_vect){
  *
  * Description: 
  *********************************************************************/
-/**ISR(USART0_RX_vect){
+ISR(USART1_RX_vect){
+	
+	USART_RX_Flag = 1	
+	
 }//ISR
 */

@@ -26,15 +26,7 @@ void bldc_interface_set_rx_mcconf_received_func(void(*func)(void));
 void bldc_interface_set_rx_appconf_received_func(void(*func)(void));
 
 // Setters
-void bldc_interface_terminal_cmd(char* cmd);
-void bldc_interface_set_duty_cycle(float dutyCycle);
 void bldc_interface_set_current(float current);
-void bldc_interface_set_current_brake(float current);
-void bldc_interface_set_rpm(int rpm);
-void bldc_interface_set_pos(float pos);
-void bldc_interface_set_servo_pos(float pos);
-void bldc_interface_set_mcconf(const mc_configuration *mcconf);
-void bldc_interface_set_appconf(const app_configuration *appconf);
 
 // Getters
 void bldc_interface_get_fw_version(void);

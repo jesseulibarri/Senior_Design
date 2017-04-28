@@ -39,7 +39,8 @@
 
 volatile float motor_current;
 volatile uint8_t Tx_flag;
-uint8_t eco_accel;
+volatile uint8_t USART_RX_Flag; 
+volatile uint8_t eco_accel;
 int WaitCount = 0;
 int main(){
 	//Initialize the system

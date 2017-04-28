@@ -86,8 +86,7 @@ void system_init() {
     uart1_init(BAUDVALUE_1);
    
 	/****** VESC Interface UART Initialization ******/
-	bldc_interface_uart_init(send_packet);  
-	bldc_interface_set_rx_value_func(USART1_RX);	
+	bldc_interface_uart_init(send_packet);  	
 
     /**** Enable Global Interrupts ********/
     sei();

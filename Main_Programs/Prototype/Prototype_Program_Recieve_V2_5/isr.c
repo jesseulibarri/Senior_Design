@@ -71,11 +71,11 @@ ISR(INT0_vect){
 ISR(USART1_RX_vect){
 
 	//Receieve a Byte, then pass it to VESC in main (Use flag)
-	unsigned char Recieve_Buff[0] = 0;
-    USART1_RX(*Recieve_Buff[], 1);
+	unsigned char Recieve_Buff;
+    USART1_RX(*Recieve_Buff, 1);
 
 	//USART_RX_Flag = 1;	
-	bldc_interface_uart_process_byte(Recieve_Buff[0]);
+	bldc_interface_uart_process_byte(Recieve_Buff);
 	
 }//ISR
 

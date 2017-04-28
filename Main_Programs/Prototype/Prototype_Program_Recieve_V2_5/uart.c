@@ -57,7 +57,7 @@ void uart1_init(unsigned char ubrr){
 }//uart1_init
 //******************************************************************
 
-void bldc_val_received(mc_values *val){
+void bldc_val_received(struct mc_values *val){
 	float WattHrDrawn = val.watt_hours;
 	USART0_RX(WattHrDrawn, 1);
 }

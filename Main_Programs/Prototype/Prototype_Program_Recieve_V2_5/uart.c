@@ -22,6 +22,8 @@
 #include "packet.h"
 #include "crc.h"
 
+unsigned char WattHr_Bytes[];
+
 /**************************************************************************************
  * Name: uart0_init
  *
@@ -58,8 +60,9 @@ void uart1_init(unsigned char ubrr){
 //******************************************************************
 
 void bldc_val_received(mc_values *val){
-	float WattHrDrawn = val->watt_hours;
-	send_packet0(WattHrDrawn, 1);
+	float WattHr = val->watt_hours;
+	float_to_bytes(WattHr, WattHr_Bytes); 
+	send_packet0(WattHr_Bytes, 4);
 }
 
 /************************************************************************************************

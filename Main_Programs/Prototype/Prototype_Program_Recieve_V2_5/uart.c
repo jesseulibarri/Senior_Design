@@ -112,7 +112,7 @@ void USART0_RX(unsigned char *data, unsigned int len){
  *
  *  Description: Recieve an unsigned 8-bit variable size array on USART1
  ****************************************************************************************/
-void USART1_RX(uint8_t* rx_buf, uint8_t n){
+void USART1_RX(unsigned char *data, unsigned int len){
 	
 	int i = 0;
 	
@@ -120,9 +120,9 @@ void USART1_RX(uint8_t* rx_buf, uint8_t n){
 	while (!(UCSR1A & (1<<RXC1))) {}
 
 	//Get and return received data to rx_buf
-	for(i=0; i<n; i++){
-		uint8_t data = UDR1;
-		rx_buf[i] = data;
+	for(i=0; i<len; i++){
+		unsigned char temp = UDR1;
+		data[i] = temp;
 		while (!(UCSR1A & (1<<RXC1))) {}
 	}
 }//USART1_RX

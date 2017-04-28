@@ -41,7 +41,10 @@ volatile float motor_current;
 volatile uint8_t Tx_flag;
 volatile uint8_t USART_RX_Flag; 
 volatile uint8_t eco_accel;
+volatile uint8_t Packet_Rec;
+volatile uint8_t Packet_Num;
 int WaitCount = 0;
+
 int main(){
 	//Initialize the system
 	system_init();
@@ -133,6 +136,14 @@ int main(){
 			
 			Tx_flag = 0;
 		}//if Tx_flag
+		
+		if(Packet_Rec == 1){
+			handler_states[Packet_Num].process_func(handler_states[Packet_Num].rx_buffer,
+				handler_states[Packet_Num].payload_length);
+			handler_states[Packet_Num].rx_state = 0;
+			Packet_Rec = 0;
+		}
+		
 	}//while
 	
 	return 0;

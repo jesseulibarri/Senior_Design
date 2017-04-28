@@ -2,6 +2,9 @@
 #include "packet.h"
 #include "crc.h"
 
+volatile extern uint8_t Packet_Rec = 0;
+volatile extern uint8_t Packet_Num = 0;
+
 typedef struct {
 	volatile unsigned char rx_state;
 	volatile unsigned char rx_timeout;
@@ -130,12 +133,11 @@ void packet_process_byte(uint8_t rx_data, int handler_num) {
 							| (unsigned short)handler_states[handler_num].crc_low)) {
 				// Packet received!
 				if (handler_states[handler_num].process_func) {
-					handler_states[handler_num].process_func(handler_states[handler_num].rx_buffer,
-							handler_states[handler_num].payload_length);
+					Packet_Rec = 1;
+					Packet_Num = handler_num;
 				}
 			}
 		}
-		handler_states[handler_num].rx_state = 0;
 		break;
 
 	default:

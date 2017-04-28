@@ -92,7 +92,7 @@ void send_packet(unsigned char *data, unsigned int len){
  *
  *  Description: Recieve an unsigned 8-bit variable size array on USART0
  ****************************************************************************************/
-void USART0_RX(uint8_t* rx_buf, uint8_t n){
+void USART0_RX(unsigned char *data, unsigned int len){
 	
     int i = 0;
 
@@ -100,9 +100,9 @@ void USART0_RX(uint8_t* rx_buf, uint8_t n){
 	while (!(UCSR0A & (1<<RXC0))) {}
 	
 	//Get and return received data to rx_buf 	
-	for(i=0; i<n; i++){
-		uint8_t data = UDR0;
-        rx_buf[i] = data;
+	for(i=0; i<len; i++){
+		unsigned char temp = UDR0;
+        data[i] = temp;
 		while (!(UCSR0A & (1<<RXC0))) {}	
 	}
 }//USART0_RX

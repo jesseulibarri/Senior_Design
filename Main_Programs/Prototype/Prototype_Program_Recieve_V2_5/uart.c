@@ -59,8 +59,33 @@ void uart1_init(unsigned char ubrr){
 
 void bldc_val_received(mc_values *val){
 	float WattHrDrawn = val->watt_hours;
-	USART0_RX(WattHrDrawn, 1);
+	send_packet0(WattHrDrawn, 1);
 }
+
+/************************************************************************************************
+ * Name: send_packet0
+ *
+ * Description: This function takes a pointer to the start of an 8-bit data array 'data',
+ * and the length of the array 'len', as an input argument. UART Implementation of 
+ * VESC "send_packet" function, to be used with Prototype vehicle control system.
+ * NOTE: Data is sent via UART1 at a baudrate of 115200. High logic level = 3.3Vdc. 
+ ************************************************************************************************/
+void send_packet0(unsigned char *data, unsigned int len){
+    
+	int i = 0;
+	
+    //Wait for empty transmit buffer
+    while(!(UCSR0A & (1<<UDRE0))) { }
+	
+	//Send a packet of length 'len'
+    for(i = 0; i < len;i++) {
+        UDR0 = data[i];
+		//Wait for byte to be sent before sending next byte
+		while(!(UCSR0A & (1<<UDRE0))) { }
+		//Delay may not be needed anymore
+		//_delay_us(10);
+    }
+}//send_packet0
 
 /************************************************************************************************
  * Name: send_packet

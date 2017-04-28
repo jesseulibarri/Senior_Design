@@ -18,7 +18,7 @@ try
     %Select the total number of floats, (num_of_in_float), 
     %being sent via serial every cycle; and which speed 
     %you would like to sample for input.
-    serialPort = 'COM4';                %Define COM port #
+    serialPort = 'COM7';                %Define COM port #
     baudrate = 115200;                   %Define baudrate of data
     num_of_char = 10;
     num_of_in_float = 1;                %Define # of Float/packet
@@ -92,7 +92,7 @@ try
     while ishandle(plotGraph)
         Rx_data_packet = fread(s, 10, 'uint8')
        
-            if(~isempty(Rx_data_packet))                
+            if(~isempty(Rx_data_packet) && Rx_data_packet(1) == 3)                
             %Make sure read data is a Float and not an empty array      
 
                 %Plot some given data

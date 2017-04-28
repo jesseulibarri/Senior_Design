@@ -87,6 +87,8 @@ void system_init() {
    
 	/****** VESC Interface UART Initialization ******/
 	bldc_interface_uart_init(send_packet);  	
+	//Function that will be called once an entire packet is recieved
+	bldc_interface_set_rx_value_func(bldc_val_received);
 
     /**** Enable Global Interrupts ********/
     sei();

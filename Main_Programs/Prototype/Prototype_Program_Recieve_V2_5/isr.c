@@ -75,7 +75,7 @@ ISR(USART1_RX_vect){
     USART1_RX(Recieve_Buff, 1);
 
 	//USART_RX_Flag = 1;	
-	bldc_interface_uart_process_byte(&Recieve_Buff);
+	bldc_interface_uart_process_byte(*Recieve_Buff);
 	
 }//ISR
 

@@ -13,7 +13,7 @@
 void uart0_init(unsigned char);
 void uart1_init(unsigned char);
 void send_packet(unsigned char *data, unsigned int len);
-void bldc_val_received(mc_values *val);
+void bldc_val_received(struct mc_values *val);
 void USART1_RX(uint8_t* rx_buf, uint8_t n);
 void USART0_RX(uint8_t* rx_buf, uint8_t n);
 #endif

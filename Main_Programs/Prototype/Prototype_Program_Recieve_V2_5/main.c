@@ -123,6 +123,14 @@ int main(){
 				//sei();
 
 			}//else eco_accel
+			
+			if(WaitCount == 10){
+				bldc_interface_get_values();
+				WaitCount = 0;
+			}
+			else
+				WaitCount += 1;
+			
 			Tx_flag = 0;
 		}//if Tx_flag
 	}//while

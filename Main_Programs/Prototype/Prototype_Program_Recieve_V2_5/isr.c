@@ -54,7 +54,6 @@ ISR(TIMER3_OVF_vect){
 	Tx_flag = 1;	
 }//timer1_ISR
 
-
 /*********************************************************************
  * ISR: pirate_mode
  *
@@ -73,7 +72,9 @@ ISR(USART1_RX_vect){
 	//Receieve a Byte, then pass it to VESC in main (Use flag)
 	unsigned char Recieve_Buff[1];
     USART1_RX(Recieve_Buff, 1);
-	USART_RX_Flag = 1;	
+
+	//USART_RX_Flag = 1;	
+	bldc_interface_uart_process_byte(Recieve_Buff)
 	
 }//ISR
 

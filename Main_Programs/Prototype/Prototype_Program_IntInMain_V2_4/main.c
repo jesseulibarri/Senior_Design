@@ -29,7 +29,7 @@
 #define CRUISE          0x9F
 #define PIRATE          0xFE
 #define NO_INPUT		0xFF
-#define MAX_CUR  		15.0
+#define MAX_CUR  		20.0
 #define TRUE			1
 #define FALSE   		0
 
@@ -40,8 +40,6 @@
 float target_cur;
 volatile float motor_current;
 volatile uint8_t Tx_flag;
-uint8_t eco_accel;
-int WaitCount = 0;
 int main(){
 	//Initialize the system
 	system_init();
@@ -55,75 +53,37 @@ int main(){
 			// Get button input	
 			uint8_t user_mode = PINF | 0x9F; //Mask everything out except PORTF
 
-			if(eco_accel && user_mode == ACCELERATE) {
+			// Get analog throttle input
+			ADCSRA |= (1<<ADSC);
+			while(!bit_is_set(ADCSRA, ADIF)) { }
+			ADCSRA |= (1<<ADIF);
+			volatile uint16_t thr_in = ADC;
 				
-					if(motor_current >= MAX_CUR) {
-						bldc_interface_set_current(MAX_CUR);
-						
-					}
-					else {
-						motor_current = motor_current + 0.5;
-						bldc_interface_set_current(motor_current);
-						if(motor_current >= MAX_CUR) {
-							TCCR1B |= (1<<CS12)|(1<<CS10);      // start with clock off
-						}
-					}
-			}// if eco_accel
-			
-			else {
-				// Get analog throttle input
-				ADCSRA |= (1<<ADSC);
-				while(!bit_is_set(ADCSRA, ADIF)) { }
-				ADCSRA |= (1<<ADIF);
-				volatile uint16_t thr_in = ADC;
-				
-				switch(user_mode){ 
-				//All button released
-				case NO_INPUT:
+			switch(user_mode){ 
+			//All button released
+			case NO_INPUT:
 
-					eco_accel = 0;
-
-					if(thr_in >= 36){
-						//Calculate and send current proportional to the ADC throttle input
-						target_cur = thr_in*(MAX_CUR)/(IN_MAX-IN_MIN)-(MAX_CUR/(IN_MAX-IN_MIN))*IN_MIN;
-                        if(motor_current < target_cur) { motor_current += 0.5; } 
-                        else if(motor_current >= MAX_CUR) { motor_current = MAX_CUR; }
-						bldc_interface_set_current(motor_current);
-					} 
-					else{
-						motor_current = 0;
-						bldc_interface_set_current(0);	
-					}
-					break;
+			if(thr_in >= 36){
+				//Calculate and send current proportional to the ADC throttle input
+				target_cur = thr_in*(MAX_CUR)/(IN_MAX-IN_MIN)-(MAX_CUR/(IN_MAX-IN_MIN))*IN_MIN;
+                if(motor_current < target_cur) { motor_current += 0.5; } 
+                else if(motor_current >= MAX_CUR) { motor_current = MAX_CUR; }
+				bldc_interface_set_current(motor_current);
+			} 
+			else{
+				motor_current = 0;
+				bldc_interface_set_current(0);	
+			}
+			break;
 				   
-				//Accelerate button is pushed
-				case ACCELERATE:
+			//Accelerate button is pushed
+			case ACCELERATE:
 
-					if(!bit_is_set(TCCR1B,CS12)) {
-						eco_accel = 1;
-					}
-					else {
-						bldc_interface_set_current(0);
-					}
-
-					// motor_current = motor_current + 0.6;
-					// if(motor_current > MAX_CUR)
-					// 	motor_current = MAX_CUR;
-					// bldc_interface_set_current(motor_current);		
-					break;	
+			break;	
 					
-				}//End switch
+			}//End switch
 					
-				if(!(PINE & (1 << PE4))){
-					bldc_interface_set_current(0);
-					pirate_mode();
-				}
-				
-				
-				//sei();
-
-			}//else eco_accel
-			Tx_flag = 0;
+		Tx_flag = 0;
 		}//if Tx_flag
 	}//while
 	

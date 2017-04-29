@@ -10,6 +10,7 @@ void bldc_interface_send_packet(unsigned char *data, unsigned int len);
 // Setters
 void bldc_interface_set_current(float current);
 void bldc_interface_set_current_brake(float current);
+void bldc_interface_set_rpm(int rpm);
 
 // Other functions
 void bldc_interface_reboot(void);

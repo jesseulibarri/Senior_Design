@@ -29,7 +29,8 @@
 #define CRUISE          0x9F
 #define PIRATE          0xFE
 #define NO_INPUT		0xFF
-#define MAX_CUR  		20.0
+#define MAX_CUR  		15.0
+#define MAX_RPM			100
 #define TRUE			1
 #define FALSE   		0
 
@@ -39,6 +40,7 @@
 
 float target_cur;
 volatile float motor_current;
+volatile float motor_rpm;
 volatile uint8_t Tx_flag;
 int main(){
 	//Initialize the system
@@ -62,7 +64,6 @@ int main(){
 			switch(user_mode){ 
 			//All button released
 			case NO_INPUT:
-
 			if(thr_in >= 36){
 				//Calculate and send current proportional to the ADC throttle input
 				target_cur = thr_in*(MAX_CUR)/(IN_MAX-IN_MIN)-(MAX_CUR/(IN_MAX-IN_MIN))*IN_MIN;
@@ -72,13 +73,16 @@ int main(){
 			} 
 			else{
 				motor_current = 0;
+				motor_rpm = 0;	
 				bldc_interface_set_current(0);	
 			}
 			break;
 				   
 			//Accelerate button is pushed
 			case ACCELERATE:
-
+				if(motor_rpm < MAX_RPM) { motor_rpm += 1000; } 
+                else if(motor_rpm >= MAX_RPM) { motor_rpm = MAX_RPM; }
+				bldc_interface_set_rpm(motor_rpm);
 			break;	
 					
 			}//End switch

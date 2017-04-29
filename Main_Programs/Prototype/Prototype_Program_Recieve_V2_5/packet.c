@@ -3,7 +3,7 @@
 #include "crc.h"
 
 volatile extern uint8_t Packet_Rec = 0;
-volatile extern uint8_t Packet_Num = 0;
+volatile extern uint8_t Packet_Num;
 
 typedef struct {
 	volatile unsigned char rx_state;
@@ -134,7 +134,7 @@ void packet_process_byte(uint8_t rx_data, int handler_num) {
 				// Packet received!
 				if (handler_states[handler_num].process_func) {
 					Packet_Rec = 1;
-					Packet_Num = handler_num;
+					Packet_Num = &handler_states[handler_num].rx_buffer[0];
 				}
 			}
 		}

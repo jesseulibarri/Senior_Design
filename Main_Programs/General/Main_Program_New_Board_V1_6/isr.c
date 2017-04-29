@@ -28,7 +28,7 @@
 #define TRUE	1
 #define FALSE   0
 
-extern uint8_t wake_up_timing;
+volatile extern uint8_t wake_up_timing = 0;
 extern uint16_t encoder_angle;
 float torque_right = 0.0;
 unsigned char torque_r_bytes[4];
@@ -146,8 +146,10 @@ ISR(TIMER3_OVF_vect) {
  * ISR: pirate_mode
  *
  *********************************************************************/
-ISR(INT0_vect){
+ISR(INT0_vect){ 
+	wake_up_timing = 1;		//We only want to do this once when waking from sleep mode
     EIMSK &= ~(1<<INT0);
+	wake_up_timing = 1;		//We only want to do this once when waking from sleep mode
 
 }//ISR
 

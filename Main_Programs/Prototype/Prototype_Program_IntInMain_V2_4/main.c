@@ -29,7 +29,7 @@
 #define CRUISE          0x9F
 #define PIRATE          0xFE
 #define NO_INPUT		0xFF
-#define MAX_CUR  		30.0
+#define MAX_CUR  		15.0
 #define TRUE			1
 #define FALSE   		0
 
@@ -37,6 +37,7 @@
 #define IN_MAX   		184
 #define IN_MIN   		36
 
+float target_cur;
 volatile float motor_current;
 volatile uint8_t Tx_flag;
 uint8_t eco_accel;
@@ -61,7 +62,7 @@ int main(){
 						
 					}
 					else {
-						motor_current = motor_current + 0.6;
+						motor_current = motor_current + 0.5;
 						bldc_interface_set_current(motor_current);
 						if(motor_current >= MAX_CUR) {
 							TCCR1B |= (1<<CS12)|(1<<CS10);      // start with clock off
@@ -84,9 +85,9 @@ int main(){
 
 					if(thr_in >= 36){
 						//Calculate and send current proportional to the ADC throttle input
-						motor_current = thr_in*(MAX_CUR)/(IN_MAX-IN_MIN)-(MAX_CUR/(IN_MAX-IN_MIN))*IN_MIN;
-						if(motor_current >= MAX_CUR)
-							motor_current = MAX_CUR;
+						target_cur = thr_in*(MAX_CUR)/(IN_MAX-IN_MIN)-(MAX_CUR/(IN_MAX-IN_MIN))*IN_MIN;
+                        if(motor_current < target_cur) { motor_current += 0.5; } 
+                        else if(motor_current >= MAX_CUR) { motor_current = MAX_CUR; }
 						bldc_interface_set_current(motor_current);
 					} 
 					else{

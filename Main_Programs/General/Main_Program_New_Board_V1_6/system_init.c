@@ -11,8 +11,6 @@
 float tire_circ;
 float distance_per_pulse;
 
-uint8_t wake_up_timing = 0;
-
 /*** Turn ON to enable datalogging ***/
 uint8_t datalogging = OFF;
 uint8_t spi_steering = ON;
@@ -25,8 +23,6 @@ uint8_t spi_steering = ON;
  *  Timers, interrupts, UART, datalogging, ADC, IO
  * ******************************************************/
 void system_init() {
-
-    wake_up_timing = 1;
 
     /******** ICP1 *********/
     //Makes use of the input capture function on PORTD.4.

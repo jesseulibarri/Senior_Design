@@ -30,7 +30,7 @@
 #define PIRATE          0xFE
 #define NO_INPUT		0xFF
 #define MAX_CUR  		15.0
-#define MAX_RPM			100
+#define MAX_RPM			10000
 #define TRUE			1
 #define FALSE   		0
 
@@ -80,7 +80,7 @@ int main(){
 				   
 			//Accelerate button is pushed
 			case ACCELERATE:
-				if(motor_rpm < MAX_RPM) { motor_rpm += 1000; } 
+				if(motor_rpm < MAX_RPM) { motor_rpm += 500; } 
                 else if(motor_rpm >= MAX_RPM) { motor_rpm = MAX_RPM; }
 				bldc_interface_set_rpm(motor_rpm);
 			break;	

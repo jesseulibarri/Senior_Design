@@ -150,7 +150,7 @@ void USART1_RX(unsigned char *data, unsigned int len){
 	//Get and return received data to rx_buf
 	for(i=0; i<len; i++){
 		unsigned char temp = UDR1;
-		data[i] = temp;
+		data = temp;
 		while (!(UCSR1A & (1<<RXC1))) {}
 	}
 }//USART1_RX

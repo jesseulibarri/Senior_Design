@@ -30,7 +30,7 @@ A = 3.56;             %Effective frontal vehicle cross-sectional area (m2)
 h = 0.1524;           %Height of vehicle CG above the ground (m)
 a = 0.6;              %Distance of front and rear axles, respectively, from the vertical projection point of vehicle CG onto the axle-ground plane (m)
 b = 0.6;              %Distance of front and rear axles, respectively, from the vertical projection point of vehicle CG onto the axle-ground plane (m)
-Cd = 0.076;           %Aerodynamic drag coefficient (N·s2/kg·m)
+Cd = 0.076;           %Aerodynamic drag coefficient (Nï¿½s2/kgï¿½m)
 p = 1.2;              %Mass density of air (kg/m3)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -57,13 +57,17 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %Zero vertical acceleration and zero pitch torque require
 %Fzf = (+h(Fd-mgsin(beta)-m*Vx)+b*mgcos(beta))/(a+b);
 %Fzr = (-h(Fd-mgsin(beta)-m*Vx)+b*mgcos(beta))/(a+b);
-%Note that Fzf + Fzr = mg·cos?
+%Note that Fzf + Fzr = mgï¿½cos?
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Select the total number of floats, (num_of_in_float), 
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
+<<<<<<< HEAD
 serialPort = 'COM7';                %Define COM port #
+=======
+serialPort = '/dev/ttyUSB0';                %Define COM port #
+>>>>>>> cfe46fc6de8a6333fe0be99a745e62b7d6a983d9
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 1;                %Define # of Float/packet
 delay = 0.001;                       %Make sure sample faster than resolution

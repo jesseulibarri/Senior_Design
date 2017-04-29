@@ -28,7 +28,7 @@
 #define TRUE	1
 #define FALSE   0
 
-extern uint8_t wake_up_timing;
+volatile extern uint8_t wake_up_timing = 0;
 extern uint16_t encoder_angle;
 float torque_right = 0.0;
 unsigned char torque_r_bytes[4];
@@ -138,10 +138,7 @@ ISR(TIMER3_OVF_vect) {
 		uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
         //uart1_uchar_transmit(torque_l_bytes, torque_left);
         break;
-*/    }//switch
-        if(!(PINE & (1 << PE4))) {
-        	pirate_mode();
-        }
+*/    }//switch case
 }//timer1_ISR
 
 
@@ -149,9 +146,10 @@ ISR(TIMER3_OVF_vect) {
  * ISR: pirate_mode
  *
  *********************************************************************/
-ISR(INT0_vect){
-    //NOT SURE WHAT THIS IS FOUCSR0B &= ~(1<<RXCIE0);R
+ISR(INT0_vect){ 
+	wake_up_timing = 1;		//We only want to do this once when waking from sleep mode
     EIMSK &= ~(1<<INT0);
+	wake_up_timing = 1;		//We only want to do this once when waking from sleep mode
 
 }//ISR
 

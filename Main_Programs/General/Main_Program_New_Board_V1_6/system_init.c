@@ -11,8 +11,6 @@
 float tire_circ;
 float distance_per_pulse;
 
-uint8_t wake_up_timing = 0;
-
 /*** Turn ON to enable datalogging ***/
 uint8_t datalogging = OFF;
 uint8_t spi_steering = ON;
@@ -25,8 +23,6 @@ uint8_t spi_steering = ON;
  *  Timers, interrupts, UART, datalogging, ADC, IO
  * ******************************************************/
 void system_init() {
-
-    wake_up_timing = 1;
 
     /******** ICP1 *********/
     //Makes use of the input capture function on PORTD.4.
@@ -54,20 +50,12 @@ void system_init() {
     //sei();
 
     /******** IO ********/
-    // DDRF |= (0<<ACCELERATE_B) | (0<<CRUISE_B) | (0<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Accelerate, and pirate switch (input) buttons on PORTD 6, 7, 0. Set PC_ON_OFF (output) PORTD 5.
-    // PORTF |= (1<<ACCELERATE_B) | (1<<CRUISE_B) | (1<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Set pullup resistors for input pins and turn on PC_ON_OFF pin
-    // DDRE |= (0<<PIRATE_SWITCH);
-    // PORTE |= (1<<PIRATE_SWITCH);
-    DDRF |= (0<<PF6) | (0<<PF5); //| (0<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Accelerate, and pirate switch (input) buttons on PORTD 6, 7, 0. Set PC_ON_OFF (output) PORTD 5.
-    PORTF |= (1<<PF6) | (1<<PF5); //| (1<<PIRATE_SWITCH) | (1<<PC_ON_OFF); //Set pullup resistors for input pins and turn on PC_ON_OFF pin
-    DDRE |= (0<<PE4);
-    PORTE |= (1<<PE4);
-
-    // DDRB |= (1<<PB7); //input for led indicaiting 12 power converter on off pin is on
-    // PORTB &= ~(1<<PB7); // turn on led
-
-    DDRA |= (1<<PA1);       //Set timing bit for system checkoff 
-    PORTA |= (1<<PA1);
+    DDRF |= (0<<PF6) | (0<<PF5); //set PORT F pin 5,6 for input
+    PORTF |= (1<<PF6) | (1<<PF5); //turn on pull ups for accelerate and cruise button
+    DDRE |= (0<<PE4); //set PORT E pin 4 as input for pirate switch
+    PORTE |= (1<<PE4); //set pull up for pin 4
+    DDRA = (1<<PA0) | (1<<PA1); //set PORT A pin 1 as output for 12V relay
+   // PORTA &= ~(1<<PA1); //pull pin 1 high turn on relay
 
 
     /****** spi_steering sensor *******/

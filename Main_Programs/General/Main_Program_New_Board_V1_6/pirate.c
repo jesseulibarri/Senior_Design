@@ -22,21 +22,19 @@
  *********************************************************************/
 void pirate_mode() {
     //Configure interrupt 0 so a rising edge will wake up the controller out of sleep mode
-    EICRA = (1<<ISC00) | (1<<ISC01);   //Generate aysnchronous interrupt request on rising edge
+   // PORTA |= (1<<PA1);
+	EICRA = (1<<ISC00) | (1<<ISC01);   //Generate aysnchronous interrupt request on rising edge
     EIMSK = (1<<INT4);                 //Enable external interrupt 0
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);    //Enable power down mode, set sleep enable bit 
                                             //in the MCUCR register
-    PORTD &= ~(1<<PC_ON_OFF);  //Turn 12V power converter
-    PORTB |= (1<<PB7);
+    //PORTA &= ~(1<<PA1);  //Turn 12V power converter
+   
     cli();  //clear global interrupt, only needed if storing data before sleep
     sleep_enable();         //Set sleep enable bit in MCUCR register
     sei();                  //Set global interrupt bit
 
     sleep_cpu();            //CPU is sleeping
-    sleep_disable();        //CPU wakes up on rising edge ISR is executed
-
-    system_init();
-    
+    sleep_disable();        //CPU wakes up on rising edge ISR is executed    
 
 }//pirate_mode
 

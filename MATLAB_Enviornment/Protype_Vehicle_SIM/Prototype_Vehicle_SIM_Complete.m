@@ -63,16 +63,16 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %Select the total number of floats, (num_of_in_float), 
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
-serialPort = 'COM4';                %Define COM port #
+serialPort = 'COM7';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 1;                %Define # of Float/packet
-delay = 0.01;                       %Make sure sample faster than resolution
+delay = 0.001;                       %Make sure sample faster than resolution
 
 %Log file name and column titles 
 Logging = 0; %Set this to turn the data log on/off
-Log_Title = 'Prototype_Vehicle_SIM_Complete_Log.txt';
-fileID = fopen(Log_Title,'w');
-fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Set Current', 'Actual Current','Velocity of Vehicle (mph)','');
+%Log_Title = 'Prototype_Vehicle_SIM_Complete_Log.txt';
+%fileID = fopen(Log_Title,'w');
+%fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Set Current', 'Actual Current','Velocity of Vehicle (mph)','');
 
 %Other User Defined Properties
 plotTitle = 'Vehicle Speed vs Time';        %Plot title
@@ -119,11 +119,11 @@ try
     set(s,'Parity','none');
     set(s,'StopBits', 1);
     set(s,'FlowControl','none');
-    set(s,'InputBufferSize', 11);
-    set(s,'OutputBufferSize', 5);
-    set(s,'BytesAvailableFcnCount', 11);
+    set(s,'InputBufferSize', 12);
+    set(s,'OutputBufferSize', 6);
+    set(s,'BytesAvailableFcnCount', 12);
     set(s,'BytesAvailableFcnMode','byte');
-    set(s,'Timeout', 0.01);
+    set(s,'Timeout', 0.1);
 
     %Open the Serial Com Port and allow to open (pause)
     fopen(s);
@@ -159,9 +159,9 @@ try
         if(CheckPacket == 'S')
             CheckPacket = 0;
             Rx_data_packet = fread(s, num_of_in_float, 'float32');
-
+            
+            if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet)) 
             %Make sure read data is a Float and not an empty array
-            if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))  
                 Imset = Rx_data_packet(1);
 
                 %Calculate back EMF at the current linear speed, current 
@@ -240,25 +240,25 @@ try
         end
         pause(delay)               
 
-
-        if(Logging == 1)
-            %Save all input floats to the log file,
-            %first with the current time, followed
-            %by all of the read floats, ending with
-            %a new-line. Log is CSV compatable.
-            fprintf(fileID,'%f,',toc);  
-            fprintf(fileID,'%f,',Imset);  
-            fprintf(fileID,'%f,',Im);
-            fprintf(fileID,'%f,',Vxfmph);                        
-            fprintf(fileID,'\r\n');
-        end
-        pause(delay);
+% 
+%         if(Logging == 1)
+%             %Save all input floats to the log file,
+%             %first with the current time, followed
+%             %by all of the read floats, ending with
+%             %a new-line. Log is CSV compatable.
+%             fprintf(fileID,'%f,',toc);  
+%             fprintf(fileID,'%f,',Imset);  
+%             fprintf(fileID,'%f,',Im);
+%             fprintf(fileID,'%f,',Vxfmph);                        
+%             fprintf(fileID,'\r\n');
+%         end
+        %pause(delay);
         %Allow MATLAB time to Update Plot
 
         %Extract user selected data to graph
         data(count) = Vxfmph;
         Vxi = Vxf;
-
+        %pause(delay);
         %Plot some given data               
         %Adjust the graph's X-axis according to Scroll Width'.
         %It is adjusted using the current 'time' and 'count'.

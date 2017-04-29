@@ -66,7 +66,7 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 serialPort = 'COM7';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 4;                %Define # of Float/packet
-delay = 0.0001;                       %Make sure sample faster than resolution
+delay = 0.001;                       %Make sure sample faster than resolution
 
 %Log file name and column titles 
 Logging = 1; %Set this to turn the data log on/off
@@ -123,7 +123,7 @@ try
     set(s,'OutputBufferSize', 5);
     set(s,'BytesAvailableFcnCount', num_of_bytes+1);
     set(s,'BytesAvailableFcnMode','byte');
-    set(s,'Timeout', 0.01);
+    set(s,'Timeout', 0.001);
 
     %Open the Serial Com Port and allow to open (pause)
     fopen(s);
@@ -148,7 +148,7 @@ try
 
         %Icrement the count and time for live graph
         count = count + 1;
-        toc
+        toc;
         time(count) = toc;                                   
         %Extract Elapsed Time
         if(count > 2)
@@ -195,15 +195,17 @@ try
                 end
             end
         elseif(CheckPacket == 'V')
-        CheckPacket = 0;
-        Speed = fread(s, 1, 'float32')
-        fprintf('Speed recieved from Sleep')
-        fprintf(fileID,'**Microcontroller Awake! Current Speed: %f MPH **',Speed);                        
-        fprintf(fileID,'\r\n');
-        Im = 0;
+            CheckPacket = 0;
+            fprintf('Current Vehicle Speed: %f\n\n', Vxfmph)
+            Speed = fread(s, 1, 'float32');
+            Speed = Speed*4.95;
+            fprintf('Speed recieved from Microcontroller/Calculated Speed: %f\n\n', Speed)
+            fprintf(fileID,'**Microcontroller Awake! Current Speed: %f MPH **\n\n',Speed);                        
+            fprintf(fileID,'\r\n');
+            Im = 0;
         else
-        Im = 0;
-        %fprintf('Controller Timeout, setting current to zero');
+            Im = 0;
+            fprintf('Controller Timeout, setting current to zero');
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -236,9 +238,9 @@ try
 
         %Convert the current speed to MPH
         Vxfmph = 2.23694*(Vxf);
-        Current_Speed = Vxfmph
+        Current_Speed = Vxfmph;
         Max_Current = Imax;
-        Set_Current = Imset
+        Set_Current = Imset;
         Motor_Current = Im;        
 
         %Send current speed out to speed sensor
@@ -285,7 +287,7 @@ try
             set(plotGraph,'XData',time,'YData',data);
             axis([0 time(count) min max]);
         end   
-        pause(delay)
+        pause(delay);
         
     end
 

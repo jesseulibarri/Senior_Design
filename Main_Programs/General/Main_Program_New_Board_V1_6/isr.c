@@ -138,10 +138,7 @@ ISR(TIMER3_OVF_vect) {
 		uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
         //uart1_uchar_transmit(torque_l_bytes, torque_left);
         break;
-*/    }//switch
-        if(!(PINE & (1 << PE4))) {
-        	pirate_mode();
-        }
+*/    }//switch case
 }//timer1_ISR
 
 
@@ -150,7 +147,6 @@ ISR(TIMER3_OVF_vect) {
  *
  *********************************************************************/
 ISR(INT0_vect){
-    //NOT SURE WHAT THIS IS FOUCSR0B &= ~(1<<RXCIE0);R
     EIMSK &= ~(1<<INT0);
 
 }//ISR

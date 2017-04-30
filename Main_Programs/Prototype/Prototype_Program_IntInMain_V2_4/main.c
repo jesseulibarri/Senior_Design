@@ -59,16 +59,22 @@ int main(){
 			ADCSRA |= (1<<ADSC);
 			while(!bit_is_set(ADCSRA, ADIF)) { }
 			ADCSRA |= (1<<ADIF);
-			volatile uint16_t thr_in = ADC;
-				
+			volatile float thr_prev = thr_in;			
+			volatile float thr_in = ADC;
+			thr_in = thr_in*0.75 + thr_prev*0.25;
+
 			switch(user_mode){ 
 			//All button released
 			case NO_INPUT:
 			if(thr_in >= 36){
-				//Calculate and send current proportional to the ADC throttle input
+				//Calculate and send current proportional to the ADC throttle input		
 				target_cur = thr_in*(MAX_CUR)/(IN_MAX-IN_MIN)-(MAX_CUR/(IN_MAX-IN_MIN))*IN_MIN;
-                if(motor_current < target_cur) { motor_current += 0.5; } 
-                else if(motor_current >= MAX_CUR) { motor_current = MAX_CUR; }
+                if(motor_current < target_cur) {
+					motor_current += 0.5;
+					} 
+                else if(motor_current >= MAX_CUR) { 
+					motor_current = MAX_CUR;			
+					}
 				bldc_interface_set_current(motor_current);
 			} 
 			else{

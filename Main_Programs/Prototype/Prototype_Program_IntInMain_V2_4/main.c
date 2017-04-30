@@ -60,7 +60,7 @@ int main(){
 			while(!bit_is_set(ADCSRA, ADIF)) { }
 			ADCSRA |= (1<<ADIF);
 			volatile float thr_prev = thr_in;			
-			volatile float thr_in = ADC;
+			volatile float thr_in = (float)ADC*1.0f;
 			thr_in = thr_in*0.75 + thr_prev*0.25;
 
 			switch(user_mode){ 

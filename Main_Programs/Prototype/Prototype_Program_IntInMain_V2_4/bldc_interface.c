@@ -43,10 +43,9 @@ void bldc_interface_set_current(float current) {
 
 void bldc_interface_set_rpm(int rpm) {
 	int32_t send_index = 0;
-	fwd_can_append(send_buffer, &send_index);
 	send_buffer[send_index++] = COMM_SET_RPM;
 	buffer_append_int32(send_buffer, rpm, &send_index);
-	send_packet_no_fwd(send_buffer, send_index);
+	bldc_interface_send_packet(send_buffer, send_index);	
 }
 
 void bldc_interface_set_current_brake(float current) {

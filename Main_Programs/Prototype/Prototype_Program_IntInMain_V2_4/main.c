@@ -29,8 +29,8 @@
 #define CRUISE          0x9F
 #define PIRATE          0xFE
 #define NO_INPUT		0xFF
-#define MAX_CUR  		15.0
-#define MAX_RPM			10000
+#define MAX_CUR  		20.0
+#define MAX_RPM			7500
 #define TRUE			1
 #define FALSE   		0
 

@@ -63,10 +63,10 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %Select the total number of floats, (num_of_in_float), 
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
-serialPort = 'COM7';                %Define COM port #
+serialPort = 'COM3';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 4;                %Define # of Float/packet
-delay = 0.001;                       %Make sure sample faster than resolution
+delay = 0.0001;                       %Make sure sample faster than resolution
 
 %Log file name and column titles 
 Logging = 1; %Set this to turn the data log on/off
@@ -161,8 +161,8 @@ try
             CheckPacket = 0;
             Rx_data_packet = fread(s, num_of_in_float, 'float32');       
             %Read data off the serial bus as 32-bit floats.      
-            Base_Torque = Rx_data_packet(1);           
-            Set_Torque_Right = Rx_data_packet(2);            
+            Base_Torque = Rx_data_packet(1);
+            Set_Torque_Right = Rx_data_packet(2);
             Set_Torque_Left =  Rx_data_packet(3);
             Steering_Angle_Bin = Rx_data_packet(4);
 
@@ -198,9 +198,11 @@ try
             CheckPacket = 0;
             fprintf('Current Vehicle Speed: %f\n\n', Vxfmph)
             Speed = fread(s, 1, 'float32');
-            Speed = Speed*4.95;
+%             Speed = Speed*4.95;
             fprintf('Speed recieved from Microcontroller/Calculated Speed: %f\n\n', Speed)
-            fprintf(fileID,'**Microcontroller Awake! Current Speed: %f MPH **\n\n',Speed);                        
+            fprintf(fileID,'**Microcontroller Awake! Current Speed: %f MPH **\n\n',Speed);
+            %percent_error = abs(1-Vxfmph/Speed)*100
+            percent_error = abs((Speed-Vxfmph)/Vxfmph)*100
             fprintf(fileID,'\r\n');
             Im = 0;
         else

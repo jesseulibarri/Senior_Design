@@ -17,9 +17,6 @@
 #include <stdlib.h>
 
 #define NO_INPUT        0xFF
-// #define ACCELERATE      0x7F
-// #define CRUISE          0x3F
-
 #define ACCELERATE      0xBF
 #define CRUISE          0x9F
 
@@ -28,6 +25,7 @@
 #define TRUE	1
 #define FALSE   0
 
+volatile extern uint8_t index = 0;
 volatile extern uint8_t wake_up_timing = 0;
 volatile extern uint16_t encoder_angle;
 float torque_right = 0.0;
@@ -44,7 +42,7 @@ unsigned char base_torque_bytes[4];
 uint16_t timestamp_dif = 20000;
 float integral = 0.0;
 char rx_buff[4];
-float speed = 0.0;
+volatile extern float speed = 0.0;
 char* speed_array = "     ";
 unsigned char output_array[4];
 uint8_t status;
@@ -63,15 +61,13 @@ ISR(TIMER3_OVF_vect) {
 	speed = calc_speed(timestamp_dif, speed);
 
 	//TODO: This is entirely for system checkoff. Remove afterward
-	if(wake_up_timing == 1) {
+	if(wake_up_timing == 1 && index == 20) {
 		wake_up_timing = 0;		//We only want to do this once when waking from sleep mode
-		//PORTA |= (1<<PA1);		//Clear timing bit
 		uart1_uchar_transmit(speed_bytes, speed, 'V');
 	}//if
+	index++;
 
-	
-	//uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
-	//uint8_t user_mode = PINA | 0x3F; //Mask everything out except PORTD 0, 6, and 7
+
 	uint8_t user_mode = PINF | 0x9F;
     switch(user_mode){ 
     
@@ -83,62 +79,49 @@ ISR(TIMER3_OVF_vect) {
             torque_right = 0;
             torque_left = 0;
         
-        //uart1_uchar_transmit(torque_r_bytes, torque_right);
 		uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
-        //uart1_uchar_transmit(torque_l_bytes, torque_left);
         break;
        
     //Accelerate button is pushed
 	case ACCELERATE:
 		//integral = 0;
-		//speed = calc_speed(timestamp_dif, speed);
 		cruise_speed = speed;
 		base_torque = base_torque + 0.6;
 		if(base_torque > MAX_TORQUE_CUR)
 			base_torque = MAX_TORQUE_CUR; 
             
 		//Calculate new values for the motor controllers
-        set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);     
-        //Transmit torque value over uart
-        //uart1_uchar_transmit(torque_l_bytes, torque_left);
+        set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
 		uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
         break;
 	
 	//Cruise button is pushed
 	case CRUISE:
         //Calculate new values for the motor controllers
-       // speed = calc_speed(timestamp_dif, speed);
       // cruise(&torque_right, &torque_left, steering_angle, &base_torque, cruise_speed, speed, &integral);
       // uart1_uchar_transmit(torque_l_bytes, torque_left);
 		 	
 		if(speed > cruise_speed){
 			base_torque = 0;
 	   		set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
-		//	uart1_uchar_transmit(torque_l_bytes, torque_left);
 			uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
 		}
 		else{
 			base_torque = 9;
 	   		set_differential_torque(&torque_right, &torque_left, steering_angle, base_torque);
 			uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
-		//	uart1_uchar_transmit(torque_l_bytes, torque_left);
+
 		}
         break;
 
-	// case PIRATE:
-	// 	pirate_mode();
-	// 	break;
-/*
 	default:
 		base_torque = 0.001;
         torque_right = 0;
         torque_left = 0;
-        
-        //uart1_uchar_transmit(torque_r_bytes, torque_right);
+
 		uart1_package_transmit(base_torque_bytes, torque_l_bytes, torque_r_bytes, steering_angle_bytes, torque_right, torque_left, steering_angle, base_torque);
-        //uart1_uchar_transmit(torque_l_bytes, torque_left);
         break;
-*/    }//switch case
+    }//switch case
 }//timer1_ISR
 
 

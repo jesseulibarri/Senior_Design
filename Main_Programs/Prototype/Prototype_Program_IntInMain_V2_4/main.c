@@ -29,8 +29,8 @@
 #define CRUISE          0x9F
 #define PIRATE          0xFE
 #define NO_INPUT		0xFF
-#define MAX_CUR  		15.0
-#define MAX_RPM			10000
+#define MAX_CUR  		20.0
+#define MAX_RPM			13000
 #define TRUE			1
 #define FALSE   		0
 
@@ -38,6 +38,8 @@
 #define IN_MAX   		184
 #define IN_MIN   		36
 
+volatile float thr_prev = 0;
+volatile float thr_in = 0;			
 float target_cur;
 volatile float motor_current;
 volatile float motor_rpm;
@@ -59,8 +61,8 @@ int main(){
 			ADCSRA |= (1<<ADSC);
 			while(!bit_is_set(ADCSRA, ADIF)) { }
 			ADCSRA |= (1<<ADIF);
-			volatile float thr_prev = thr_in;			
-			volatile float thr_in = (float)ADC*1.0f;
+			thr_prev = thr_in;			
+			thr_in = (float)ADC*1.0f;
 			thr_in = thr_in*0.75 + thr_prev*0.25;
 
 			switch(user_mode){ 

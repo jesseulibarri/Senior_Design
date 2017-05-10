@@ -14,7 +14,8 @@
 #include "steering.h"
 #include "pirate.h"
 
-
+volatile uint8_t index;
+volatile float speed;
 volatile uint8_t wake_up_timing;
 volatile uint16_t encoder_angle;
 
@@ -36,7 +37,8 @@ while(1) {
 		PORTA |= (1<<PA1);
 		pirate_mode();
         wake_up_timing = 1;
-		
+        index = 0;
+        speed = 0.0;
 	}
 	
 }	

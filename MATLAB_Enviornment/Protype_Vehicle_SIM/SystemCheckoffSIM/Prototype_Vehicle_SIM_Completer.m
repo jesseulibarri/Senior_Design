@@ -63,18 +63,17 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %Select the total number of floats, (num_of_in_float), 
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
-serialPort = 'COM7';                %Define COM port #
+serialPort = 'COM4';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 4;                %Define # of Float/packet
 delay = 0.0001;                       %Make sure sample faster than resolution
 Packet_Rec = 0;
-Packet_Time = 0;
 Packet_Error = 0;
 
 
 %Log file name and column titles 
 Logging = 1; %Set this to turn the data log on/off
-Log_Title = 'WakeupTimingTest.txt';
+Log_Title = 'WakeupCalculationLog.txt';
 fileID = fopen(Log_Title,'w');
 fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Set Current', 'Actual Current','Velocity of Vehicle (mph)','Speed', 'Packets Recieved','Packet Errors');
 
@@ -150,7 +149,7 @@ try
     %Loop when Plot is Active 
     while ishandle(plotGraph)
 
-        %Icrement the count and time for live graph
+        %Increment the count and time for live graph
         count = count + 1;
         toc;
         time(count) = toc;                                   
@@ -172,7 +171,7 @@ try
 
             %Make sure read data is a Float and not an empty array
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))
-                Packet_Rec = Packet_Rec+1
+                Packet_Rec = Packet_Rec+1;
                 Imset = Rx_data_packet(1);
 
                 %Calculate back EMF at the current linear speed, current 
@@ -202,7 +201,7 @@ try
         elseif(CheckPacket == 'V')
             CheckPacket = 0;
             fprintf('Current Vehicle Speed: %f\n\n', Vxfmph)
-            Speed = fread(s, 1, 'float32');
+            Speed = fread(s, 1, 'float32')
             fprintf('Speed recieved from Microcontroller/Calculated Speed: %f\n\n', Speed)
             fprintf(fileID,'**Microcontroller Awake! Current Speed: %f MPH **\n\n',Speed);
             %percent_error = abs(1-Vxfmph/Speed)*100
@@ -212,7 +211,7 @@ try
         else
             Im = 0;
             fprintf('Controller Timeout, setting current to zero');
-            Packet_Error = Packet_Error+1
+            Packet_Error = Packet_Error+1;
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -276,9 +275,9 @@ try
             fprintf(fileID,'%f,',Imset);  
             fprintf(fileID,'%f,',Im);
             fprintf(fileID,'%f,',Vxfmph);
-            fprintf(fileID, '%f', Speed);
+            fprintf(fileID, '%f,', Speed);
             fprintf(fileID, '%f,', Packet_Rec);                       
-            fprintf(fileID, '%f,', Packet_Error);            
+            fprintf(fileID, '%f.', Packet_Error);            
             fprintf(fileID,'\r\n');
         end
         %Allow MATLAB time to Update Plot

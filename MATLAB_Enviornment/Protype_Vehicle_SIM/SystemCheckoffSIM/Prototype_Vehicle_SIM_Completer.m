@@ -63,17 +63,17 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %Select the total number of floats, (num_of_in_float), 
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
-serialPort = 'COM4';                %Define COM port #
+serialPort = 'COM7';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 4;                %Define # of Float/packet
-delay = 0.0001;                       %Make sure sample faster than resolution
+delay = 0.001;                       %Make sure sample faster than resolution
 Packet_Rec = 0;
 Packet_Error = 0;
 
 
 %Log file name and column titles 
 Logging = 1; %Set this to turn the data log on/off
-Log_Title = 'WakeupCalculationLog.txt';
+Log_Title = 'WakeuptionLog231.txt';
 fileID = fopen(Log_Title,'w');
 fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Set Current', 'Actual Current','Velocity of Vehicle (mph)','Speed', 'Packets Recieved','Packet Errors');
 
@@ -82,17 +82,17 @@ plotTitle = 'Vehicle Speed vs Time';        %Plot title
 xLabel = 'Elapsed Time(s)';                 %X-axis label
 yLabel = 'Current Vehicle Velocity (mph)';  %Y-axis label
 plotGrid = 'on';                            %'off' to turn off grid
-scrollWidth = 20;                           %Display period in plot, plot entire data log if <= 0
+scrollWidth = 3;                           %Display period in plot, plot entire data log if <= 0
 
 %Choose which input float to graph (float_to_graph,then
 %indicate the maximum and minimum value that it can be.
 float_to_graph = 1;                         %Define which float to graph     
 min = 0;                                    %Define y-min
-max = 100;                                  %Define y-max
+max = 32;                                  %Define y-max
 
 %Define Function Variables
-time = 0;
-data = 0;
+time = zeros(1,1000);
+data = zeros(1,1000);
 count = 0;
 num_of_bytes = (num_of_in_float*4);
 
@@ -126,7 +126,7 @@ try
     set(s,'OutputBufferSize', 5);
     set(s,'BytesAvailableFcnCount', num_of_bytes+1);
     set(s,'BytesAvailableFcnMode','byte');
-    set(s,'Timeout', 0.001);
+    set(s,'Timeout', 0.01);
 
     %Open the Serial Com Port and allow to open (pause)
     fopen(s);
@@ -151,7 +151,6 @@ try
 
         %Increment the count and time for live graph
         count = count + 1;
-        toc;
         time(count) = toc;                                   
         %Extract Elapsed Time
         if(count > 2)
@@ -170,8 +169,8 @@ try
             Steering_Angle_Bin = Rx_data_packet(4);
 
             %Make sure read data is a Float and not an empty array
-            if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))
-                Packet_Rec = Packet_Rec+1;
+            if(~isempty(Rx_data_packet))
+                %Packet_Rec = Packet_Rec+1;
                 Imset = Rx_data_packet(1);
 
                 %Calculate back EMF at the current linear speed, current 
@@ -211,7 +210,7 @@ try
         else
             Im = 0;
             fprintf('Controller Timeout, setting current to zero');
-            Packet_Error = Packet_Error+1;
+            %Packet_Error = Packet_Error+1;
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -244,10 +243,10 @@ try
 
         %Convert the current speed to MPH
         Vxfmph = 2.23694*(Vxf);
-        Current_Speed = Vxfmph;
+        Current_Speed = Vxfmph
         Max_Current = Imax;
         Set_Current = Imset;
-        Motor_Current = Im;        
+        Motor_Current = Im;      
 
         %Send current speed out to speed sensor
         if(String == 1)
@@ -256,12 +255,12 @@ try
             fprintf(s,'%s',SendString);
             fwrite(s, 'G', 'char');
         end
-        if(String == 0)
-            SendUChar = num2str(Vxfmph,'%.1f');
-            SendUChar;
-            fwrite(s,SendUChar,'char');
-            fwrite(s, 'G', 'char');
-        end
+%         if(String == 0)
+%             SendUChar = num2str(Vxfmph,'%.1f');
+%             SendUChar;
+%             fwrite(s,SendUChar,'char');
+%             fwrite(s, 'G', 'char');
+%         end
         %pause(delay)               
 
         %time(count) - time(count-1);
@@ -276,8 +275,8 @@ try
             fprintf(fileID,'%f,',Im);
             fprintf(fileID,'%f,',Vxfmph);
             fprintf(fileID, '%f,', Speed);
-            fprintf(fileID, '%f,', Packet_Rec);                       
-            fprintf(fileID, '%f.', Packet_Error);            
+            %fprintf(fileID, '%f,', Packet_Rec);                       
+            %fprintf(fileID, '%f.', Packet_Error);            
             fprintf(fileID,'\r\n');
         end
         %Allow MATLAB time to Update Plot
@@ -298,7 +297,7 @@ try
             axis([0 time(count) min max]);
         end   
         pause(delay);
-        
+        flushinput(s);
     end
 
 catch ME

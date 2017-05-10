@@ -40,9 +40,9 @@ void system_init() {
     //Set Prescalar to 64
     TCCR3B |= (1<<CS31)|(1<<CS30);
     //Set Output Comare Match A Value (TOP value, 10Hz, 100mS)
-    OCR3A = 24999;
+    //OCR3A = 24999;
     //Set Output Comare Match A Value (TOP value, 40Hz, 25mS)
-    //OCR3A = 6000; 
+    OCR3A = 6000; 
     //Interrupt on timer overflow (at TOP value)
     ETIMSK |= (1<<TOIE3);
 

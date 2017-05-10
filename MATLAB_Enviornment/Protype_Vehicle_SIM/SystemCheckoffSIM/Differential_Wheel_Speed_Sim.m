@@ -13,6 +13,7 @@
 Wheelbase = 1.6;
 Tread = 0.455;
 Steering_Angle_Deg = 0;
+Packet_Rec = 0;
 
 %Clear workplace and variable before run
 clear;
@@ -77,7 +78,7 @@ try
     set(s,'InputBufferSize', num_of_bytes+1);
     set(s,'BytesAvailableFcnCount', num_of_bytes+1);
     set(s,'BytesAvailableFcnMode','byte');
-
+    Packet_Rec = 0;
     %Open the Serial Com Port and allow to open (pause)
     fopen(s);
     pause(1);
@@ -89,7 +90,6 @@ try
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   User Settings: Configures the simulation, read below for info
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
     Wheelbase = 1.6;
     Tread = 0.455;
@@ -122,7 +122,6 @@ try
                 if(Steering_Angle_Bin > 2048 && Steering_Angle_Bin < 4090)
                     %LTR = 1.033849*log(Steering_Angle_Bin) - 7.588172;
                     Steering_Angle_Deg = (Steering_Angle_Bin/11.3778)-360
-
                 end
                 %Right turn (0 to +180 Degrees) = (0 to 2048)
                 if(Steering_Angle_Bin >= 0 && Steering_Angle_Bin < 2048)
@@ -212,7 +211,12 @@ try
             %Allow MATLAB time to Update Plot
             pause(delay);
         end
-
+        
+        Packet_Rec = Packet_Rec+1;
+        if  ~mod(Packet_Rec,80)
+            flushinput(s);
+        end        
+        
     end
 
 catch ME

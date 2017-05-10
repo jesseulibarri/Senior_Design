@@ -299,7 +299,10 @@ try
             axis([0 time(count) min max]);
         end   
         pause(delay);
-        flushinput(s);
+        
+        if  ~mod(Packet_Rec,80)
+            flushinput(s);
+        end
     end
 
 catch ME

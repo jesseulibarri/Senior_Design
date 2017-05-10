@@ -70,7 +70,6 @@ delay = 0.001;                       %Make sure sample faster than resolution
 Packet_Rec = 0;
 Packet_Error = 0;
 
-
 %Log file name and column titles 
 Logging = 1; %Set this to turn the data log on/off
 Log_Title = 'WakeuptionLog231.txt';

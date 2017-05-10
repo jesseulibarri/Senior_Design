@@ -16,7 +16,7 @@
 
 
 volatile uint8_t wake_up_timing;
-uint16_t encoder_angle = 20;
+//uint16_t encoder_angle = 20;
 
 int main(){
 ///*** Calculate the system needed constants ***/

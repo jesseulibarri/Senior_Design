@@ -17,7 +17,7 @@
 volatile uint8_t index;
 volatile float speed;
 volatile uint8_t wake_up_timing;
-uint16_t encoder_angle = 20;
+volatile uint16_t encoder_angle;
 
 int main(){
 ///*** Calculate the system needed constants ***/

@@ -63,12 +63,13 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %Select the total number of floats, (num_of_in_float), 
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
-serialPort = 'COM4';                %Define COM port #
+serialPort = 'COM7';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 4;                %Define # of Float/packet
 delay = 0.001;                       %Make sure sample faster than resolution
 Packet_Rec = 0;
 Packet_Error = 0;
+
 
 %Log file name and column titles 
 Logging = 1; %Set this to turn the data log on/off
@@ -254,12 +255,12 @@ try
             fprintf(s,'%s',SendString);
             fwrite(s, 'G', 'char');
         end
-        if(String == 0)
-            SendUChar = num2str(Vxfmph,'%.1f');
-            SendUChar;
-            fwrite(s,SendUChar,'char');
-            fwrite(s, 'G', 'char');
-        end
+%         if(String == 0)
+%             SendUChar = num2str(Vxfmph,'%.1f');
+%             SendUChar;
+%             fwrite(s,SendUChar,'char');
+%             fwrite(s, 'G', 'char');
+%         end
         %pause(delay)               
         %time(count) - time(count-1);
         
@@ -268,13 +269,9 @@ try
             %first with the current time, followed
             %by all of the read floats, ending with
             %a new-line. Log is CSV compatable.
-            fprintf(fileID,'%f,',toc);
-            fprintf(fileID,'%f,',Base_Torque);
-            fprintf(fileID,'%f,',Set_Torque_Right);
-            fprintf(fileID,'%f,',Set_Torque_Left);
-            fprintf(fileID,'%f,',Steering_Angle_Bin);            
-%             fprintf(fileID,'%f,',Imset);  
-%             fprintf(fileID,'%f,',Im);
+            fprintf(fileID,'%f,',toc);  
+            fprintf(fileID,'%f,',Imset);  
+            fprintf(fileID,'%f,',Im);
             fprintf(fileID,'%f,',Vxfmph);
             fprintf(fileID, '%f,', Speed);
             fprintf(fileID, '%f,', Packet_Rec);                       

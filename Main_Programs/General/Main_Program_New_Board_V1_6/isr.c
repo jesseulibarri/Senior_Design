@@ -29,7 +29,7 @@
 #define FALSE   0
 
 volatile extern uint8_t wake_up_timing = 0;
-extern uint16_t encoder_angle;
+volatile extern uint16_t encoder_angle;
 float torque_right = 0.0;
 unsigned char torque_r_bytes[4];
 float torque_left = 0.0;

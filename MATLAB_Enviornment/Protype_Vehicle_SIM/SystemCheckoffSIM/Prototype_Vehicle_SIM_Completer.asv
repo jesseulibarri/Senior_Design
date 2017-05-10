@@ -173,6 +173,8 @@ try
             %Make sure read data is a Float and not an empty array
             if(~isempty(Rx_data_packet) && isfloat(Rx_data_packet))
                 Packet_Rec = Packet_Rec+1
+                Packet_Time = toc
+                
                 Imset = Rx_data_packet(1);
 
                 %Calculate back EMF at the current linear speed, current 
@@ -279,6 +281,7 @@ try
             fprintf(fileID, '%f', Speed);
             fprintf(fileID, '%f,', Packet_Rec);                       
             fprintf(fileID, '%f,', Packet_Error);            
+            
             fprintf(fileID,'\r\n');
         end
         %Allow MATLAB time to Update Plot

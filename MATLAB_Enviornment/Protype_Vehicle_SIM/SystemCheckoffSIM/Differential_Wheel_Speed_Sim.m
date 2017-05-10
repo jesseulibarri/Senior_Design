@@ -23,7 +23,7 @@ try
     %Select the total number of floats, (num_of_in_float), 
     %being sent via serial every cycle; and which speed 
     %you would like to sample for input.
-    serialPort = 'COM4';                %Define COM port #
+    serialPort = 'COM7';                %Define COM port #
     baudrate = 76800;                   %Define baudrate of data
     num_of_in_float = 4;                %Define # of Float/packet
     delay = 0.01;                      %Make sure sample faster than resolution
@@ -213,7 +213,7 @@ try
         end
         
         Packet_Rec = Packet_Rec+1;
-        if  ~mod(Packet_Rec,80)
+        if  ~mod(Packet_Rec,40)
             flushinput(s);
         end        
         

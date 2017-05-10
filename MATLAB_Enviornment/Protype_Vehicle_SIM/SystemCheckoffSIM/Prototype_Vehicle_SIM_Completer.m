@@ -63,7 +63,7 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %Select the total number of floats, (num_of_in_float), 
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
-serialPort = 'COM4';                %Define COM port #
+serialPort = 'COM7';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 4;                %Define # of Float/packet
 delay = 0.001;                       %Make sure sample faster than resolution
@@ -72,22 +72,22 @@ Packet_Error = 0;
 
 %Log file name and column titles 
 Logging = 1; %Set this to turn the data log on/off
-Log_Title = 'WakeuptionLog231.txt';
+Log_Title = 'VehicleSimLog_SystemCheckoff1.txt';
 fileID = fopen(Log_Title,'w');
-fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s\r\n','Time(s)','Set Current', 'Actual Current','Velocity of Vehicle (mph)','Speed', 'Packets Recieved','Packet Errors');
+fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s,%s,%s:\r\n','Time(s)','Base Torque','Torque Right','Torque Left','Steering Angle Binary','Velocity of Vehicle (mph)','Speed Calculated at Wake-up', 'Packets Recieved','Packet With Errors');
 
 %Other User Defined Properties
 plotTitle = 'Vehicle Speed vs Time';        %Plot title
 xLabel = 'Elapsed Time(s)';                 %X-axis label
 yLabel = 'Current Vehicle Velocity (mph)';  %Y-axis label
 plotGrid = 'on';                            %'off' to turn off grid
-scrollWidth = 3;                           %Display period in plot, plot entire data log if <= 0
+scrollWidth = 10;                           %Display period in plot, plot entire data log if <= 0
 
 %Choose which input float to graph (float_to_graph,then
 %indicate the maximum and minimum value that it can be.
 float_to_graph = 1;                         %Define which float to graph     
 min = 0;                                    %Define y-min
-max = 32;                                  %Define y-max
+max = 45;                                  %Define y-max
 
 %Define Function Variables
 time = zeros(1,1000);
@@ -202,13 +202,14 @@ try
             Speed = fread(s, 1, 'float32')
             fprintf('Speed recieved from Microcontroller/Calculated Speed: %f\n\n', Speed)
             fprintf(fileID,'**Microcontroller Awake! Current Speed: %f MPH **\n\n',Speed);
-            %percent_error = abs(1-Vxfmph/Speed)*100
             percent_error = abs((Speed-Vxfmph)/Vxfmph)*100
+            fprintf('Error in Calculation: %f % **\n\n',percent_error)
+            fprintf(fileID,'**Error in Calculation: %f % **\n\n',percent_error);
             fprintf(fileID,'\r\n');
             Im = 0;
         else
             Im = 0;
-            fprintf('Controller Timeout, setting current to zero');
+            fprintf('Packet Error. Setting current to zero');
             Packet_Error = Packet_Error+1;
         end
 
@@ -273,8 +274,6 @@ try
             fprintf(fileID,'%f,',Set_Torque_Right);
             fprintf(fileID,'%f,',Set_Torque_Left);
             fprintf(fileID,'%f,',Steering_Angle_Bin);            
-%             fprintf(fileID,'%f,',Imset);  
-%             fprintf(fileID,'%f,',Im);
             fprintf(fileID,'%f,',Vxfmph);
             fprintf(fileID, '%f,', Speed);
             fprintf(fileID, '%f,', Packet_Rec);                       
@@ -300,7 +299,7 @@ try
         end   
         pause(delay);
         
-        if  ~mod(Packet_Rec,80)
+        if  ~mod(Packet_Rec,40)
             flushinput(s);
         end
     end

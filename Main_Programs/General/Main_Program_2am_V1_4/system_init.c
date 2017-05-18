@@ -74,10 +74,10 @@ void system_init() {
      }//if spi_steering
 
     /****** Initialize UART0 *******/
-   uart0_init(BAUDVALUE);
+   uart0_init(8);
 
     /****** Initialize UART1 *******/
-   uart1_init(BAUDVALUE);
+   uart1_init(8);
 
 
 }//system_init

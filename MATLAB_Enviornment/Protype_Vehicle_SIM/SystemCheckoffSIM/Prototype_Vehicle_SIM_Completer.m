@@ -63,7 +63,7 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %Select the total number of floats, (num_of_in_float), 
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
-serialPort = 'COM7';                %Define COM port #
+serialPort = 'COM4';                %Define COM port #
 baudrate = 76800;                   %Define baudrate of data
 num_of_in_float = 4;                %Define # of Float/packet
 delay = 0.001;                       %Make sure sample faster than resolution
@@ -105,11 +105,64 @@ ylabel(yLabel,'FontSize',15);
 axis([0 10 min max]);
 
 %Append grid to plot at users command
-grid(plotGrid);
+% Create the figure
+% mFigure = figure()
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Create a uicontrol of type "text"
+mSpeedTitle = uicontrol('style','text','Position',[1740 200 150 20],'FontSize',12)
+set(mSpeedTitle,'String','Vehicle Speed:')
+mSpeed = uicontrol('style','text','Position',[1765 180 100 20],'FontSize',12)
+Speed = 20.0023;
+set(mSpeed,'String',Speed)
+
+mAngleTitle = uicontrol('style','text','Position',[1740 250 150 20],'FontSize',12)
+set(mAngleTitle,'String','Wheel Angle:')
+mAngle = uicontrol('style','text','Position',[1765 230 100 20],'FontSize',12)
+Angle = 0;
+set(mAngle,'String',Angle)
+
+mSetcurrentTitle = uicontrol('style','text','Position',[1740 300 150 20],'FontSize',12)
+set(mSetcurrentTitle,'String','Set Current:')
+mSetcurrent = uicontrol('style','text','Position',[1765 280 100 20],'FontSize',12)
+Setcurrent = 10;
+set(mSetcurrent,'String',Setcurrent)
+
+mPacket_RecTitle = uicontrol('style','text','Position',[1740 350 150 20],'FontSize',12)
+set(mPacket_RecTitle,'String','Packets Recieved:')
+mPacket_Rec = uicontrol('style','text','Position',[1765 330 100 20],'FontSize',12)
+Packet_Rec = 0;
+set(mPacket_Rec,'String',Speed)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% grid(plotGrid);
+% TextFig = figure(2)
+% TextDisp = uicontrol('style','text','FontSize',12,...
+%               'Position',[1 1 1 1]);
+% 
+% set(TextDisp,'String','342')
+          
 %Generate plot and pause slightly to let it open
 disp('Close Plot to End Session');
 pause(delay);
+
+Vxfmpg = 0;
+
+% i=1;
+% for i = 1:500
+%     
+%     Packet_Rec = Packet_Rec+2;
+%     Setcurrent = Setcurrent +0.5;
+%     Speed = Speed + 0.25;
+%     Angle = Angle + 1;
+%     set(mSpeed,'String',Speed) 
+%     set(mAngle,'String',Setcurrent) 
+%     set(mPacket_Rec,'String',Packet_Rec) 
+%     set(mAngle,'String',Angle) 
+%     pause(.1);
+%     
+% end
+
 
 try
 
@@ -160,7 +213,7 @@ try
         %Make sure incoming data contains the correct "set current command 'S'."
         if(CheckPacket == 'S')
             CheckPacket = 0;
-            Rx_data_packet = fread(s, num_of_in_float, 'float32');       
+            Rx_data_packet = fread(s, num_of_in_float, 'float32')       
             %Read data off the serial bus as 32-bit floats.      
             Base_Torque = Rx_data_packet(1);
             Set_Torque_Right = Rx_data_packet(2);
@@ -244,6 +297,14 @@ try
         %Convert the current speed to MPH
         Vxfmph = 2.23694*(Vxf);
         Current_Speed = Vxfmph
+        
+        
+        set(mSpeed,'String',Vxfmpg)
+        set(mSetcurrent,'String',Imset)
+        set(mAngle,'String',Angle)
+        set(mPacket_Rec,'String',Packet_Rec)
+        
+        
         Max_Current = Imax;
         Set_Current = Imset;
         Motor_Current = Im;      

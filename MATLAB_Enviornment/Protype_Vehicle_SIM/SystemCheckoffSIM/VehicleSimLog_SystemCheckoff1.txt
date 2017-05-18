@@ -1,2 +1,1 @@
 Time(s),Base Torque,Torque Right,Torque Left,Steering Angle Binary,Velocity of Vehicle (mph),Speed Calculated at Wake-up,Packets Recieved,Packet With Errors:
-0.015061,

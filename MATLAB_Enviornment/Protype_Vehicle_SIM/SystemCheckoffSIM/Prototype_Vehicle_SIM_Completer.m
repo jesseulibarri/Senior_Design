@@ -60,6 +60,18 @@ Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 %Note that Fzf + Fzr = mg·cos?
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   User Settings: Configures the simulation, read below for info
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    Wheelbase = 1.6;
+    Tread = 0.455;
+    Steering_Angle_Deg = 0;
+    Percent_Error_Left = 'N/A';
+    Percent_Error_Right = 'N/A';      
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %Select the total number of floats, (num_of_in_float), 
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
@@ -71,7 +83,7 @@ Packet_Rec = 0;
 Packet_Error = 0;
 
 %Log file name and column titles 
-Logging = 1; %Set this to turn the data log on/off
+Logging = 0; %Set this to turn the data log on/off
 Log_Title = 'VehicleSimLog_SystemCheckoff1.txt';
 fileID = fopen(Log_Title,'w');
 fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s,%s,%s:\r\n','Time(s)','Base Torque','Torque Right','Torque Left','Steering Angle Binary','Velocity of Vehicle (mph)','Speed Calculated at Wake-up', 'Packets Recieved','Packet With Errors');
@@ -363,6 +375,59 @@ try
         if  ~mod(Packet_Rec,40)
             flushinput(s);
         end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %   Differential Wheel Torque Calculations      %
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        if(Base_Torque > 0.1)
+            %Left turn (0 to -180 Degrees) = (4085 - 2048)            
+            if(Steering_Angle_Bin > 2048 && Steering_Angle_Bin < 4090)
+                %LTR = 1.033849*log(Steering_Angle_Bin) - 7.588172;
+                Steering_Angle_Deg = (Steering_Angle_Bin/11.3778)-360
+            end
+            %Right turn (0 to +180 Degrees) = (0 to 2048)
+            if(Steering_Angle_Bin >= 0 && Steering_Angle_Bin < 2048)
+                %RTR = -8E-08*(Steering_Angle_Bin)^2 - 0.0002*(Steering_Angle_Bin) + 0.9863;                
+                Steering_Angle_Deg = (Steering_Angle_Bin/11.3778)
+            end      
+
+            Steering_Angle_Rad = abs(Steering_Angle_Deg)*(pi/180);
+            Center_Wheel_Angle_Deg = ((0.1464*abs(Steering_Angle_Deg))-0.132448)*(2);
+            Center_Wheel_Angle_Rad = Center_Wheel_Angle_Deg*(pi/180);
+            Radius_To_Cen_Axle = (Wheelbase-(tan(Center_Wheel_Angle_Rad)*Tread))/(tan(Center_Wheel_Angle_Rad));
+            Radius_To_In_Wheel = Radius_To_Cen_Axle - Tread;
+            Radius_To_Out_Wheel = Radius_To_Cen_Axle + Tread;
+            In_Wheel_Deg = atand(Wheelbase/Radius_To_In_Wheel)*(pi/180);
+            Out_Wheel_Deg = atand(Wheelbase/Radius_To_Out_Wheel)*(pi/180);        
+
+            Speed_Ratio = Radius_To_In_Wheel/Radius_To_Out_Wheel;
+
+            if(Steering_Angle_Deg > 0 && Steering_Angle_Deg < 180)
+                fprintf('Turning Right');
+                Target_Torque_Left = Base_Torque
+                Target_Torque_Right = Base_Torque*Speed_Ratio
+            end
+
+            if(Steering_Angle_Deg > -180 && Steering_Angle_Deg < 0)
+                fprintf('Turning Left');                
+                Target_Torque_Left = Base_Torque*Speed_Ratio
+                Target_Torque_Right = Base_Torque
+            end
+
+            if(Steering_Angle_Deg ~= 0)
+                Error_Left = Target_Torque_Left - Set_Torque_Left;
+                Error_Right = Target_Torque_Right - Set_Torque_Right;
+
+                Percent_Error_Left = (((Set_Torque_Left - Target_Torque_Left)/Set_Torque_Left)*100);
+                Percent_Error_Right = (((Set_Torque_Right - Target_Torque_Right)/Target_Torque_Right)*100);            
+
+                Percent_Error_Left = abs(Percent_Error_Left)
+                Percent_Error_Right = abs(Percent_Error_Right)
+            else
+                Percent_Error_Left = 'N/A';
+                Percent_Error_Right = 'N/A';                    
+            end
+        end        
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
     end
 
 catch ME

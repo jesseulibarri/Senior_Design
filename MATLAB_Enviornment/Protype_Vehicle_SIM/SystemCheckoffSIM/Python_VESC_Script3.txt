@@ -1,0 +1,1 @@
+Time(s),StartByte(2),PayloadSize(#ofBytes),Command,Payload2,Payload3,Payload4,Payload5,CRCByte1,CRCByte2,EndByte(3)

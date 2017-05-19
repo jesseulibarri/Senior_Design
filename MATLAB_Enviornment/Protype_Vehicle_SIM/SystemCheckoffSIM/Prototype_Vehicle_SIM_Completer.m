@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   Motor/Wheel Parameters
+%                   Motor/Wheel Parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 B = 0.5;              %Magnetic Flux Density (T)
 Cemf = 3;             %Back EMF constant
@@ -22,7 +22,7 @@ Mm = 4.26;            %Mass of motor (Kg)
 Mw = 1.7;             %Mass of wheel (Kg)
 f = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   Vehicle/Enviornment Parameters
+%                   Vehicle/Enviornment Parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 g = -9.81;            %Gravitational acceleration (m/s2)
 m = 81;               %Vehicle mass (kg)
@@ -34,7 +34,7 @@ Cd = 0.076;           %Aerodynamic drag coefficient (N·s2/kg·m)
 p = 1.2;              %Mass density of air (kg/m3)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   Active Forces on System
+%                   Active Forces on System
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Ax = 0;               %Longitudinal vehicle acceleration (m/s^2)
 Vxi = 0;              %Initial Longitudinal vehicle velocity (m/s)
@@ -53,31 +53,31 @@ Statf = 1;
 Speed = 0;
 Fxf = 0; %Force exerted on the front wheel (0 since there is no motor)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Zero vertical acceleration and zero pitch torque require
 %Fzf = (+h(Fd-mgsin(beta)-m*Vx)+b*mgcos(beta))/(a+b);
 %Fzr = (-h(Fd-mgsin(beta)-m*Vx)+b*mgcos(beta))/(a+b);
 %Note that Fzf + Fzr = mg·cos?
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   User Settings: Configures the simulation, read below for info
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    Wheelbase = 1.6;
-    Tread = 0.455;
-    Steering_Angle_Deg = 0;
-    Percent_Error_Left = 'N/A';
-    Percent_Error_Right = 'N/A';      
-    
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%       User Settings: Configures the simulation, read below for info
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Wheelbase = 1.6;
+Tread = 0.455;
+Steering_Angle_Bin = 0;
+Steering_Angle_Deg = 0;
+Percent_Error_Left = 'N/A';
+Percent_Error_Right = 'N/A';   
+Base_Torque = 0;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Select the total number of floats, (num_of_in_float), 
 %being sent via serial every cycle; and which speed 
 %you would like to sample for input.
-serialPort = 'COM4';                %Define COM port #
-baudrate = 76800;                   %Define baudrate of data
-num_of_in_float = 4;                %Define # of Float/packet
+serialPort = 'COM4';                 %Define COM port #
+baudrate = 76800;                    %Define baudrate of data
+num_of_in_float = 4;                 %Define # of Float/packet
 delay = 0.001;                       %Make sure sample faster than resolution
 Packet_Rec = 0;
 Packet_Error = 0;
@@ -89,7 +89,7 @@ fileID = fopen(Log_Title,'w');
 fprintf(fileID,'%s,%s,%s,%s,%s,%s,%s,%s,%s:\r\n','Time(s)','Base Torque','Torque Right','Torque Left','Steering Angle Binary','Velocity of Vehicle (mph)','Speed Calculated at Wake-up', 'Packets Recieved','Packet With Errors');
 
 %Other User Defined Properties
-plotTitle = 'Vehicle Speed vs Time';        %Plot title
+plotTitle = 'Electric Vehicle Simulation';  %Plot title
 xLabel = 'Elapsed Time(s)';                 %X-axis label
 yLabel = 'Current Vehicle Velocity (mph)';  %Y-axis label
 plotGrid = 'on';                            %'off' to turn off grid
@@ -99,7 +99,7 @@ scrollWidth = 10;                           %Display period in plot, plot entire
 %indicate the maximum and minimum value that it can be.
 float_to_graph = 1;                         %Define which float to graph     
 min = 0;                                    %Define y-min
-max = 45;                                  %Define y-max
+max = 45;                                   %Define y-max
 
 %Define Function Variables
 time = zeros(1,1000);
@@ -108,7 +108,7 @@ count = 0;
 num_of_bytes = (num_of_in_float*4);
 
 %Set up Plot
-plotGraph = plot(time,data,'-mo','LineWidth',1,'MarkerEdgeColor','k','MarkerFaceColor',[.49 1 .63],'MarkerSize',2);
+plotGraph = plot(time,data,'-mo','LineWidth',1,'MarkerEdgeColor','b','MarkerFaceColor',[0 0 0],'MarkerSize',2);
 
 %Set plot grid, title, and axis lables
 title(plotTitle,'FontSize',25);
@@ -116,49 +116,67 @@ xlabel(xLabel,'FontSize',15);
 ylabel(yLabel,'FontSize',15);
 axis([0 10 min max]);
 
-%Append grid to plot at users command
-% Create the figure
-% mFigure = figure()
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Create a uicontrol of type "text"
-mSpeedTitle = uicontrol('style','text','Position',[1740 200 150 20],'FontSize',12)
+%                   Vehicle and Simulation Display Panels
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+mPacket_ErrorTitle = uicontrol('style','text','Position',[1740 300 180 20],'FontSize',12)
+set(mPacket_ErrorTitle,'String','Packet_Error:')
+mPacket_Error = uicontrol('style','text','Position',[1740 280 180 20],'FontSize',12)
+Packet_Error = 0;
+set(mPacket_Error,'String',Packet_Error)
+
+mPacket_RecTitle = uicontrol('style','text','Position',[1740 350 180 20],'FontSize',12)
+set(mPacket_RecTitle,'String','Packets Recieved:')
+mPacket_Rec = uicontrol('style','text','Position',[1740 330 180 20],'FontSize',12)
+Packet_Rec = 0;
+set(mPacket_Rec,'String',Packet_Rec)
+            
+mPercent_Error_LeftTitle = uicontrol('style','text','Position',[1740 600 180 20],'FontSize',12)
+set(mPercent_Error_LeftTitle,'String','Percent Error Left:')
+mPercent_Error_Left = uicontrol('style','text','Position',[1740 580 180 20],'FontSize',12)
+Percent_Error_Left = 'N/A';
+set(mPercent_Error_Left,'String',Percent_Error_Left)
+
+mSet_Torque_LeftTitle = uicontrol('style','text','Position',[1740 650 180 20],'FontSize',12)
+set(mSet_Torque_LeftTitle,'String','Set Current Left:')
+mSet_Torque_Left = uicontrol('style','text','Position',[1740 630 180 20],'FontSize',12)
+Set_Torque_Left = 0;
+set(mSet_Torque_Left,'String',Set_Torque_Left)
+
+mPercent_Error_RightTitle = uicontrol('style','text','Position',[1740 750 180 20],'FontSize',12)
+set(mPercent_Error_RightTitle,'String','Percent Error Right:')
+mPercent_Error_Right = uicontrol('style','text','Position',[1740 730 180 20],'FontSize',12)
+Percent_Error_Right = 'N/A';
+set(mPercent_Error_Right,'String',Percent_Error_Right)
+
+mSet_Torque_RightTitle = uicontrol('style','text','Position',[1740 800 180 20],'FontSize',12)
+set(mSet_Torque_RightTitle,'String','Set Current Right:')
+mSet_Torque_Right = uicontrol('style','text','Position',[1740 780 180 20],'FontSize',12)
+Set_Torque_Right = 0;
+set(mSet_Torque_Right,'String',Set_Torque_Right)
+
+mSpeedTitle = uicontrol('style','text','Position',[50 800 180 30],'FontSize',16)
 set(mSpeedTitle,'String','Vehicle Speed:')
-mSpeed = uicontrol('style','text','Position',[1765 180 100 20],'FontSize',12)
-Speed = 20.0023;
+mSpeed = uicontrol('style','text','Position',[50 770 180 30],'FontSize',16)
+Speed = 0;
 set(mSpeed,'String',Speed)
 
-mAngleTitle = uicontrol('style','text','Position',[1740 250 150 20],'FontSize',12)
+mMotor_CurrentTitle = uicontrol('style','text','Position',[50 720 180 30],'FontSize',16)
+set(mMotor_CurrentTitle,'String','Motor Current:')
+mMotor_Current = uicontrol('style','text','Position',[50 690 180 30],'FontSize',16)
+Motor_Current = 0;
+set(mMotor_Current,'String',Motor_Current)
+
+mAngleTitle = uicontrol('style','text','Position',[50 640 180 30],'FontSize',16)
 set(mAngleTitle,'String','Wheel Angle:')
-mAngle = uicontrol('style','text','Position',[1765 230 100 20],'FontSize',12)
-Angle = 0;
-set(mAngle,'String',Angle)
+mAngle = uicontrol('style','text','Position',[50 610 180 30],'FontSize',16)
+Steering_Angle_Deg = 0;
+set(mAngle,'String',Steering_Angle_Deg)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
 
-mSetcurrentTitle = uicontrol('style','text','Position',[1740 300 150 20],'FontSize',12)
-set(mSetcurrentTitle,'String','Set Current:')
-mSetcurrent = uicontrol('style','text','Position',[1765 280 100 20],'FontSize',12)
-Setcurrent = 10;
-set(mSetcurrent,'String',Setcurrent)
-
-mPacket_RecTitle = uicontrol('style','text','Position',[1740 350 150 20],'FontSize',12)
-set(mPacket_RecTitle,'String','Packets Recieved:')
-mPacket_Rec = uicontrol('style','text','Position',[1765 330 100 20],'FontSize',12)
-Packet_Rec = 0;
-set(mPacket_Rec,'String',Speed)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% grid(plotGrid);
-% TextFig = figure(2)
-% TextDisp = uicontrol('style','text','FontSize',12,...
-%               'Position',[1 1 1 1]);
-% 
-% set(TextDisp,'String','342')
-          
 %Generate plot and pause slightly to let it open
 disp('Close Plot to End Session');
 pause(delay);
-
-Vxfmpg = 0;
 
 % i=1;
 % for i = 1:500
@@ -175,9 +193,7 @@ Vxfmpg = 0;
 %     
 % end
 
-
 try
-
     %Create and Configure Serial COM Port with user settings
     s = serial(serialPort);
     set(s,'Terminator','G');
@@ -201,8 +217,8 @@ try
     tic    
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %   Configuration for test, read below for options.    
-    %    "How data should be sent back out on UART"
+    %           Configuration for test, read below for options.    
+    %           "How data should be sent back out on UART"
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Send As String(1) or Uchar(0)
     String = 1;
@@ -236,29 +252,32 @@ try
             if(~isempty(Rx_data_packet))
                 Packet_Rec = Packet_Rec+1;
                 Imset = Rx_data_packet(1);
-
-                %Calculate back EMF at the current linear speed, current 
-                %voltage available, then lastly, the (Maximum current) the 
-                %motor can accept at the given speed (Maximum velocity).                    
-                Vemf = (Vxi*Cemf);
-                if(Vemf < Vbatt)
-                    Vcurr = Vbatt - Vemf;                
-                    Pcurr = Vcurr*Im;
+                
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %                 Motor and Battery Limits:
+            %
+            %   Calculate back EMF at the current linear speed, current 
+            %   voltage available, then lastly, the (Maximum current) the 
+            %	motor can accept at the given speed (Maximum velocity).
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                
+                Vemf = (Vxi*Cemf)
+                Vcurr = Vbatt - Vemf             
+                Pcurr = Vcurr*Im
+                
+                if(Pmax-Pcurr > 0 && Vcurr > 0)
+                    Imax = ((Pmax-Pcurr)/Vbatt)*(Vcurr/Vbatt)
                 else
-                    Imax = 200/Vbatt;
-                    %fprintf('Motor Max Speed Reached')
+                    Imax = 0
+                    Im = 0
+                    fprintf('Motor Max Speed Reached')
                 end
                 %Check if current power is less than the available motor
                 %power, if not set current to maximum available.                     
-                if(Pmax-Pcurr > 0 && Vemf < Vbatt)
-                    Imax = (Pmax-Pcurr)/Vbatt;
-                end
-
                 if(Imset > Imax)
-                   %fprintf('Target Current Too High') 
-                   Im = Imax;
+                   fprintf('Target Current Too High') 
+                   Im = Imax
                 else
-                    Im = Imset;
+                   Im = Imset
                 end
             end
         elseif(CheckPacket == 'V')
@@ -277,15 +296,16 @@ try
             fprintf('Packet Error. Setting current to zero');
             Packet_Error = Packet_Error+1;
         end
-
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %   Linear Motion Calculations:
+        %                                   Linear Motion Calculations:
         %
         %   The vehicle motion is determined by the net effect of all the forces and torques acting on it. 
         %   The longitudinal tire forces push the vehicle forward or backward. The weight mg of the vehicle 
         %   acts through its center of gravity (CG). Depending on the incline angle, the weight pulls the 
-        %   vehicle to the ground and either pulls it backward or forward. Whether the vehicle travels forward or backward, 
-        %   aerodynamic drag slows it down. For simplicity, the drag is assumed to act through the CG.
+        %   vehicle to the ground and either pulls it backward or forward. Whether the vehicle travels forward 
+        %   or backward, aerodynamic drag slows it down. For simplicity, the drag is assumed to act through the CG.
         %
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%               
         N = (Fzr + Fzf); %Normal force of vehicle                          
@@ -304,22 +324,21 @@ try
         if(Vxf - Vxi < 0 && Vxf < 0)
             Vxf = 0;
         end
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         %Convert the current speed to MPH
         Vxfmph = 2.23694*(Vxf);
         Current_Speed = Vxfmph
-        
-        
-        set(mSpeed,'String',Vxfmpg)
-        set(mSetcurrent,'String',Imset)
-        set(mAngle,'String',Angle)
-        set(mPacket_Rec,'String',Packet_Rec)
-        
-        
         Max_Current = Imax;
         Set_Current = Imset;
-        Motor_Current = Im;      
+        Motor_Current = Im; 
+        
+        set(mSpeed,'String',Vxfmph)
+        set(mMotor_Current,'String',Motor_Current)
+        set(mPacket_Rec,'String',Packet_Rec)
+        set(mPacket_Error,'String',Packet_Error)
+        set(mSet_Torque_Right,'String',Set_Torque_Right)
+        set(mSet_Torque_Left,'String',Set_Torque_Left)        
 
         %Send current speed out to speed sensor
         if(String == 1)
@@ -334,9 +353,7 @@ try
             fwrite(s,SendUChar,'char');
             fwrite(s, 'G', 'char');
         end
-        %pause(delay)               
-        %time(count) - time(count-1);
-        
+
         if(Logging == 1)
             %Save all input floats to the log file,
             %first with the current time, followed
@@ -348,9 +365,9 @@ try
             fprintf(fileID,'%f,',Set_Torque_Left);
             fprintf(fileID,'%f,',Steering_Angle_Bin);            
             fprintf(fileID,'%f,',Vxfmph);
-            fprintf(fileID, '%f,', Speed);
-            fprintf(fileID, '%f,', Packet_Rec);                       
-            fprintf(fileID, '%f.', Packet_Error);            
+            fprintf(fileID, '%f,',Speed);
+            fprintf(fileID, '%f,',Packet_Rec);                       
+            fprintf(fileID, '%f.',Packet_Error);            
             fprintf(fileID,'\r\n');
         end
         %Allow MATLAB time to Update Plot
@@ -375,21 +392,23 @@ try
         if  ~mod(Packet_Rec,40)
             flushinput(s);
         end
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %   Differential Wheel Torque Calculations      %
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        if(Base_Torque > 0.1)
+        
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %   Differential Wheel Torque Calculations      %
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %Left turn (0 to -180 Degrees) = (4085 - 2048)            
             if(Steering_Angle_Bin > 2048 && Steering_Angle_Bin < 4090)
                 %LTR = 1.033849*log(Steering_Angle_Bin) - 7.588172;
                 Steering_Angle_Deg = (Steering_Angle_Bin/11.3778)-360
+                set(mAngle,'String',Steering_Angle_Deg)
             end
             %Right turn (0 to +180 Degrees) = (0 to 2048)
             if(Steering_Angle_Bin >= 0 && Steering_Angle_Bin < 2048)
                 %RTR = -8E-08*(Steering_Angle_Bin)^2 - 0.0002*(Steering_Angle_Bin) + 0.9863;                
                 Steering_Angle_Deg = (Steering_Angle_Bin/11.3778)
+                set(mAngle,'String',Steering_Angle_Deg)                
             end      
-
+        if(Base_Torque > 0.1)
             Steering_Angle_Rad = abs(Steering_Angle_Deg)*(pi/180);
             Center_Wheel_Angle_Deg = ((0.1464*abs(Steering_Angle_Deg))-0.132448)*(2);
             Center_Wheel_Angle_Rad = Center_Wheel_Angle_Deg*(pi/180);
@@ -425,9 +444,14 @@ try
             else
                 Percent_Error_Left = 'N/A';
                 Percent_Error_Right = 'N/A';                    
-            end
-        end        
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+            end         
+        else
+            Percent_Error_Left = 'N/A';
+            Percent_Error_Right = 'N/A'; 
+        end
+    set(mPercent_Error_Left,'String',Percent_Error_Left)   
+    set(mPercent_Error_Right,'String',Percent_Error_Right)         
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     end
 
 catch ME
